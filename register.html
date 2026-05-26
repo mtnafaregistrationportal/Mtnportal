@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register AFA - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-bg: #0a1628;
+            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-white: #ffffff;
+            --text-light: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg-gradient);
+            min-height: 100vh;
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+        }
+        .reg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 22, 40, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .reg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .reg-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .reg-icon svg {
+            width: 20px; height: 20px;
+            color: var(--primary-yellow);
+        }
+        .reg-header-text h2 {
+            font-size: 16px; font-weight: 700;
+        }
+        .menu-btn {
+            width: 40px; height: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .menu-btn span {
+            width: 20px;
+            height: 2px;
+            background: var(--text-white);
+            border-radius: 2px;
+        }
+        .reg-content {
+            padding: 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .reg-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .btn-black {
+            flex: 1;
+            padding: 12px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-yellow-full {
+            flex: 1;
+            padding: 12px;
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .summary-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .summary-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+        .tab.active {
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            border-color: var(--primary-yellow);
+        }
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .form-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .form-card > p {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: #e74c3c;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1a1a1a;
+            background: #fafafa;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--primary-yellow);
+            background: #fff;
+        }
+        .form-input::placeholder {
+            color: #bbb;
+        }
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+        }
+        .file-input-wrapper {
+            margin-bottom: 12px;
+        }
+        .file-input-wrapper label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        .file-input-wrapper label .required {
+            color: #e74c3c;
+        }
+        .file-hint {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .file-box {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-box:hover {
+            border-color: var(--primary-yellow);
+            background: rgba(255, 215, 0, 0.05);
+        }
+        .file-box input[type="file"] {
+            display: none;
+        }
+        .file-box-text {
+            font-size: 13px;
+            color: #666;
+        }
+        .submit-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .submit-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+        .submit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        .submit-row .label {
+            color: #666;
+        }
+        .submit-row .value {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .btn-topup {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: var(--text-white);
+            font-size: 14px;
+            font-weight: 600;
+            border: 1.5px solid var(--glass-border);
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .package-details {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .package-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        @media (min-width: 768px) {
+            .reg-content {
+                max-width: 520px;
+                padding: 40px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="reg-header">
+        <div class="reg-header-left">
+            <div class="reg-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="reg-header-text">
+                <h2>MTN AFA Portal</h2>
+            </div>
+        </div>
+        <button class="menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </header>
+
+    <div class="reg-content">
+        <h1 class="reg-title">Register AFA</h1>
+
+        <div class="btn-row">
+            <a href="#" class="btn-black">My Orders</a>
+            <a href="#" class="btn-yellow-full">Wallet</a>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-row">
+                <span class="summary-label">Package</span>
+                <span class="summary-value">MTN AFA Bundle</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Fee</span>
+                <span class="summary-value">GH₵ 7.00</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Wallet Balance</span>
+                <span class="summary-value">GH₵ 0.00</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Review Time</span>
+                <span class="summary-value">4-8 hours</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active">New Registration</div>
+            <div class="tab">Requirements</div>
+            <div class="tab">Receipt</div>
+        </div>
+
+        <div class="form-card">
+            <h4>Applicant Details</h4>
+            <p>Fill the form carefully. Your wallet will be charged only when submission succeeds.</p>
+
+            <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" class="form-input" placeholder="e.g. John Doe">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number <span class="required">*</span></label>
+                <input type="tel" class="form-input" placeholder="e.g. 0241234567">
+            </div>
+
+            <div class="form-group">
+                <label>ID Type <span class="required">*</span></label>
+                <select class="form-input">
+                    <option>Ghana Card</option>
+                    <option>Passport</option>
+                    <option>Voter's ID</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>ID Number <span class="required">*</span></label>
+                <input type="text" class="form-input" placeholder="e.g. GHA-000000000-0">
+            </div>
+
+            <div class="form-group">
+                <label>Location <span class="required">*</span></label>
+                <input type="text" class="form-input" placeholder="e.g. Tema, Kumasi">
+            </div>
+
+            <div class="form-group">
+                <label>Date of Birth <span class="required">*</span></label>
+                <input type="date" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label>Occupation <span class="required">*</span></label>
+                <input type="text" class="form-input" placeholder="e.g. Student, Teacher, Business Owner">
+            </div>
+
+            <div class="file-input-wrapper">
+                <label>Ghana Card Uploads <span class="required">*</span></label>
+                <p class="file-hint">Upload both the front and back in one place. Accepted: JPG, PNG, WEBP or PDF. Maximum 5MB each.</p>
+            </div>
+
+            <div class="file-input-wrapper">
+                <label>Ghana Card Front <span class="required">*</span></label>
+                <label class="file-box">
+                    <input type="file" accept="image/*,.pdf">
+                    <span class="file-box-text">Choose File  No file chosen</span>
+                </label>
+            </div>
+
+            <div class="file-input-wrapper">
+                <label>Ghana Card Back <span class="required">*</span></label>
+                <label class="file-box">
+                    <input type="file" accept="image/*,.pdf">
+                    <span class="file-box-text">Choose File  No file chosen</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="submit-section">
+            <h4>Submission Summary</h4>
+            <div class="submit-row">
+                <span class="label">Package</span>
+                <span class="value">MTN AFA Bundle</span>
+            </div>
+            <div class="submit-row">
+                <span class="label">Charge</span>
+                <span class="value">GH₵ 7.00</span>
+            </div>
+            <div class="submit-row">
+                <span class="label">Current Wallet</span>
+                <span class="value">GH₵ 0.00</span>
+            </div>
+        </div>
+
+        <button class="btn-submit">Submit Registration</button>
+        <button class="btn-topup">Top Up Wallet</button>
+
+        <div class="package-details" style="margin-top: 20px;">
+            <h4>Package Details</h4>
+        </div>
+    </div>
+</body>
+</html>

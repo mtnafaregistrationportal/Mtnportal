@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-bg: #0a1628;
+            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-white: #ffffff;
+            --text-light: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg-gradient);
+            min-height: 100vh;
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+        }
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 22, 40, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .dash-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dash-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .dash-icon svg {
+            width: 20px; height: 20px;
+            color: var(--primary-yellow);
+        }
+        .dash-header-text h2 {
+            font-size: 16px; font-weight: 700;
+        }
+        .dash-header-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .menu-btn {
+            width: 40px; height: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .menu-btn span {
+            width: 20px;
+            height: 2px;
+            background: var(--text-white);
+            border-radius: 2px;
+        }
+        .dash-content {
+            padding: 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 20px;
+            padding: 24px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .welcome-card h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .welcome-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-black {
+            flex: 1;
+            padding: 14px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-yellow-full {
+            flex: 1;
+            padding: 14px;
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .info-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+        .info-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .btn-yellow-block {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+        .view-link {
+            text-align: center;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-white);
+            text-decoration: none;
+            display: block;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .grid-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .grid-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+        .grid-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .grid-card p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        @media (min-width: 768px) {
+            .dash-content {
+                max-width: 520px;
+                padding: 40px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="dash-header">
+        <div class="dash-header-left">
+            <div class="dash-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="dash-header-text">
+                <h2>MTN AFA Portal</h2>
+                <p>Welcome, Daniel</p>
+            </div>
+        </div>
+        <button class="menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </header>
+
+    <div class="dash-content">
+        <div class="welcome-card">
+            <h2>Hello, Daniel</h2>
+            <p>Welcome back. Here is your account overview.</p>
+            <div class="btn-row">
+                <a href="register.html" class="btn-black">New Registration</a>
+                <a href="#" class="btn-yellow-full">Manage Wallet</a>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Wallet Balance</div>
+            <div class="info-value">GH₵ 0.00</div>
+            <button class="btn-yellow-block">Top Up Wallet</button>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Amount Spent</div>
+            <div class="info-value">GH₵ 0.00</div>
+            <a href="#" class="view-link">View Orders</a>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Total Registrations</div>
+            <div class="info-value">0</div>
+            <a href="register.html" class="btn-black">New AFA Registration</a>
+        </div>
+
+        <div class="grid-2">
+            <div class="grid-card">
+                <h4>Register AFA</h4>
+                <p>Create new order</p>
+            </div>
+            <div class="grid-card">
+                <h4>Wallet</h4>
+                <p>Top up and review</p>
+            </div>
+            <div class="grid-card">
+                <h4>Orders</h4>
+                <p>Track submissions</p>
+            </div>
+            <div class="grid-card">
+                <h4>Profile</h4>
+                <p>Manage account</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
