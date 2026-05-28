@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTN Ghana - AFA Association Bundles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .landing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+        }
+        .logo-box {
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px;
+            color: #FFD700;
+        }
+        .brand-name { font-size: 20px; font-weight: 700; }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #FFD700;
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+        }
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 24px 40px;
+        }
+        .carousel-container {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            margin-bottom: 32px;
+        }
+        .carousel-slide {
+            display: none;
+            width: 100%;
+            aspect-ratio: 1/1.1;
+        }
+        .carousel-slide.active {
+            display: block;
+            animation: slideIn 0.6s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(1.05); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .carousel-slide img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dot.active {
+            background: #FFD700;
+            border-color: #FFD700;
+            transform: scale(1.2);
+        }
+        .hero-text {
+            text-align: center;
+            max-width: 340px;
+        }
+        .hero-title {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+        .hero-subtitle {
+            font-size: 17px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .hero-cta {
+            margin-top: 8px;
+        }
+        .landing-footer {
+            text-align: center;
+            padding: 20px 24px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+        @media (min-width: 768px) {
+            .hero-title { font-size: 48px; }
+            .carousel-container { max-width: 500px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="landing-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-box">MTN</div>
+                <span class="brand-name">MTN Ghana</span>
+            </div>
+            <a href="signin.html" class="btn-primary">Sign Up &rarr;</a>
+        </header>
+
+        <section class="hero-section" style="flex: 1;">
+            <div class="carousel-container">
+                <div class="carousel-slide active">
+                    <img src="images/slide1.jpg" alt="MoMo Loan">
+                </div>
+                <div class="carousel-slide">
+                    <img src="images/slide2.jpg" alt="Receive Money">
+                </div>
+                <div class="carousel-slide">
+                    <img src="images/slide3.jpg" alt="Send Love">
+                </div>
+            </div>
+
+            <div class="carousel-dots">
+                <span class="dot active" onclick="goToSlide(0)"></span>
+                <span class="dot" onclick="goToSlide(1)"></span>
+                <span class="dot" onclick="goToSlide(2)"></span>
+            </div>
+
+            <div class="hero-text">
+                <h1 class="hero-title">AFA Association Bundles</h1>
+                <p class="hero-subtitle">Enjoy the association bundle offers at discounted prices</p>
+                <a href="signin.html" class="btn-primary hero-cta">Sign Up &rarr;</a>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            &copy; MTN Ghana. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+
+        function goToSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            const next = (currentSlide + 1) % totalSlides;
+            goToSlide(next);
+        }
+
+        setInterval(nextSlide, 3000);
+    </script>
+</body>
+</html>

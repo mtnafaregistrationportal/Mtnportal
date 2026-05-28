@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .auth-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10,22,40,0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+        .auth-header-left { display: flex; align-items: center; gap: 12px; }
+        .auth-icon {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .auth-icon svg { width: 20px; height: 20px; color: #FFD700; }
+        .auth-header-text h2 { font-size: 16px; font-weight: 700; }
+        .auth-header-text p { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .btn-yellow {
+            background: #FFD700; color: #1a1a1a;
+            font-size: 14px; font-weight: 600; padding: 10px 20px;
+            border-radius: 50px; border: none; cursor: pointer;
+            text-decoration: none; display: inline-block;
+        }
+        .auth-content {
+            padding: 24px 20px; max-width: 480px;
+            margin: 0 auto;
+        }
+        .auth-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 28px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .auth-card h3 { color: #1a1a1a; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; color: #1a1a1a; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .input-wrapper { position: relative; }
+        .form-input {
+            width: 100%; padding: 14px 16px; border: 1.5px solid #e0e0e0;
+            border-radius: 14px; font-size: 15px; font-family: inherit;
+            color: #1a1a1a; background: #fafafa; outline: none;
+        }
+        .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
+        .form-input::placeholder { color: #aaa; }
+        .password-toggle {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: 1.5px solid #ddd; border-radius: 8px;
+            padding: 6px 12px; font-size: 13px; color: #666; cursor: pointer;
+        }
+        .btn-submit {
+            width: 100%; padding: 16px; background: #1a1a1a;
+            color: white; font-size: 16px; font-weight: 600;
+            border: none; border-radius: 14px; cursor: pointer; margin-top: 8px;
+        }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+        .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; cursor: pointer; }
+        .forgot-link { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; cursor: pointer; }
+        .forgot-link.show { display: block; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none;
+            align-items: center; justify-content: center; z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-card {
+            background: white; border-radius: 20px; padding: 28px 24px;
+            width: 100%; max-width: 400px;
+        }
+        .modal-card h4 { color: #1a1a1a; font-size: 18px; margin-bottom: 16px; }
+        .modal-card .form-group { margin-bottom: 16px; }
+        .modal-card .btn-submit { margin-top: 0; }
+        .otp-inputs { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+        .otp-inputs input {
+            width: 48px; height: 56px; text-align: center;
+            font-size: 20px; border: 2px solid #e0e0e0;
+            border-radius: 12px; outline: none;
+        }
+        .otp-inputs input:focus { border-color: #FFD700; }
+        .info-box {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 16px; padding: 16px 20px;
+            margin-bottom: 24px; font-size: 14px;
+            color: #666; line-height: 1.5;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .badge {
+            display: inline-block; background: #FFD700;
+            color: #1a1a1a; font-size: 12px; font-weight: 700;
+            padding: 6px 14px; border-radius: 50px; margin-bottom: 16px;
+        }
+        .welcome-title { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+        .welcome-text { font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 24px; }
+        .feature-cards { display: flex; flex-direction: column; gap: 12px; }
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px; padding: 18px 20px;
+        }
+        .feature-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 4px; text-transform: uppercase; }
+        .feature-value { font-size: 16px; font-weight: 600; color: #ffffff; }
+        @media (min-width: 768px) {
+            .auth-content { max-width: 520px; padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="auth-header">
+            <div class="auth-header-left">
+                <div class="auth-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div class="auth-header-text">
+                    <h2>MTN AFA Portal</h2>
+                    <p>Secure user access</p>
+                </div>
+            </div>
+            <a href="create.html" class="btn-yellow">Create Account</a>
+        </header>
+
+        <div class="auth-content" style="flex: 1;">
+            <div class="auth-card">
+                <h3>Sign in</h3>
+                <p class="subtitle">Enter your account details below.</p>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signinEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signinPassword" class="form-input" placeholder="Enter your password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('signinPassword', this)">Show</button>
+                    </div>
+                </div>
+
+                <p class="forgot-link" id="forgotLink" onclick="showForgotModal()">Forgot Password?</p>
+
+                <button class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+
+                <div class="auth-link">
+                    Do not have an account? <a href="create.html">Create one</a>
+                </div>
+            </div>
+
+            <div class="info-box">
+                Use the same email address you registered with to access your dashboard.
+            </div>
+
+            <div style="margin-top: 8px;">
+                <span class="badge">MTN AFA User Login</span>
+                <h2 class="welcome-title">Welcome back</h2>
+                <p class="welcome-text">Sign in to manage your wallet, submit AFA registrations, track orders, and keep your account updated.</p>
+
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <div class="feature-label">Wallet</div>
+                        <div class="feature-value">Fast funding</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-label">Orders</div>
+                        <div class="feature-value">Track status</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-label">Security</div>
+                        <div class="feature-value">Protected access</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-card">
+            <h4>Reset Password</h4>
+            <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your registered email to receive a reset link.</p>
+            <div class="form-group">
+                <input type="email" id="resetEmail" class="form-input" placeholder="you@example.com">
+            </div>
+            <button class="btn-submit" onclick="sendResetEmail()">Send Reset Link</button>
+            <button style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Reset Success Modal -->
+    <div class="modal-overlay" id="resetSuccessModal">
+        <div class="modal-card">
+            <h4>Check Your Email</h4>
+            <p style="color:#666; font-size:14px; margin-bottom:16px;">A password reset link has been sent to your email. Click the link to reset your password.</p>
+            <button class="btn-submit" onclick="closeResetSuccessModal()">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcIww7vLwcx3dB0-5-OPg1sw1lcP-u4ZM",
+            authDomain: "mtn-portal-671f6.firebaseapp.com",
+            projectId: "mtn-portal-671f6",
+            storageBucket: "mtn-portal-671f6.firebasestorage.app",
+            messagingSenderId: "244083466572",
+            appId: "1:244083466572:web:560219b082dddd6de56fe9",
+            measurementId: "G-156B36671Y"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+        window.togglePassword = togglePassword;
+
+        async function handleSignIn() {
+            const email = document.getElementById('signinEmail').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            const btn = document.getElementById('signinBtn');
+            const forgotLink = document.getElementById('forgotLink');
+
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Signing In...';
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    localStorage.setItem('userName', data.name || user.displayName || 'User');
+                    localStorage.setItem('userEmail', data.email || email);
+                    localStorage.setItem('userId', user.uid);
+                    localStorage.setItem('userPhone', data.phoneNumber || '');
+                    if (data.profilePicture) localStorage.setItem('profilePicture', data.profilePicture);
+                } else {
+                    localStorage.setItem('userName', user.displayName || 'User');
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userId', user.uid);
+                }
+
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+                forgotLink.classList.add('show');
+                alert('Wrong password or email. Please try again or click "Forgot Password".');
+            }
+        }
+        window.handleSignIn = handleSignIn;
+
+        function showForgotModal() {
+            document.getElementById('forgotModal').classList.add('show');
+        }
+        window.showForgotModal = showForgotModal;
+
+        function closeForgotModal() {
+            document.getElementById('forgotModal').classList.remove('show');
+        }
+        window.closeForgotModal = closeForgotModal;
+
+        async function sendResetEmail() {
+            const email = document.getElementById('resetEmail').value.trim();
+            if (!email) {
+                alert('Please enter your email.');
+                return;
+            }
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                closeForgotModal();
+                document.getElementById('resetSuccessModal').classList.add('show');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        window.sendResetEmail = sendResetEmail;
+
+        function closeResetSuccessModal() {
+            document.getElementById('resetSuccessModal').classList.remove('show');
+        }
+        window.closeResetSuccessModal = closeResetSuccessModal;
+    </script>
+</body>
+</html>

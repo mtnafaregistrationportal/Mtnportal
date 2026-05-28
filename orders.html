@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-bg: #0a1628;
+            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-white: #ffffff;
+            --text-light: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg-gradient);
+            min-height: 100vh;
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+        .orders-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 22, 40, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .orders-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .orders-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .orders-icon svg {
+            width: 20px; height: 20px;
+            color: var(--primary-yellow);
+        }
+        .orders-header-text h2 {
+            font-size: 16px; font-weight: 700;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-white);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .orders-content {
+            padding: 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state svg {
+            width: 64px; height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .order-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .order-id {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .order-status {
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
+        .status-processing { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+        .status-approved { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .status-rejected { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+        .order-details {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { font-weight: 600; }
+        @media (min-width: 768px) {
+            .orders-content { max-width: 520px; padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="orders-header">
+        <div class="orders-header-left">
+            <div class="orders-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="orders-header-text">
+                <h2>My Orders</h2>
+            </div>
+        </div>
+        <a href="dashboard.html" class="back-btn">&larr; Back</a>
+    </header>
+
+    <div class="orders-content">
+        <h1 class="section-title">Orders</h1>
+        <div id="ordersList">
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p>No orders yet. Submit your first AFA registration.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcIww7vLwcx3dB0-5-OPg1sw1lcP-u4ZM",
+            authDomain: "mtn-portal-671f6.firebaseapp.com",
+            projectId: "mtn-portal-671f6",
+            storageBucket: "mtn-portal-671f6.firebasestorage.app",
+            messagingSenderId: "244083466572",
+            appId: "1:244083466572:web:560219b082dddd6de56fe9",
+            measurementId: "G-156B36671Y"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            const q = query(
+                collection(db, 'orders'),
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('ordersList');
+                
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p>No orders yet. Submit your first AFA registration.</p>
+                        </div>`;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const order = doc.data();
+                    const statusClass = 'status-' + (order.registrationStatus || 'pending');
+                    const statusText = order.registrationStatus === 'approved' ? 'Registered Successfully ✅' : 
+                                      order.registrationStatus === 'rejected' ? 'Rejected' :
+                                      order.registrationStatus === 'processing' ? 'Processing' : 'Pending';
+                    
+                    const date = order.createdAt ? new Date(order.createdAt.toDate()).toLocaleDateString() : 'Just now';
+                    
+                    html += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <span class="order-id">#${doc.id.substr(-6).toUpperCase()}</span>
+                                <span class="order-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="order-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Applicant</span>
+                                    <span class="detail-value">${order.applicantName || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Phone</span>
+                                    <span class="detail-value">${order.applicantPhone || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value">GH₵ ${(order.amount || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Payment Ref</span>
+                                    <span class="detail-value">${order.paymentReference || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">${date}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            });
+        });
+    </script>
+</body>
+</html>
