@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-bg: #0a1628;
+            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-white: #ffffff;
+            --text-light: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg-gradient);
+            min-height: 100vh;
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+        .orders-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 22, 40, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .orders-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .orders-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .orders-icon svg {
+            width: 20px; height: 20px;
+            color: var(--primary-yellow);
+        }
+        .orders-header-text h2 {
+            font-size: 16px; font-weight: 700;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-white);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .orders-content {
+            padding: 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary-yellow);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state svg {
+            width: 64px; height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .order-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: transform 0.2s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .order-id {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+        .order-status {
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
+        .status-processing { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+        .status-approved { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .status-rejected { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+        .status-paid { background: rgba(255, 215, 0, 0.2); color: var(--primary-yellow); }
+        .order-details {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { font-weight: 600; }
+        .uploads-preview {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .upload-thumb {
+            width: 60px; height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid var(--glass-border);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .upload-thumb:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-yellow);
+        }
+        .admin-note {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #FFC107;
+        }
+        .admin-note.rejected {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: rgba(244, 67, 54, 0.3);
+            color: #F44336;
+        }
+        .admin-note.approved {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+        /* Support Card */
+        .support-card {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #0066cc, #FFD700);
+            background-size: 200% 200%;
+            animation: gradientShift 5s ease infinite;
+            border-radius: 16px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 200;
+            max-width: 90%;
+            width: fit-content;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .support-card svg {
+            width: 24px; height: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .support-text {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .support-btn {
+            background: white;
+            color: #0066cc;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        /* Image Modal */
+        .img-modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .img-modal.show { display: flex; }
+        .img-modal img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+        }
+        .img-modal-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        @media (min-width: 768px) {
+            .orders-content { max-width: 720px; padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="orders-header">
+        <a href="dashboard.html" class="back-btn">&larr; Back</a>
+        <div class="orders-header-left">
+            <div class="orders-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            </div>
+            <div class="orders-header-text">
+                <h2>My Orders</h2>
+            </div>
+        </div>
+        <div style="width: 60px;"></div>
+    </header>
+
+    <div class="orders-content">
+        <h1 class="section-title">Orders</h1>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalOrders">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingOrders">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="approvedOrders">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
+        </div>
+
+        <div id="ordersList">
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p>No orders yet. Submit your first AFA registration.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Card -->
+    <div class="support-card" id="supportCard">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <span class="support-text">Need help? Contact support</span>
+        <a href="https://wa.me/233557810669" target="_blank" class="support-btn">WhatsApp</a>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="img-modal" id="imgModal" onclick="closeImgModal()">
+        <button class="img-modal-close" onclick="closeImgModal()">&times;</button>
+        <img src="" alt="Preview" id="modalImg">
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcIww7vLwcx3dB0-5-OPg1sw1lcP-u4ZM",
+            authDomain: "mtn-portal-671f6.firebaseapp.com",
+            projectId: "mtn-portal-671f6",
+            storageBucket: "mtn-portal-671f6.firebasestorage.app",
+            messagingSenderId: "244083466572",
+            appId: "1:244083466572:web:560219b082dddd6de56fe9",
+            measurementId: "G-156B36671Y"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let totalCount = 0, pendingCount = 0, approvedCount = 0;
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            const q = query(
+                collection(db, 'registrations'),
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('ordersList');
+                totalCount = snapshot.size;
+                pendingCount = 0;
+                approvedCount = 0;
+
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p>No orders yet. Submit your first AFA registration.</p>
+                        </div>`;
+                    updateStats();
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((docSnap) => {
+                    const order = docSnap.data();
+                    const status = order.adminStatus || order.status || 'pending';
+                    
+                    if (status === 'pending' || status === 'processing' || status === 'paid') pendingCount++;
+                    if (status === 'approved') approvedCount++;
+
+                    const statusClass = 'status-' + status;
+                    const statusText = status === 'approved' ? 'Approved ✅' : 
+                                      status === 'rejected' ? 'Rejected ❌' :
+                                      status === 'processing' ? 'Processing' : 
+                                      status === 'paid' ? 'Paid - Awaiting Approval' : 'Pending Payment';
+
+                    const date = order.createdAt ? new Date(order.createdAt.toDate()).toLocaleDateString('en-GB') : 'Just now';
+                    
+                    let uploadsHtml = '';
+                    if (order.uploads) {
+                        const thumbs = [];
+                        if (order.uploads.profilePhoto) thumbs.push({url: order.uploads.profilePhoto, label: 'Profile'});
+                        if (order.uploads.selfie) thumbs.push({url: order.uploads.selfie, label: 'Selfie'});
+                        if (order.uploads.ghanaCardFront) thumbs.push({url: order.uploads.ghanaCardFront, label: 'ID Front'});
+                        if (order.uploads.ghanaCardBack) thumbs.push({url: order.uploads.ghanaCardBack, label: 'ID Back'});
+                        
+                        if (thumbs.length > 0) {
+                            uploadsHtml = '<div class="uploads-preview">' + 
+                                thumbs.map(t => `<img src="${t.url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${t.url}')" alt="${t.label}">`).join('') + 
+                                '</div>';
+                        }
+                    }
+
+                    let adminNote = '';
+                    if (status === 'rejected' && order.adminNote) {
+                        adminNote = `<div class="admin-note rejected">Admin: ${order.adminNote}</div>`;
+                    } else if (status === 'approved') {
+                        adminNote = `<div class="admin-note approved">Your registration has been approved!</div>`;
+                    } else if (status === 'paid') {
+                        adminNote = `<div class="admin-note">Payment received. Awaiting admin approval...</div>`;
+                    }
+
+                    html += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <span class="order-id">#${docSnap.id.substr(-8).toUpperCase()}</span>
+                                <span class="order-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="order-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Applicant</span>
+                                    <span class="detail-value">${order.applicantName || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Phone</span>
+                                    <span class="detail-value">${order.applicantPhone || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value">GH₵ ${(order.amount || 15).toFixed(2)}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Payment Ref</span>
+                                    <span class="detail-value">${order.paymentReference || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">${date}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Network</span>
+                                    <span class="detail-value">${order.detectedNetwork || 'Unknown'}</span>
+                                </div>
+                            </div>
+                            ${uploadsHtml}
+                            ${adminNote}
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                updateStats();
+            });
+        });
+
+        function updateStats() {
+            document.getElementById('totalOrders').textContent = totalCount;
+            document.getElementById('pendingOrders').textContent = pendingCount;
+            document.getElementById('approvedOrders').textContent = approvedCount;
+        }
+
+        window.openImgModal = function(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('imgModal').classList.add('show');
+        };
+        window.closeImgModal = function() {
+            document.getElementById('imgModal').classList.remove('show');
+        };
+    </script>
+</body>
+</html>
