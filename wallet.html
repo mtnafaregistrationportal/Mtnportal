@@ -248,7 +248,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, getDoc, collection, query, where, orderBy, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, collection, query, where, orderBy, addDoc, serverTimestamp, increment, updateDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js";
 
         const firebaseConfig = {
@@ -276,21 +276,13 @@
             }
             currentUser = user;
 
-            // Get email from Firebase Auth (backend) - this is the source of truth
-            const userEmail = user.email;
-            if (!userEmail) {
-                console.error('No email found for user');
-                return;
-            }
-
-            // Also store in Firestore users collection for consistency
             const userRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userRef);
             if (userDoc.exists() && !userDoc.data().email) {
-                await updateDoc(userRef, { email: userEmail });
+                await updateDoc(userRef, { email: user.email });
             }
 
-            // Real-time wallet
+            // Real-time wallet & amount spent
             onSnapshot(userRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -352,13 +344,11 @@
         };
 
         window.initiateTopUp = async function() {
-            // Ensure user is authenticated and email is available
             if (!currentUser) {
                 alert('Please wait... User session is loading.');
                 return;
             }
 
-            // Get email directly from Firebase Auth (backend source of truth)
             const userEmail = currentUser.email;
             if (!userEmail) {
                 alert('Error: Unable to get your email. Please log out and log in again.');
@@ -384,7 +374,7 @@
             try {
                 const handler = PaystackPop.setup({
                     key: 'pk_live_1894c11558fa750a2bf2154b77326184381f3763',
-                    email: userEmail, // Direct from Firebase Auth backend
+                    email: userEmail,
                     amount: amount * 100,
                     currency: 'GHS',
                     ref: reference,
@@ -419,43 +409,24 @@
                 });
 
                 if (result.data.success) {
-                    // WALLET TOPUP: Add amount to wallet balance
-                    if (type === 'wallet_topup') {
-                        const userRef = doc(db, 'users', currentUser.uid);
-                        await updateDoc(userRef, {
-                            walletBalance: increment(amount)
-                        });
-                    }
-
-                    // Record transaction for user history
+                    // CLOUD FUNCTION ALREADY UPDATED WALLET — DO NOT ADD AGAIN HERE
+                    // Just record the transaction for history (with processed flag so dashboard doesn't double-count)
+                    
                     await addDoc(collection(db, 'transactions'), {
                         userId: currentUser.uid,
-                        type: type === 'wallet_topup' ? 'topup' : 'debit',
+                        type: 'topup',
                         amount: amount,
-                        description: type === 'wallet_topup' ? 'Wallet Top-up' : 'AFA Registration',
+                        description: 'Wallet Top-up',
                         reference: reference,
                         paymentMethod: 'paystack',
-                        status: 'completed',
+                        status: 'success',
+                        paystackVerified: true,     // ← Required by dashboard listener
+                        verifiedAt: serverTimestamp(), // ← Required by dashboard listener
+                        processed: true,            // ← Already processed by Cloud Function
                         createdAt: serverTimestamp()
                     });
 
-                    // Record for admin backend
-                    await addDoc(collection(db, 'admin_transactions'), {
-                        userId: currentUser.uid,
-                        userEmail: currentUser.email, // From Firebase Auth
-                        type: type === 'wallet_topup' ? 'topup' : 'registration',
-                        amount: amount,
-                        description: type === 'wallet_topup' ? 'Wallet Top-up' : 'AFA Registration',
-                        reference: reference,
-                        paymentMethod: 'paystack',
-                        status: 'completed',
-                        createdAt: serverTimestamp()
-                    });
-
-                    alert(type === 'wallet_topup' 
-                        ? 'Wallet topped up successfully! GH₵' + amount.toFixed(2) + ' added to your balance.' 
-                        : 'Payment successful! Your registration is being processed.'
-                    );
+                    alert('Wallet topped up successfully! GH₵' + amount.toFixed(2) + ' added to your balance.');
                 } else {
                     alert('Payment verification failed. Please contact support.');
                 }
