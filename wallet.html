@@ -248,7 +248,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, updateDoc, collection, query, where, orderBy, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js";
 
         const firebaseConfig = {
@@ -275,7 +275,6 @@
                 return;
             }
             currentUser = user;
-            const email = user.email || localStorage.getItem('userEmail') || 'user@example.com';
 
             // Real-time wallet
             onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
@@ -327,7 +326,6 @@
             document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('customAmount').value = amt;
-            // Clear error when valid amount selected
             document.getElementById('amountError').classList.remove('show');
             document.getElementById('customAmount').classList.remove('error');
         };
@@ -335,7 +333,6 @@
         window.clearSelection = function() {
             selectedAmount = 0;
             document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
-            // Clear error on input
             document.getElementById('amountError').classList.remove('show');
             document.getElementById('customAmount').classList.remove('error');
         };
@@ -352,11 +349,9 @@
                 return;
             }
 
-            // Clear error
             errorEl.classList.remove('show');
             inputEl.classList.remove('error');
 
-            // Go straight to Paystack popup
             const reference = 'WALLET_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
             try {
@@ -397,17 +392,43 @@
                 });
 
                 if (result.data.success) {
-                    // Record transaction
+                    // WALLET TOPUP: Add amount to wallet balance
+                    if (type === 'wallet_topup') {
+                        const userRef = doc(db, 'users', currentUser.uid);
+                        await updateDoc(userRef, {
+                            walletBalance: increment(amount)
+                        });
+                    }
+
+                    // Record transaction for ALL payment types (topup + registration)
                     await addDoc(collection(db, 'transactions'), {
                         userId: currentUser.uid,
-                        type: 'topup',
+                        type: type === 'wallet_topup' ? 'topup' : 'debit',
                         amount: amount,
-                        description: 'Wallet Top-up',
+                        description: type === 'wallet_topup' ? 'Wallet Top-up' : 'AFA Registration',
                         reference: reference,
+                        paymentMethod: 'paystack',
+                        status: 'completed',
                         createdAt: serverTimestamp()
                     });
 
-                    alert('Wallet topped up successfully! GH₵' + amount.toFixed(2) + ' added.');
+                    // Also record in admin transactions collection for backend tracking
+                    await addDoc(collection(db, 'admin_transactions'), {
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email || localStorage.getItem('userEmail'),
+                        type: type === 'wallet_topup' ? 'topup' : 'registration',
+                        amount: amount,
+                        description: type === 'wallet_topup' ? 'Wallet Top-up' : 'AFA Registration',
+                        reference: reference,
+                        paymentMethod: 'paystack',
+                        status: 'completed',
+                        createdAt: serverTimestamp()
+                    });
+
+                    alert(type === 'wallet_topup' 
+                        ? 'Wallet topped up successfully! GH₵' + amount.toFixed(2) + ' added to your balance.' 
+                        : 'Payment successful! Your registration is being processed.'
+                    );
                 } else {
                     alert('Payment verification failed. Please contact support.');
                 }
