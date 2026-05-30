@@ -274,6 +274,17 @@
             transform: translateY(0);
         }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-message {
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #F44336;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error-message.show { display: block; }
         /* Selfie modal */
         .selfie-modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -387,6 +398,9 @@
                 <span class="summary-value">5-10 minutes</span>
             </div>
         </div>
+
+        <!-- Error Message Display -->
+        <div class="error-message" id="errorMessage"></div>
 
         <div class="form-card">
             <h4>Applicant Details</h4>
@@ -627,22 +641,30 @@
         }
         window.closeSelfie = closeSelfie;
 
-        // ========== TIMEOUT PROTECTION ==========
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg;
+            el.classList.add('show');
+            console.error('ERROR:', msg);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
         function resetButton(btn, text) {
             btn.disabled = false;
             btn.textContent = text || 'Pay GH₵ 15.00 & Submit';
         }
 
         async function submitRegistration() {
-            console.log('=== SUBMIT REGISTRATION STARTED ===');
-            
-            // CHECK: User logged in?
+            hideError();
+            console.log('=== SUBMIT STARTED ===');
+
             if (!currentUser) {
-                console.error('ERROR: User not logged in');
-                alert('Please wait... You are not logged in properly. Refresh the page.');
+                showError('You are not logged in. Please refresh and log in again.');
                 return;
             }
-            console.log('User OK:', currentUser.uid);
 
             const name = document.getElementById('appName').value.trim();
             const phone = document.getElementById('appPhone').value.trim();
@@ -656,48 +678,44 @@
             const backFile = document.getElementById('backFile').files[0];
 
             if (!name || !phone || !idNumber || !location || !dob || !occupation) {
-                alert('Please fill all required fields.'); return;
+                showError('Please fill all required fields.'); return;
             }
             if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-                alert('Phone number must be exactly 10 digits.'); return;
+                showError('Phone number must be exactly 10 digits.'); return;
             }
             if (!selfie || !frontFile || !backFile) {
-                alert('Please upload all required documents (Selfie, Ghana Card Front & Back).'); return;
+                showError('Please upload all required documents (Selfie, Ghana Card Front & Back).'); return;
             }
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Uploading Files...';
-            console.log('Starting file upload...');
-
-            // Set timeout to prevent button from being stuck forever
-            const timeoutId = setTimeout(() => {
-                console.error('TIMEOUT: Upload taking too long');
-                resetButton(btn);
-                alert('Upload is taking too long. Please check your internet connection and try again.');
-            }, 30000); // 30 seconds timeout
 
             let uploadData = null;
             let reference = null;
 
+            // ========== STEP 1: UPLOAD FILES ==========
             try {
-                // Upload files
                 const timestamp = Date.now();
-                console.log('Uploading to path:', `registrations/${currentUser.uid}/${timestamp}_`);
+                console.log('Uploading files...');
                 
                 const selfieRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_selfie`);
                 const frontRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_front`);
                 const backRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_back`);
                 
-                console.log('Starting uploadBytes...');
+                console.log('Uploading selfie...');
                 await uploadBytes(selfieRef, selfie);
                 console.log('Selfie uploaded');
+                
+                console.log('Uploading front...');
                 await uploadBytes(frontRef, frontFile);
                 console.log('Front uploaded');
+                
+                console.log('Uploading back...');
                 await uploadBytes(backRef, backFile);
                 console.log('Back uploaded');
 
-                console.log('Getting download URLs...');
+                console.log('Getting URLs...');
                 const selfieUrl = await getDownloadURL(selfieRef);
                 const frontUrl = await getDownloadURL(frontRef);
                 const backUrl = await getDownloadURL(backRef);
@@ -706,48 +724,38 @@
                 uploadData = { selfieUrl, frontUrl, backUrl };
                 reference = 'REG_' + timestamp + '_' + Math.random().toString(36).substr(2, 9);
                 
-                // Store pending data
                 localStorage.setItem('pendingRegData', JSON.stringify({
                     name, phone, idType, idNumber, location, dob, occupation,
                     uploads: uploadData,
                     reference: reference
                 }));
-                console.log('Pending data saved to localStorage');
-
-                // Clear timeout since upload succeeded
-                clearTimeout(timeoutId);
+                console.log('Data saved to localStorage');
 
             } catch (uploadError) {
-                clearTimeout(timeoutId);
                 console.error('UPLOAD ERROR:', uploadError);
-                console.error('Error code:', uploadError.code);
-                console.error('Error message:', uploadError.message);
+                showError('File upload failed: ' + (uploadError.message || 'Check Storage rules and internet connection'));
                 resetButton(btn);
-                alert('File upload failed: ' + (uploadError.message || 'Unknown error. Check console for details.'));
                 return;
             }
 
-            // ========== PAYSTACK PAYMENT ==========
+            // ========== STEP 2: OPEN PAYSTACK ==========
             btn.textContent = 'Opening Payment...';
-            console.log('Opening Paystack payment...');
+            console.log('Opening Paystack...');
 
             try {
-                // Check if Paystack is loaded
+                // Check if Paystack loaded
                 if (typeof PaystackPop === 'undefined') {
                     throw new Error('Paystack library not loaded. Check your internet connection.');
                 }
-                console.log('PaystackPop is available');
 
-                // Use Paystack v2 API - newTransaction()
-                const paystack = new PaystackPop();
-                console.log('Paystack instance created');
-
-                const transaction = paystack.newTransaction({
+                // Use Paystack v1 (simpler, more reliable for now)
+                // v2 requires backend initialization which needs another Cloud Function
+                const handler = PaystackPop.setup({
                     key: 'pk_live_1894c11558fa750a2bf2154b77326184381f3763',
-                    email: currentUser.email || localStorage.getItem('userEmail') || 'user@example.com',
-                    amount: 1500, // 15 GHS in pesewas
+                    email: currentUser.email || 'user@example.com',
+                    amount: 1500,
                     currency: 'GHS',
-                    reference: reference,
+                    ref: reference,
                     channels: ['mobile_money'],
                     metadata: {
                         custom_fields: [
@@ -757,38 +765,32 @@
                         name: name,
                         phone: phone
                     },
-                    onSuccess: function(transaction) {
-                        console.log('Paystack success:', transaction.reference);
-                        handlePaystackSuccess(reference, btn);
+                    callback: function(response) {
+                        console.log('Paystack callback received:', response.reference);
+                        // This runs after user completes payment
+                        handlePaystackCallback(response.reference, btn);
                     },
-                    onCancel: function() {
-                        console.log('Paystack cancelled by user');
+                    onClose: function() {
+                        console.log('Paystack closed by user');
                         resetButton(btn);
-                        alert('Payment was cancelled.');
-                    },
-                    onError: function(error) {
-                        console.error('Paystack error:', error);
-                        resetButton(btn);
-                        alert('Payment error: ' + (error.message || 'Unknown error'));
-                    },
-                    onLoad: function() {
-                        console.log('Paystack checkout loaded');
+                        showError('Payment was cancelled. You can try again.');
                     }
                 });
 
-                console.log('Transaction object:', transaction);
+                console.log('Opening iframe...');
+                handler.openIframe();
 
             } catch (paystackError) {
                 console.error('PAYSTACK ERROR:', paystackError);
+                showError('Payment failed to open: ' + paystackError.message);
                 resetButton(btn);
-                alert('Payment setup failed: ' + paystackError.message);
             }
         }
         window.submitRegistration = submitRegistration;
 
-        async function handlePaystackSuccess(reference, btn) {
+        async function handlePaystackCallback(reference, btn) {
             btn.textContent = 'Verifying Payment...';
-            console.log('Verifying payment with Cloud Function...');
+            console.log('Verifying payment...');
 
             try {
                 const verifyPaymentFn = httpsCallable(functions, 'verifyPaystackPayment');
@@ -802,11 +804,9 @@
                 console.log('Verification result:', result.data);
 
                 if (result.data.success) {
-                    // Get pending data
                     const pending = JSON.parse(localStorage.getItem('pendingRegData'));
-                    console.log('Creating registration...');
                     
-                    // Create registration
+                    console.log('Creating registration...');
                     await createRegistration(
                         pending.name,
                         pending.phone,
@@ -821,83 +821,89 @@
                     );
 
                     localStorage.removeItem('pendingRegData');
-                    console.log('Registration complete, redirecting to orders...');
+                    console.log('Done! Redirecting to orders...');
                     
-                    // Redirect to orders page
                     window.location.href = 'orders.html';
                 } else {
-                    console.error('Verification failed:', result.data);
+                    showError('Payment verification failed. Please contact support.');
                     resetButton(btn);
-                    alert('Payment verification failed. Please contact support.');
                 }
             } catch (error) {
                 console.error('VERIFICATION ERROR:', error);
+                showError('Verification failed: ' + error.message);
                 resetButton(btn);
-                alert('Verification error: ' + error.message);
             }
         }
 
-        // Helper function to create registration, order, transaction
         async function createRegistration(name, phone, idType, idNumber, location, dob, occupation, uploads, reference, paymentMethod) {
-            console.log('Creating registration record...');
+            console.log('Saving registration to Firestore...');
             const userRef = doc(db, 'users', currentUser.uid);
 
-            const regRef = await addDoc(collection(db, 'registrations'), {
-                userId: currentUser.uid,
-                applicantName: name,
-                applicantPhone: phone,
-                idType: idType,
-                idNumber: idNumber,
-                location: location,
-                dob: dob,
-                occupation: occupation,
-                selfieUrl: uploads.selfieUrl,
-                frontUrl: uploads.frontUrl,
-                backUrl: uploads.backUrl,
-                amount: 15,
-                paymentMethod: paymentMethod,
-                paymentReference: reference,
-                registrationStatus: 'pending',
-                adminApproved: false,
-                createdAt: serverTimestamp()
-            });
-            console.log('Registration created:', regRef.id);
+            try {
+                const regRef = await addDoc(collection(db, 'registrations'), {
+                    userId: currentUser.uid,
+                    applicantName: name,
+                    applicantPhone: phone,
+                    idType: idType,
+                    idNumber: idNumber,
+                    location: location,
+                    dob: dob,
+                    occupation: occupation,
+                    selfieUrl: uploads.selfieUrl,
+                    frontUrl: uploads.frontUrl,
+                    backUrl: uploads.backUrl,
+                    amount: 15,
+                    paymentMethod: paymentMethod,
+                    paymentReference: reference,
+                    registrationStatus: 'pending',
+                    adminApproved: false,
+                    createdAt: serverTimestamp()
+                });
+                console.log('Registration saved:', regRef.id);
 
-            await addDoc(collection(db, 'orders'), {
-                userId: currentUser.uid,
-                registrationId: regRef.id,
-                applicantName: name,
-                applicantPhone: phone,
-                amount: 15,
-                paymentReference: reference,
-                paymentMethod: paymentMethod,
-                registrationStatus: 'pending',
-                createdAt: serverTimestamp()
-            });
-            console.log('Order created');
+                console.log('Saving order...');
+                await addDoc(collection(db, 'orders'), {
+                    userId: currentUser.uid,
+                    registrationId: regRef.id,
+                    applicantName: name,
+                    applicantPhone: phone,
+                    amount: 15,
+                    paymentReference: reference,
+                    paymentMethod: paymentMethod,
+                    registrationStatus: 'pending',
+                    createdAt: serverTimestamp()
+                });
+                console.log('Order saved');
 
-            await addDoc(collection(db, 'transactions'), {
-                userId: currentUser.uid,
-                type: 'registration',
-                amount: 15,
-                description: 'AFA Registration',
-                reference: reference,
-                paymentMethod: paymentMethod,
-                status: 'completed',
-                processed: true,
-                completedAt: serverTimestamp(),
-                createdAt: serverTimestamp()
-            });
-            console.log('Transaction recorded');
+                console.log('Saving transaction...');
+                await addDoc(collection(db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'registration',
+                    amount: 15,
+                    description: 'AFA Registration',
+                    reference: reference,
+                    paymentMethod: paymentMethod,
+                    status: 'completed',
+                    processed: true,
+                    completedAt: serverTimestamp(),
+                    createdAt: serverTimestamp()
+                });
+                console.log('Transaction saved');
 
-            await updateDoc(userRef, {
-                amountSpent: increment(15),
-                totalRegistrations: increment(1),
-                lastUpdated: serverTimestamp()
-            });
-            console.log('User stats updated');
+                console.log('Updating user stats...');
+                await updateDoc(userRef, {
+                    amountSpent: increment(15),
+                    totalRegistrations: increment(1),
+                    lastUpdated: serverTimestamp()
+                });
+                console.log('User stats updated');
+
+            } catch (firestoreError) {
+                console.error('FIRESTORE ERROR:', firestoreError);
+                throw new Error('Failed to save registration: ' + firestoreError.message);
+            }
         }
     </script>
-    <script src="https://js.paystack.co/v2/inline.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
 </body>
 </html>
