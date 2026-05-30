@@ -528,6 +528,7 @@
                 return;
             }
             currentUser = user;
+            console.log('User logged in:', user.uid, user.email);
         });
 
         function toggleMenu() {
@@ -626,7 +627,23 @@
         }
         window.closeSelfie = closeSelfie;
 
+        // ========== TIMEOUT PROTECTION ==========
+        function resetButton(btn, text) {
+            btn.disabled = false;
+            btn.textContent = text || 'Pay GH₵ 15.00 & Submit';
+        }
+
         async function submitRegistration() {
+            console.log('=== SUBMIT REGISTRATION STARTED ===');
+            
+            // CHECK: User logged in?
+            if (!currentUser) {
+                console.error('ERROR: User not logged in');
+                alert('Please wait... You are not logged in properly. Refresh the page.');
+                return;
+            }
+            console.log('User OK:', currentUser.uid);
+
             const name = document.getElementById('appName').value.trim();
             const phone = document.getElementById('appPhone').value.trim();
             const idType = document.getElementById('idType').value;
@@ -651,83 +668,129 @@
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Uploading Files...';
+            console.log('Starting file upload...');
+
+            // Set timeout to prevent button from being stuck forever
+            const timeoutId = setTimeout(() => {
+                console.error('TIMEOUT: Upload taking too long');
+                resetButton(btn);
+                alert('Upload is taking too long. Please check your internet connection and try again.');
+            }, 30000); // 30 seconds timeout
+
+            let uploadData = null;
+            let reference = null;
 
             try {
-                // Upload files first
+                // Upload files
                 const timestamp = Date.now();
+                console.log('Uploading to path:', `registrations/${currentUser.uid}/${timestamp}_`);
+                
                 const selfieRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_selfie`);
                 const frontRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_front`);
                 const backRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_back`);
                 
+                console.log('Starting uploadBytes...');
                 await uploadBytes(selfieRef, selfie);
+                console.log('Selfie uploaded');
                 await uploadBytes(frontRef, frontFile);
+                console.log('Front uploaded');
                 await uploadBytes(backRef, backFile);
-                
+                console.log('Back uploaded');
+
+                console.log('Getting download URLs...');
                 const selfieUrl = await getDownloadURL(selfieRef);
                 const frontUrl = await getDownloadURL(frontRef);
                 const backUrl = await getDownloadURL(backRef);
+                console.log('All URLs obtained');
 
-                // Store pending data in localStorage for callback
-                const uploadData = { selfieUrl, frontUrl, backUrl };
-                const reference = 'REG_' + timestamp + '_' + Math.random().toString(36).substr(2, 9);
+                uploadData = { selfieUrl, frontUrl, backUrl };
+                reference = 'REG_' + timestamp + '_' + Math.random().toString(36).substr(2, 9);
                 
+                // Store pending data
                 localStorage.setItem('pendingRegData', JSON.stringify({
                     name, phone, idType, idNumber, location, dob, occupation,
                     uploads: uploadData,
                     reference: reference
                 }));
+                console.log('Pending data saved to localStorage');
 
-                btn.textContent = 'Opening Payment...';
+                // Clear timeout since upload succeeded
+                clearTimeout(timeoutId);
 
-                // ========== PAYSTACK V2 API ==========
-                // Initialize transaction via Cloud Function first (secure - uses secret key)
-                const initPaystackFn = httpsCallable(functions, 'initializePaystackTransaction');
-                const initResult = await initPaystackFn({
+            } catch (uploadError) {
+                clearTimeout(timeoutId);
+                console.error('UPLOAD ERROR:', uploadError);
+                console.error('Error code:', uploadError.code);
+                console.error('Error message:', uploadError.message);
+                resetButton(btn);
+                alert('File upload failed: ' + (uploadError.message || 'Unknown error. Check console for details.'));
+                return;
+            }
+
+            // ========== PAYSTACK PAYMENT ==========
+            btn.textContent = 'Opening Payment...';
+            console.log('Opening Paystack payment...');
+
+            try {
+                // Check if Paystack is loaded
+                if (typeof PaystackPop === 'undefined') {
+                    throw new Error('Paystack library not loaded. Check your internet connection.');
+                }
+                console.log('PaystackPop is available');
+
+                // Use Paystack v2 API - newTransaction()
+                const paystack = new PaystackPop();
+                console.log('Paystack instance created');
+
+                const transaction = paystack.newTransaction({
+                    key: 'pk_live_1894c11558fa750a2bf2154b77326184381f3763',
                     email: currentUser.email || localStorage.getItem('userEmail') || 'user@example.com',
                     amount: 1500, // 15 GHS in pesewas
+                    currency: 'GHS',
                     reference: reference,
+                    channels: ['mobile_money'],
                     metadata: {
+                        custom_fields: [
+                            { display_name: "Type", variable_name: "type", value: "registration" }
+                        ],
                         user_id: currentUser.uid,
-                        type: 'registration'
+                        name: name,
+                        phone: phone
+                    },
+                    onSuccess: function(transaction) {
+                        console.log('Paystack success:', transaction.reference);
+                        handlePaystackSuccess(reference, btn);
+                    },
+                    onCancel: function() {
+                        console.log('Paystack cancelled by user');
+                        resetButton(btn);
+                        alert('Payment was cancelled.');
+                    },
+                    onError: function(error) {
+                        console.error('Paystack error:', error);
+                        resetButton(btn);
+                        alert('Payment error: ' + (error.message || 'Unknown error'));
+                    },
+                    onLoad: function() {
+                        console.log('Paystack checkout loaded');
                     }
                 });
 
-                if (!initResult.data.status) {
-                    throw new Error('Failed to initialize payment');
-                }
+                console.log('Transaction object:', transaction);
 
-                const accessCode = initResult.data.data.access_code;
-
-                // Complete transaction using Paystack v2 Popup
-                const paystack = new PaystackPop();
-                
-                paystack.resumeTransaction(accessCode)
-                    .then((transaction) => {
-                        // Payment successful
-                        handlePaystackSuccess(reference);
-                    })
-                    .catch((error) => {
-                        console.error('Payment error:', error);
-                        alert('Payment failed or was cancelled.');
-                        btn.disabled = false;
-                        btn.textContent = 'Pay GH₵ 15.00 & Submit';
-                    });
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error: ' + error.message);
-                btn.disabled = false;
-                btn.textContent = 'Pay GH₵ 15.00 & Submit';
+            } catch (paystackError) {
+                console.error('PAYSTACK ERROR:', paystackError);
+                resetButton(btn);
+                alert('Payment setup failed: ' + paystackError.message);
             }
         }
         window.submitRegistration = submitRegistration;
 
-        async function handlePaystackSuccess(reference) {
-            const btn = document.getElementById('submitBtn');
+        async function handlePaystackSuccess(reference, btn) {
             btn.textContent = 'Verifying Payment...';
+            console.log('Verifying payment with Cloud Function...');
 
             try {
-                // Verify payment via Cloud Function
                 const verifyPaymentFn = httpsCallable(functions, 'verifyPaystackPayment');
                 const result = await verifyPaymentFn({
                     reference: reference,
@@ -736,11 +799,14 @@
                     userId: currentUser.uid
                 });
 
+                console.log('Verification result:', result.data);
+
                 if (result.data.success) {
-                    // Get pending data from localStorage
+                    // Get pending data
                     const pending = JSON.parse(localStorage.getItem('pendingRegData'));
+                    console.log('Creating registration...');
                     
-                    // Create registration with Paystack payment
+                    // Create registration
                     await createRegistration(
                         pending.name,
                         pending.phone,
@@ -754,29 +820,28 @@
                         'paystack'
                     );
 
-                    // Clear pending data
                     localStorage.removeItem('pendingRegData');
-
+                    console.log('Registration complete, redirecting to orders...');
+                    
                     // Redirect to orders page
                     window.location.href = 'orders.html';
                 } else {
+                    console.error('Verification failed:', result.data);
+                    resetButton(btn);
                     alert('Payment verification failed. Please contact support.');
-                    btn.disabled = false;
-                    btn.textContent = 'Pay GH₵ 15.00 & Submit';
                 }
             } catch (error) {
-                console.error('Verification error:', error);
+                console.error('VERIFICATION ERROR:', error);
+                resetButton(btn);
                 alert('Verification error: ' + error.message);
-                btn.disabled = false;
-                btn.textContent = 'Pay GH₵ 15.00 & Submit';
             }
         }
 
         // Helper function to create registration, order, transaction
         async function createRegistration(name, phone, idType, idNumber, location, dob, occupation, uploads, reference, paymentMethod) {
+            console.log('Creating registration record...');
             const userRef = doc(db, 'users', currentUser.uid);
 
-            // Create registration record
             const regRef = await addDoc(collection(db, 'registrations'), {
                 userId: currentUser.uid,
                 applicantName: name,
@@ -796,8 +861,8 @@
                 adminApproved: false,
                 createdAt: serverTimestamp()
             });
+            console.log('Registration created:', regRef.id);
 
-            // Create order
             await addDoc(collection(db, 'orders'), {
                 userId: currentUser.uid,
                 registrationId: regRef.id,
@@ -809,8 +874,8 @@
                 registrationStatus: 'pending',
                 createdAt: serverTimestamp()
             });
+            console.log('Order created');
 
-            // Record transaction
             await addDoc(collection(db, 'transactions'), {
                 userId: currentUser.uid,
                 type: 'registration',
@@ -823,13 +888,14 @@
                 completedAt: serverTimestamp(),
                 createdAt: serverTimestamp()
             });
+            console.log('Transaction recorded');
 
-            // Update user stats
             await updateDoc(userRef, {
                 amountSpent: increment(15),
                 totalRegistrations: increment(1),
                 lastUpdated: serverTimestamp()
             });
+            console.log('User stats updated');
         }
     </script>
     <script src="https://js.paystack.co/v2/inline.js"></script>
