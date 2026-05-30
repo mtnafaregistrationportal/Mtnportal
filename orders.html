@@ -378,8 +378,10 @@
                 let html = '';
                 snapshot.forEach((docSnap) => {
                     const order = docSnap.data();
-                    const status = order.adminStatus || order.status || 'pending';
+                    // Check multiple possible status fields for compatibility
+                    const status = order.adminStatus || order.registrationStatus || order.status || 'pending';
                     
+                    // Count stats
                     if (status === 'pending' || status === 'processing' || status === 'paid') pendingCount++;
                     if (status === 'approved') approvedCount++;
 
@@ -387,31 +389,33 @@
                     const statusText = status === 'approved' ? 'Approved ✅' : 
                                       status === 'rejected' ? 'Rejected ❌' :
                                       status === 'processing' ? 'Processing' : 
-                                      status === 'paid' ? 'Paid - Awaiting Approval' : 'Pending Payment';
+                                      status === 'paid' ? 'Paid - Awaiting Approval' : 'Pending Approval';
 
                     const date = order.createdAt ? new Date(order.createdAt.toDate()).toLocaleDateString('en-GB') : 'Just now';
                     
+                    // Build uploads preview from multiple possible field names
                     let uploadsHtml = '';
-                    if (order.uploads) {
-                        const thumbs = [];
-                        if (order.uploads.profilePhoto) thumbs.push({url: order.uploads.profilePhoto, label: 'Profile'});
-                        if (order.uploads.selfie) thumbs.push({url: order.uploads.selfie, label: 'Selfie'});
-                        if (order.uploads.ghanaCardFront) thumbs.push({url: order.uploads.ghanaCardFront, label: 'ID Front'});
-                        if (order.uploads.ghanaCardBack) thumbs.push({url: order.uploads.ghanaCardBack, label: 'ID Back'});
-                        
-                        if (thumbs.length > 0) {
-                            uploadsHtml = '<div class="uploads-preview">' + 
-                                thumbs.map(t => `<img src="${t.url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${t.url}')" alt="${t.label}">`).join('') + 
-                                '</div>';
-                        }
+                    const uploads = order.uploads || {};
+                    const thumbs = [];
+                    
+                    if (order.profilePhotoUrl || uploads.profilePhoto) thumbs.push({url: order.profilePhotoUrl || uploads.profilePhoto, label: 'Profile'});
+                    if (order.selfieUrl || uploads.selfie) thumbs.push({url: order.selfieUrl || uploads.selfie, label: 'Selfie'});
+                    if (order.frontUrl || uploads.ghanaCardFront) thumbs.push({url: order.frontUrl || uploads.ghanaCardFront, label: 'ID Front'});
+                    if (order.backUrl || uploads.ghanaCardBack) thumbs.push({url: order.backUrl || uploads.ghanaCardBack, label: 'ID Back'});
+                    
+                    if (thumbs.length > 0) {
+                        uploadsHtml = '<div class="uploads-preview">' + 
+                            thumbs.map(t => `<img src="${t.url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${t.url}')" alt="${t.label}">`).join('') + 
+                            '</div>';
                     }
 
+                    // Admin notes based on status
                     let adminNote = '';
                     if (status === 'rejected' && order.adminNote) {
                         adminNote = `<div class="admin-note rejected">Admin: ${order.adminNote}</div>`;
                     } else if (status === 'approved') {
-                        adminNote = `<div class="admin-note approved">Your registration has been approved!</div>`;
-                    } else if (status === 'paid') {
+                        adminNote = `<div class="admin-note approved">Order completed successfully! Your registration has been approved.</div>`;
+                    } else if (status === 'paid' || status === 'pending') {
                         adminNote = `<div class="admin-note">Payment received. Awaiting admin approval...</div>`;
                     }
 
@@ -424,11 +428,11 @@
                             <div class="order-details">
                                 <div class="detail-row">
                                     <span class="detail-label">Applicant</span>
-                                    <span class="detail-value">${order.applicantName || 'N/A'}</span>
+                                    <span class="detail-value">${order.applicantName || order.name || 'N/A'}</span>
                                 </div>
                                 <div class="detail-row">
                                     <span class="detail-label">Phone</span>
-                                    <span class="detail-value">${order.applicantPhone || 'N/A'}</span>
+                                    <span class="detail-value">${order.applicantPhone || order.phone || 'N/A'}</span>
                                 </div>
                                 <div class="detail-row">
                                     <span class="detail-label">Amount</span>
