@@ -189,12 +189,10 @@
             background-repeat: no-repeat;
             background-position: right 14px center;
         }
-        /* Fix date input on mobile */
         input[type="date"].form-input {
             min-height: 44px;
             line-height: 1.2;
         }
-        /* Fix iOS date picker */
         @supports (-webkit-touch-callout: none) {
             input[type="date"].form-input {
                 padding: 12px 14px;
@@ -285,88 +283,6 @@
             transform: translateY(0);
         }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        /* Paystack Frame - Portal Theme */
-        .paystack-frame {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--dark-bg-gradient);
-            z-index: 1000; display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 40px 20px;
-            overflow-y: auto;
-        }
-        .paystack-frame.show { display: flex; }
-        .paystack-header {
-            width: 100%; max-width: 400px;
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 32px;
-        }
-        .paystack-logo {
-            font-size: 14px; font-weight: 700;
-            color: var(--primary-yellow);
-            display: flex; align-items: center; gap: 8px;
-        }
-        .paystack-logo svg { width: 24px; height: 24px; }
-        .paystack-email {
-            font-size: 13px; color: var(--text-muted);
-            text-align: right;
-        }
-        .paystack-amount {
-            font-size: 24px; font-weight: 800;
-            color: var(--primary-yellow); text-align: right;
-        }
-        .paystack-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 32px 24px;
-            width: 100%; max-width: 400px;
-            text-align: center;
-        }
-        .paystack-card h3 {
-            color: #1a1a1a; font-size: 16px;
-            font-weight: 600; margin-bottom: 24px;
-            line-height: 1.4;
-        }
-        .momo-input {
-            width: 100%; padding: 16px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 14px; font-size: 16px;
-            margin-bottom: 12px; outline: none;
-            text-align: center; letter-spacing: 2px;
-        }
-        .momo-input:focus { border-color: var(--primary-yellow); }
-        .provider-select {
-            width: 100%; padding: 16px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 14px; font-size: 15px;
-            margin-bottom: 20px; outline: none;
-            background: white; cursor: pointer;
-        }
-        .confirm-btn {
-            width: 100%; padding: 16px;
-            background: var(--primary-yellow);
-            color: #1a1a1a; font-size: 16px;
-            font-weight: 700; border: none;
-            border-radius: 14px; cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .confirm-btn:hover { opacity: 0.9; }
-        .confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .cancel-btn {
-            margin-top: 20px; padding: 12px 24px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white; font-size: 14px;
-            border-radius: 12px; cursor: pointer;
-            transition: background 0.2s;
-        }
-        .cancel-btn:hover { background: rgba(255,255,255,0.2); }
-        .secured {
-            margin-top: 32px; font-size: 12px;
-            color: var(--text-muted); display: flex;
-            align-items: center; justify-content: center; gap: 6px;
-        }
         /* Selfie modal */
         .selfie-modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -610,40 +526,10 @@
         </div>
     </div>
 
-    <!-- Paystack Checkout Frame -->
-    <div class="paystack-frame" id="paystackFrame">
-        <div class="paystack-header">
-            <div class="paystack-logo">
-                <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#FFD700"/><path d="M7 12h10M12 7v10" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/></svg>
-                MTN AFA Portal
-            </div>
-            <div>
-                <div class="paystack-email" id="payEmail">user@example.com</div>
-                <div class="paystack-amount">Pay GHS 15.00</div>
-            </div>
-        </div>
-        <div class="paystack-card">
-            <h3>Enter your mobile money number and provider to start the payment</h3>
-            <input type="tel" class="momo-input" id="momoNumber" placeholder="050 000 0000" maxlength="10">
-            <select class="provider-select" id="momoProvider">
-                <option value="">Choose Provider</option>
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="vodafone">Vodafone Cash</option>
-                <option value="airteltigo">AirtelTigo Money</option>
-            </select>
-            <button class="confirm-btn" id="confirmBtn" onclick="confirmRegPayment()">Confirm</button>
-        </div>
-        <button class="cancel-btn" onclick="cancelRegPayment()">&times; Cancel Payment</button>
-        <div class="secured">
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
-            Secured by paystack
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, getDoc, updateDoc, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, updateDoc, serverTimestamp, collection, addDoc, increment } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js";
 
@@ -674,8 +560,6 @@
                 return;
             }
             currentUser = user;
-            const email = user.email || localStorage.getItem('userEmail') || 'user@example.com';
-            document.getElementById('payEmail').textContent = email;
 
             onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
                 if (docSnap.exists()) {
@@ -805,157 +689,23 @@
             if (!name || !phone || !idNumber || !location || !dob || !occupation) {
                 alert('Please fill all required fields.'); return;
             }
-            if (phone.length !== 10 || !/^\\d{10}$/.test(phone)) {
+            if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
                 alert('Phone number must be exactly 10 digits.'); return;
             }
             if (!profilePhoto || !selfie || !frontFile || !backFile) {
                 alert('Please upload all required documents (Profile Photo, Selfie, Ghana Card Front & Back).'); return;
             }
 
-            // Check wallet balance first
-            if (currentWallet >= 15) {
-                // Auto-deduct from wallet
-                const btn = document.getElementById('submitBtn');
-                btn.disabled = true; btn.textContent = 'Processing...';
-                
-                try {
-                    const reference = 'WALLET_DEDUCT_' + Date.now();
-                    
-                    // Upload files
-                    const profileRef = ref(storage, `registrations/${currentUser.uid}/${reference}_profile`);
-                    const selfieRef = ref(storage, `registrations/${currentUser.uid}/${reference}_selfie`);
-                    const frontRef = ref(storage, `registrations/${currentUser.uid}/${reference}_front`);
-                    const backRef = ref(storage, `registrations/${currentUser.uid}/${reference}_back`);
-                    
-                    await uploadBytes(profileRef, profilePhoto);
-                    await uploadBytes(selfieRef, selfie);
-                    await uploadBytes(frontRef, frontFile);
-                    await uploadBytes(backRef, backFile);
-                    
-                    const profileUrl = await getDownloadURL(profileRef);
-                    const selfieUrl = await getDownloadURL(selfieRef);
-                    const frontUrl = await getDownloadURL(frontRef);
-                    const backUrl = await getDownloadURL(backRef);
-
-                    // Deduct wallet and create order
-                    const userRef = doc(db, 'users', currentUser.uid);
-                    await updateDoc(userRef, {
-                        walletBalance: currentWallet - 15,
-                        amountSpent: (currentWallet >= 15 ? 15 : 0) + (currentWallet - 15 < 0 ? 0 : 0)
-                    });
-
-                    // Create registration record
-                    const regRef = await addDoc(collection(db, 'registrations'), {
-                        userId: currentUser.uid,
-                        applicantName: name,
-                        applicantPhone: phone,
-                        idType, idNumber, location, dob, occupation,
-                        profilePhotoUrl: profileUrl,
-                        selfieUrl: selfieUrl,
-                        frontUrl, backUrl,
-                        amount: 15,
-                        paymentMethod: 'wallet',
-                        paymentReference: reference,
-                        registrationStatus: 'pending',
-                        adminApproved: false,
-                        createdAt: serverTimestamp()
-                    });
-
-                    // Create order
-                    await addDoc(collection(db, 'orders'), {
-                        userId: currentUser.uid,
-                        registrationId: regRef.id,
-                        applicantName: name,
-                        applicantPhone: phone,
-                        amount: 15,
-                        paymentReference: reference,
-                        paymentMethod: 'wallet',
-                        registrationStatus: 'pending',
-                        createdAt: serverTimestamp()
-                    });
-
-                    // Update user stats
-                    await updateDoc(userRef, {
-                        totalRegistrations: (await getDoc(userRef)).data().totalRegistrations + 1 || 1
-                    });
-
-                    alert('Registration submitted successfully! Your order is being processed.');
-                    window.location.href = 'orders.html';
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                    btn.disabled = false; btn.textContent = 'Submit Registration';
-                }
-            } else {
-                // Insufficient wallet - show Paystack
-                localStorage.setItem('pendingRegistration', JSON.stringify({
-                    name, phone, idType, idNumber, location, dob, occupation
-                }));
-                document.getElementById('paystackFrame').classList.add('show');
-            }
-        }
-        window.submitRegistration = submitRegistration;
-
-        async function confirmRegPayment() {
-            const momoNumber = document.getElementById('momoNumber').value.trim();
-            const provider = document.getElementById('momoProvider').value;
-            const btn = document.getElementById('confirmBtn');
-
-            if (!momoNumber || momoNumber.length !== 10) {
-                alert('Please enter a valid 10-digit mobile money number.'); return;
-            }
-            if (!provider) {
-                alert('Please select a provider.'); return;
-            }
-
+            const btn = document.getElementById('submitBtn');
             btn.disabled = true; btn.textContent = 'Processing...';
 
-            const reference = 'REG_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
             try {
-                const handler = PaystackPop.setup({
-                    key: 'pk_live_1894c11558fa750a2bf2154b77326184381f3763',
-                    email: currentUser.email || localStorage.getItem('userEmail') || 'user@example.com',
-                    amount: 1500,
-                    currency: 'GHS',
-                    ref: reference,
-                    channels: ['mobile_money'],
-                    metadata: {
-                        custom_fields: [
-                            { display_name: "Phone Number", variable_name: "phone", value: momoNumber },
-                            { display_name: "Provider", variable_name: "provider", value: provider },
-                            { display_name: "Type", variable_name: "type", value: "registration" }
-                        ]
-                    },
-                    callback: function(response) {
-                        verifyPayment(response.reference);
-                    },
-                    onClose: function() {
-                        btn.disabled = false; btn.textContent = 'Confirm';
-                        alert('Payment was not completed.');
-                    }
-                });
-                handler.openIframe();
-            } catch (error) {
-                alert('Payment error: ' + error.message);
-                btn.disabled = false; btn.textContent = 'Confirm';
-            }
-        }
-        window.confirmRegPayment = confirmRegPayment;
-
-        async function verifyPayment(reference) {
-            const btn = document.getElementById('confirmBtn');
-            try {
-                const pending = JSON.parse(localStorage.getItem('pendingRegistration'));
-                const profilePhoto = document.getElementById('profilePhotoFile').files[0];
-                const selfie = document.getElementById('selfieFile').files[0];
-                const frontFile = document.getElementById('frontFile').files[0];
-                const backFile = document.getElementById('backFile').files[0];
-
-                // Upload files
-                const profileRef = ref(storage, `registrations/${currentUser.uid}/${reference}_profile`);
-                const selfieRef = ref(storage, `registrations/${currentUser.uid}/${reference}_selfie`);
-                const frontRef = ref(storage, `registrations/${currentUser.uid}/${reference}_front`);
-                const backRef = ref(storage, `registrations/${currentUser.uid}/${reference}_back`);
+                // Upload files first
+                const timestamp = Date.now();
+                const profileRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_profile`);
+                const selfieRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_selfie`);
+                const frontRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_front`);
+                const backRef = ref(storage, `registrations/${currentUser.uid}/${timestamp}_back`);
                 
                 await uploadBytes(profileRef, profilePhoto);
                 await uploadBytes(selfieRef, selfie);
@@ -967,51 +717,190 @@
                 const frontUrl = await getDownloadURL(frontRef);
                 const backUrl = await getDownloadURL(backRef);
 
-                // Verify via Cloud Function
+                // Store file URLs for later use
+                const uploadData = {
+                    profilePhotoUrl: profileUrl,
+                    selfieUrl: selfieUrl,
+                    frontUrl: frontUrl,
+                    backUrl: backUrl
+                };
+
+                // Check wallet balance
+                if (currentWallet >= 15) {
+                    // WALLET PAYMENT PATH
+                    const reference = 'WALLET_DEDUCT_' + timestamp;
+                    
+                    // Deduct wallet
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    await updateDoc(userRef, {
+                        walletBalance: increment(-15),
+                        amountSpent: increment(15)
+                    });
+
+                    // Create registration
+                    await createRegistration(name, phone, idType, idNumber, location, dob, occupation, uploadData, reference, 'wallet');
+
+                    alert('Registration submitted successfully! Your order is being processed.');
+                    window.location.href = 'orders.html';
+                } else {
+                    // PAYSTACK PAYMENT PATH
+                    const reference = 'REG_' + timestamp + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // Store pending data in localStorage for callback
+                    localStorage.setItem('pendingRegData', JSON.stringify({
+                        name, phone, idType, idNumber, location, dob, occupation,
+                        uploads: uploadData,
+                        reference: reference
+                    }));
+
+                    // Open Paystack popup directly
+                    const handler = PaystackPop.setup({
+                        key: 'pk_live_1894c11558fa750a2bf2154b77326184381f3763',
+                        email: currentUser.email || localStorage.getItem('userEmail') || 'user@example.com',
+                        amount: 1500,
+                        currency: 'GHS',
+                        ref: reference,
+                        channels: ['mobile_money'],
+                        metadata: {
+                            custom_fields: [
+                                { display_name: "Type", variable_name: "type", value: "registration" }
+                            ]
+                        },
+                        callback: function(response) {
+                            handlePaystackCallback(response.reference);
+                        },
+                        onClose: function() {
+                            btn.disabled = false;
+                            btn.textContent = 'Submit Registration';
+                            alert('Payment was not completed.');
+                        }
+                    });
+                    handler.openIframe();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Submit Registration';
+            }
+        }
+        window.submitRegistration = submitRegistration;
+
+        async function handlePaystackCallback(reference) {
+            const btn = document.getElementById('submitBtn');
+            try {
+                // Verify payment via Cloud Function
                 const verifyPaymentFn = httpsCallable(functions, 'verifyPaystackPayment');
                 const result = await verifyPaymentFn({
                     reference: reference,
                     amount: 15.00,
                     type: 'registration',
-                    userId: currentUser.uid,
-                    metadata: {
-                        applicantName: pending.name,
-                        applicantPhone: pending.phone,
-                        applicantDetails: {
-                            idType: pending.idType,
-                            idNumber: pending.idNumber,
-                            location: pending.location,
-                            dob: pending.dob,
-                            occupation: pending.occupation,
-                            profilePhotoUrl: profileUrl,
-                            selfieUrl: selfieUrl,
-                            frontUrl: frontUrl,
-                            backUrl: backUrl
-                        }
-                    }
+                    userId: currentUser.uid
                 });
 
                 if (result.data.success) {
+                    // Get pending data from localStorage
+                    const pending = JSON.parse(localStorage.getItem('pendingRegData'));
+                    
+                    // Create registration with Paystack payment
+                    await createRegistration(
+                        pending.name,
+                        pending.phone,
+                        pending.idType,
+                        pending.idNumber,
+                        pending.location,
+                        pending.dob,
+                        pending.occupation,
+                        pending.uploads,
+                        pending.reference,
+                        'paystack'
+                    );
+
+                    // Clear pending data
+                    localStorage.removeItem('pendingRegData');
+
                     alert('Registration submitted successfully! Your order is being processed.');
-                    localStorage.removeItem('pendingRegistration');
-                    document.getElementById('paystackFrame').classList.remove('show');
                     window.location.href = 'orders.html';
+                } else {
+                    alert('Payment verification failed. Please contact support.');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Registration';
                 }
             } catch (error) {
                 alert('Verification error: ' + error.message);
-                btn.disabled = false; btn.textContent = 'Confirm';
+                btn.disabled = false;
+                btn.textContent = 'Submit Registration';
             }
         }
-        window.verifyPayment = verifyPayment;
 
-        function cancelRegPayment() {
-            document.getElementById('paystackFrame').classList.remove('show');
-            document.getElementById('momoNumber').value = '';
-            document.getElementById('momoProvider').value = '';
-            document.getElementById('confirmBtn').disabled = false;
-            document.getElementById('confirmBtn').textContent = 'Confirm';
+        // Helper function to create registration, order, transaction, and update stats
+        async function createRegistration(name, phone, idType, idNumber, location, dob, occupation, uploads, reference, paymentMethod) {
+            const userRef = doc(db, 'users', currentUser.uid);
+
+            // Create registration record
+            const regRef = await addDoc(collection(db, 'registrations'), {
+                userId: currentUser.uid,
+                applicantName: name,
+                applicantPhone: phone,
+                idType: idType,
+                idNumber: idNumber,
+                location: location,
+                dob: dob,
+                occupation: occupation,
+                profilePhotoUrl: uploads.profilePhotoUrl,
+                selfieUrl: uploads.selfieUrl,
+                frontUrl: uploads.frontUrl,
+                backUrl: uploads.backUrl,
+                amount: 15,
+                paymentMethod: paymentMethod,
+                paymentReference: reference,
+                registrationStatus: 'pending',
+                adminApproved: false,
+                createdAt: serverTimestamp()
+            });
+
+            // Create order
+            await addDoc(collection(db, 'orders'), {
+                userId: currentUser.uid,
+                registrationId: regRef.id,
+                applicantName: name,
+                applicantPhone: phone,
+                amount: 15,
+                paymentReference: reference,
+                paymentMethod: paymentMethod,
+                registrationStatus: 'pending',
+                createdAt: serverTimestamp()
+            });
+
+            // Record transaction for user history
+            await addDoc(collection(db, 'transactions'), {
+                userId: currentUser.uid,
+                type: 'debit',
+                amount: 15,
+                description: 'AFA Registration',
+                reference: reference,
+                paymentMethod: paymentMethod,
+                status: 'completed',
+                createdAt: serverTimestamp()
+            });
+
+            // Record for admin backend
+            await addDoc(collection(db, 'admin_transactions'), {
+                userId: currentUser.uid,
+                userEmail: currentUser.email || localStorage.getItem('userEmail'),
+                type: 'registration',
+                amount: 15,
+                description: 'AFA Registration',
+                reference: reference,
+                paymentMethod: paymentMethod,
+                status: 'completed',
+                createdAt: serverTimestamp()
+            });
+
+            // Update user stats
+            await updateDoc(userRef, {
+                totalRegistrations: increment(1)
+            });
         }
-        window.cancelRegPayment = cancelRegPayment;
     </script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
 </body>
