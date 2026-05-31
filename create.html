@@ -112,11 +112,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" class="form-input" placeholder="e.g. johndoe">
-                </div>
-
-                <div class="form-group">
                     <label>Phone Number</label>
                     <input type="tel" id="phoneNumber" class="form-input" placeholder="0240000000" maxlength="10">
                     <p class="error-msg" id="phoneError">Phone number must be exactly 10 digits.</p>
@@ -146,16 +141,15 @@
         </div>
     </div>
 
-    <script type="module">
-        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
-        const SUPABASE_URL = "https://iqzjpdynmnucxswbrkho.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ";
-
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function togglePassword(inputId, btn) {
-            const input = document.getElementById(inputId);
+            var input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = 'Hide';
@@ -164,10 +158,9 @@
                 btn.textContent = 'Show';
             }
         }
-        window.togglePassword = togglePassword;
 
         function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.com$/;
+            var re = /^[^\s@]+@[^\s@]+\.com$/;
             return re.test(email);
         }
 
@@ -176,26 +169,28 @@
         }
 
         function showError(id, show) {
-            const el = document.getElementById(id);
-            const input = el.previousElementSibling;
+            var el = document.getElementById(id);
+            var input = el.previousElementSibling;
+            while (input && input.tagName !== 'INPUT' && input.tagName !== 'DIV') {
+                input = input.previousElementSibling;
+            }
             if (show) {
                 el.classList.add('show');
-                if (input && input.classList) input.classList.add('error');
+                if (input) input.classList.add('error');
             } else {
                 el.classList.remove('show');
-                if (input && input.classList) input.classList.remove('error');
+                if (input) input.classList.remove('error');
             }
         }
 
         async function handleCreateAccount() {
-            const name = document.getElementById('fullName').value.trim();
-            const username = document.getElementById('username').value.trim();
-            const phone = document.getElementById('phoneNumber').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('createPassword').value;
-            const btn = document.getElementById('createBtn');
+            var name = document.getElementById('fullName').value.trim();
+            var phone = document.getElementById('phoneNumber').value.trim();
+            var email = document.getElementById('email').value.trim();
+            var password = document.getElementById('createPassword').value;
+            var btn = document.getElementById('createBtn');
 
-            let hasError = false;
+            var hasError = false;
 
             if (!name) { showError('nameError', true); hasError = true; } else { showError('nameError', false); }
             if (!validatePhone(phone)) { showError('phoneError', true); hasError = true; } else { showError('phoneError', false); }
@@ -208,7 +203,8 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                const { data: authData, error: authError } = await supabase.auth.signUp({
+                // Step 1: Sign up with Supabase Auth
+                var authResult = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -219,39 +215,45 @@
                     }
                 });
 
-                if (authError) throw authError;
+                if (authResult.error) throw authResult.error;
 
-                const user = authData.user;
+                var user = authResult.data.user;
 
-                const { error: profileError } = await supabase
+                if (!user) {
+                    throw new Error('User creation failed. Please try again.');
+                }
+
+                // Step 2: Insert into users table (no trigger, we do it manually)
+                var profileResult = await supabase
                     .from('users')
                     .insert({
                         id: user.id,
                         name: name,
-                        username: username || '',
                         email: email,
                         phone_number: phone,
-                        wallet_balance: 0,
-                        amount_spent: 0,
-                        total_registrations: 0,
                         status: 'active'
                     });
 
-                if (profileError) throw profileError;
+                if (profileResult.error) {
+                    // If insert fails, still continue since auth user was created
+                    console.error('Profile insert error:', profileResult.error);
+                }
 
+                // Step 3: Store in localStorage and redirect
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
                 localStorage.setItem('userPhone', phone);
 
                 window.location.href = 'dashboard.html';
+
             } catch (error) {
+                console.error('Signup error:', error);
                 alert('Error: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
             }
         }
-        window.handleCreateAccount = handleCreateAccount;
     </script>
 </body>
 </html>
