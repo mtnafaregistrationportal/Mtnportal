@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MTN AFA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-bg: #0a1628;
+            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-white: #ffffff;
+            --text-light: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg-gradient);
+            min-height: 100vh;
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 40px 28px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-card h2 {
+            color: #1a1a1a;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .login-card p {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .admin-badge {
+            display: inline-block;
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #1a1a1a;
+            background: #fafafa;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--primary-yellow);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.15);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .error-text {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            display: none;
+        }
+        .error-text.show { display: block; }
+        .success-text {
+            color: #4CAF50;
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            display: none;
+        }
+        .success-text.show { display: block; }
+
+        /* Dashboard */
+        .dashboard-screen {
+            display: none;
+            min-height: 100vh;
+        }
+        .dashboard-screen.show { display: block; }
+
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 22, 40, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-header .logo-icon {
+            width: 36px; height: 36px;
+            background: var(--primary-yellow);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-weight: 800;
+            font-size: 12px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn-header {
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-white);
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-header:hover {
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            border-color: var(--primary-yellow);
+        }
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .admin-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .stat-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 215, 0, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .stat-icon svg {
+            width: 20px; height: 20px;
+            color: var(--primary-yellow);
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-yellow);
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .tab {
+            padding: 10px 18px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            border-color: var(--primary-yellow);
+        }
+        .tab:hover:not(.active) {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-white);
+            font-size: 14px;
+            outline: none;
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-btn {
+            padding: 12px 20px;
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Data Tables / Cards */
+        .data-section {
+            display: none;
+        }
+        .data-section.active {
+            display: block;
+        }
+
+        .user-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-yellow);
+            background: rgba(255,255,255,0.1);
+        }
+        .user-avatar-placeholder {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--primary-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-yellow);
+        }
+        .user-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .user-email {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .user-phone {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
+        .badge-approved { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .badge-rejected { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+        .badge-paid { background: rgba(255, 215, 0, 0.2); color: var(--primary-yellow); }
+        .badge-suspended { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
+
+        .user-details {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+            font-size: 13px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-item-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .detail-item-value {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .uploads-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .upload-thumb {
+            width: 60px; height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-thumb:hover {
+            border-color: var(--primary-yellow);
+            transform: scale(1.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-approve {
+            flex: 1;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 100px;
+        }
+        .btn-reject {
+            flex: 1;
+            padding: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 100px;
+        }
+        .btn-view {
+            padding: 10px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-white);
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-suspend {
+            padding: 10px 16px;
+            background: rgba(156, 39, 176, 0.2);
+            border: 1px solid rgba(156, 39, 176, 0.4);
+            color: #9C27B0;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-delete {
+            padding: 10px 16px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .admin-note-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-white);
+            font-size: 13px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+        .admin-note-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Payments Table */
+        .payment-row {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .payment-info {
+            flex: 1;
+        }
+        .payment-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-yellow);
+        }
+        .payment-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Storage Manager */
+        .storage-bar {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            height: 24px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-yellow), #ff9800);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .storage-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .file-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .file-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .btn-delete-file {
+            padding: 6px 12px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Analytics */
+        .chart-placeholder {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-bar {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 150px;
+            margin-top: 20px;
+        }
+        .chart-bar-item {
+            flex: 1;
+            background: var(--primary-yellow);
+            border-radius: 6px 6px 0 0;
+            min-width: 30px;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+        .chart-bar-item::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .chart-bar-item::before {
+            content: attr(data-value);
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary-yellow);
+        }
+
+        /* Image Modal */
+        .img-modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .img-modal.show { display: flex; }
+        .img-modal img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 12px;
+        }
+        .img-modal-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 22, 40, 0.9);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loading-overlay.show { display: flex; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(255,215,0,0.3);
+            border-top-color: var(--primary-yellow);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            max-width: 320px;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast-success { background: #4CAF50; color: white; }
+        .toast-error { background: #e74c3c; color: white; }
+
+        @media (min-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .admin-content { padding: 40px 24px; }
+            .detail-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="admin-badge">🔒 ADMIN ACCESS ONLY</div>
+            <h2>Admin Login</h2>
+            <p>Sign in with your admin credentials</p>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="adminEmail" class="form-input" placeholder="admin@mtnportal.com" value="danielekutor441@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="adminPassword" class="form-input" placeholder="Enter password">
+            </div>
+            <button class="btn-submit" id="adminLoginBtn" onclick="adminLogin()">Sign In</button>
+            <p class="error-text" id="loginError">Invalid credentials</p>
+            <p class="success-text" id="loginSuccess">Login successful!</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div class="dashboard-screen" id="dashboardScreen">
+        <header class="admin-header">
+            <div class="logo">
+                <div class="logo-icon">MTN</div>
+                <h1>Admin Dashboard</h1>
+            </div>
+            <div class="header-actions">
+                <a href="index.html" class="btn-header">🏠 Home</a>
+                <button class="btn-logout" onclick="adminLogout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <div class="stat-value" id="statTotalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </div>
+                    <div class="stat-value" id="statTotalReg">0</div>
+                    <div class="stat-label">Registrations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="stat-value" id="statRevenue">0</div>
+                    <div class="stat-label">Revenue (GHS)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pending Approval</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('users')">👥 Users</div>
+                <div class="tab" onclick="switchTab('registrations')">📝 Registrations</div>
+                <div class="tab" onclick="switchTab('payments')">💰 Payments</div>
+                <div class="tab" onclick="switchTab('wallets')">👛 Wallets</div>
+                <div class="tab" onclick="switchTab('storage')">☁️ Storage</div>
+                <div class="tab" onclick="switchTab('analytics')">📊 Analytics</div>
+            </div>
+
+            <!-- Search -->
+            <div class="search-bar" id="searchBar">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, phone..." onkeyup="handleSearch()">
+                <button class="search-btn" onclick="handleSearch()">Search</button>
+            </div>
+
+            <!-- Users Section -->
+            <div class="data-section active" id="section-users">
+                <div id="usersList"></div>
+            </div>
+
+            <!-- Registrations Section -->
+            <div class="data-section" id="section-registrations">
+                <div id="registrationsList"></div>
+            </div>
+
+            <!-- Payments Section -->
+            <div class="data-section" id="section-payments">
+                <div id="paymentsList"></div>
+            </div>
+
+            <!-- Wallets Section -->
+            <div class="data-section" id="section-wallets">
+                <div id="walletsList"></div>
+            </div>
+
+            <!-- Storage Section -->
+            <div class="data-section" id="section-storage">
+                <div class="stat-card" style="margin-bottom: 20px;">
+                    <div class="storage-text">
+                        <span>Storage Used</span>
+                        <span id="storageUsedText">0 MB / 1 GB</span>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="file-list" id="storageFileList"></div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="data-section" id="section-analytics">
+                <div class="chart-placeholder">
+                    <h3 style="color: var(--text-white); font-size: 16px; margin-bottom: 8px;">Registration Trends</h3>
+                    <p style="color: var(--text-muted); font-size: 13px;">Daily registrations over the last 7 days</p>
+                    <div class="chart-bar" id="analyticsChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="img-modal" id="imgModal" onclick="closeImgModal()">
+        <button class="img-modal-close" onclick="closeImgModal()">&times;</button>
+        <img src="" alt="Preview" id="modalImg">
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================
+        // SUPABASE CONFIGURATION
+        // ============================================================
+        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Edge Function base URL
+        const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1`;
+
+        let currentAdmin = null;
+        let allUsers = [];
+        let allRegistrations = [];
+        let allPayments = [];
+        let realtimeChannels = [];
+
+        // ============================================================
+        // AUTH & LOGIN
+        // ============================================================
+        async function adminLogin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const btn = document.getElementById('adminLoginBtn');
+            const errorEl = document.getElementById('loginError');
+            const successEl = document.getElementById('loginSuccess');
+
+            if (!email || !password) {
+                errorEl.textContent = 'Please enter email and password';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+
+            try {
+                // Sign in with Supabase Auth
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (authError) throw authError;
+
+                const user = authData.user;
+
+                // Verify admin status from admins table
+                const { data: adminData, error: adminError } = await supabase
+                    .from('admins')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (adminError || !adminData) {
+                    await supabase.auth.signOut();
+                    throw new Error('Access denied. Not an admin account.');
+                }
+
+                if (adminData.role !== 'admin') {
+                    await supabase.auth.signOut();
+                    throw new Error('Access denied. Insufficient privileges.');
+                }
+
+                currentAdmin = user;
+                successEl.textContent = 'Login successful! Loading...';
+                successEl.classList.add('show');
+
+                // Store session
+                localStorage.setItem('adminSession', JSON.stringify({
+                    user_id: user.id,
+                    email: user.email,
+                    role: adminData.role
+                }));
+
+                setTimeout(() => {
+                    showDashboard();
+                    loadAllData();
+                }, 1000);
+
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+                errorEl.textContent = error.message;
+                errorEl.classList.add('show');
+            }
+        }
+
+        // Check existing session on load
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                const { data: adminData } = await supabase
+                    .from('admins')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .single();
+
+                if (adminData && adminData.role === 'admin') {
+                    currentAdmin = session.user;
+                    showDashboard();
+                    loadAllData();
+                    return true;
+                } else {
+                    await supabase.auth.signOut();
+                }
+            }
+            return false;
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').classList.add('show');
+        }
+
+        async function adminLogout() {
+            // Unsubscribe all realtime channels
+            realtimeChannels.forEach(channel => channel.unsubscribe());
+            realtimeChannels = [];
+            
+            await supabase.auth.signOut();
+            localStorage.removeItem('adminSession');
+            window.location.reload();
+        }
+
+        // ============================================================
+        // DATA LOADING & REALTIME
+        // ============================================================
+        async function loadAllData() {
+            await loadUsers();
+            await loadRegistrations();
+            await loadPayments();
+            await loadStorageData();
+            setupRealtimeSubscriptions();
+        }
+
+        async function loadUsers() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading users:', error);
+                return;
+            }
+
+            allUsers = data || [];
+            document.getElementById('statTotalUsers').textContent = allUsers.length;
+            renderUsers();
+            updateStats();
+        }
+
+        async function loadRegistrations() {
+            const { data, error } = await supabase
+                .from('registrations')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading registrations:', error);
+                return;
+            }
+
+            allRegistrations = data || [];
+            document.getElementById('statTotalReg').textContent = allRegistrations.length;
+            renderRegistrations();
+            updateStats();
+            updateAnalytics();
+        }
+
+        async function loadPayments() {
+            const { data, error } = await supabase
+                .from('transactions')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading payments:', error);
+                return;
+            }
+
+            allPayments = data || [];
+            let revenue = 0;
+            allPayments.forEach(p => {
+                if (p.status === 'success') revenue += (p.amount || 0);
+            });
+            document.getElementById('statRevenue').textContent = revenue.toFixed(2);
+            renderPayments();
+            updateStats();
+        }
+
+        function setupRealtimeSubscriptions() {
+            // Realtime users
+            const usersChannel = supabase
+                .channel('users_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload) => {
+                    loadUsers();
+                })
+                .subscribe();
+            realtimeChannels.push(usersChannel);
+
+            // Realtime registrations
+            const regChannel = supabase
+                .channel('registrations_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'registrations' }, (payload) => {
+                    loadRegistrations();
+                })
+                .subscribe();
+            realtimeChannels.push(regChannel);
+
+            // Realtime transactions
+            const transChannel = supabase
+                .channel('transactions_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
+                    loadPayments();
+                })
+                .subscribe();
+            realtimeChannels.push(transChannel);
+        }
+
+        function updateStats() {
+            const pending = allRegistrations.filter(r => 
+                (r.status === 'pending' || r.status === 'paid' || !r.status)
+            ).length;
+            document.getElementById('statPending').textContent = pending;
+        }
+
+        // ============================================================
+        // RENDER FUNCTIONS
+        // ============================================================
+        function renderUsers(filter = '') {
+            const container = document.getElementById('usersList');
+            let users = allUsers;
+            
+            if (filter) {
+                const f = filter.toLowerCase();
+                users = users.filter(u => 
+                    (u.name || '').toLowerCase().includes(f) ||
+                    (u.email || '').toLowerCase().includes(f) ||
+                    (u.phone_number || '').includes(f)
+                );
+            }
+
+            if (users.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No users found</p>';
+                return;
+            }
+
+            container.innerHTML = users.map(u => {
+                const initials = (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = u.profile_picture 
+                    ? `<img src="${u.profile_picture}" class="user-avatar" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                    : '';
+                const placeholder = `<div class="user-avatar-placeholder" style="${u.profile_picture ? 'display:none' : ''}">${initials}</div>`;
+                
+                const isSuspended = u.status === 'suspended';
+                
+                return `
+                    <div class="user-card" data-user-id="${u.id}">
+                        <div class="user-card-header">
+                            <div class="user-info">
+                                ${avatar}${placeholder}
+                                <div>
+                                    <div class="user-name">${u.name || 'Unknown'}</div>
+                                    <div class="user-email">${u.email || 'No email'}</div>
+                                    <div class="user-phone">${u.phone_number || 'No phone'}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${isSuspended ? 'badge-suspended' : (u.is_active ? 'badge-approved' : 'badge-pending')}">
+                                ${isSuspended ? 'Suspended' : (u.is_active ? 'Active' : 'Inactive')}
+                            </span>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-item-label">Wallet</span>
+                                <span class="detail-item-value">GH₵ ${(u.wallet_balance || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Spent</span>
+                                <span class="detail-item-value">GH₵ ${(u.amount_spent || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Registrations</span>
+                                <span class="detail-item-value">${u.total_registrations || 0}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Joined</span>
+                                <span class="detail-item-value">${u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons" style="margin-top:12px;">
+                            ${isSuspended 
+                                ? `<button class="btn-approve" onclick="enableUser('${u.id}')">✓ Enable</button>`
+                                : `<button class="btn-suspend" onclick="suspendUser('${u.id}')">⏸ Suspend</button>`
+                            }
+                            <button class="btn-delete" onclick="deleteUser('${u.id}')">🗑 Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRegistrations(filter = '') {
+            const container = document.getElementById('registrationsList');
+            let regs = allRegistrations;
+            
+            if (filter) {
+                const f = filter.toLowerCase();
+                regs = regs.filter(r => 
+                    (r.applicant_name || '').toLowerCase().includes(f) ||
+                    (r.applicant_phone || '').includes(f)
+                );
+            }
+
+            if (regs.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No registrations found</p>';
+                return;
+            }
+
+            container.innerHTML = regs.map(r => {
+                const status = r.status || 'pending';
+                const statusClass = 'badge-' + status;
+                const statusText = status === 'approved' ? 'Approved' : 
+                                  status === 'rejected' ? 'Rejected' : 
+                                  status === 'paid' ? 'Paid - Pending' : 'Pending';
+
+                let uploadsHtml = '';
+                if (r.uploads) {
+                    const thumbs = [];
+                    if (r.uploads.profile_photo) thumbs.push(r.uploads.profile_photo);
+                    if (r.uploads.selfie) thumbs.push(r.uploads.selfie);
+                    if (r.uploads.ghana_card_front) thumbs.push(r.uploads.ghana_card_front);
+                    if (r.uploads.ghana_card_back) thumbs.push(r.uploads.ghana_card_back);
+                    
+                    if (thumbs.length > 0) {
+                        uploadsHtml = '<div class="uploads-row">' + 
+                            thumbs.map(url => `<img src="${url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${url}')" alt="Upload" onerror="this.style.display='none'">`).join('') + 
+                            '</div>';
+                    }
+                }
+
+                const showActions = status !== 'approved' && status !== 'rejected';
+                
+                return `
+                    <div class="user-card" data-reg-id="${r.id}">
+                        <div class="user-card-header">
+                            <div class="user-info">
+                                <div class="user-avatar-placeholder">${(r.applicant_name || 'U')[0]}</div>
+                                <div>
+                                    <div class="user-name">${r.applicant_name || 'Unknown'}</div>
+                                    <div class="user-email">${r.applicant_phone || 'No phone'}</div>
+                                    <div class="user-phone">${r.detected_network || 'Unknown network'}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-item-label">Amount</span>
+                                <span class="detail-item-value">GH₵ ${(r.amount || 15).toFixed(2)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Payment Ref</span>
+                                <span class="detail-item-value" style="font-size:11px;">${r.payment_reference || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Date</span>
+                                <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">User ID</span>
+                                <span class="detail-item-value" style="font-size:11px;">${r.user_id ? r.user_id.substring(0, 8) : 'N/A'}...</span>
+                            </div>
+                        </div>
+                        ${uploadsHtml}
+                        ${showActions ? `
+                            <input type="text" class="admin-note-input" id="note-${r.id}" placeholder="Add note (optional)">
+                            <div class="action-buttons">
+                                <button class="btn-approve" onclick="approveRegistration('${r.id}')">✓ Approve</button>
+                                <button class="btn-reject" onclick="rejectRegistration('${r.id}')">✕ Reject</button>
+                            </div>
+                        ` : r.admin_note ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">Note: ${r.admin_note}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPayments(filter = '') {
+            const container = document.getElementById('paymentsList');
+            let payments = allPayments;
+            
+            if (filter) {
+                const f = filter.toLowerCase();
+                payments = payments.filter(p => 
+                    (p.email || '').toLowerCase().includes(f) ||
+                    (p.reference || '').includes(f)
+                );
+            }
+
+            if (payments.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No payments found</p>';
+                return;
+            }
+
+            container.innerHTML = payments.map(p => `
+                <div class="payment-row">
+                    <div class="payment-info">
+                        <div class="payment-amount">GH₵ ${(p.amount || 0).toFixed(2)}</div>
+                        <div class="payment-meta">
+                            ${p.type || 'unknown'} • ${p.reference || 'N/A'} • ${p.email || 'N/A'}
+                        </div>
+                        <div class="payment-meta">
+                            ${p.created_at ? new Date(p.created_at).toLocaleString() : 'N/A'}
+                        </div>
+                    </div>
+                    <span class="status-badge ${p.status === 'success' ? 'badge-approved' : 'badge-pending'}">
+                        ${p.status || 'pending'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function renderWallets(filter = '') {
+            const container = document.getElementById('walletsList');
+            let users = allUsers.filter(u => (u.wallet_balance || 0) > 0);
+            
+            if (filter) {
+                const f = filter.toLowerCase();
+                users = users.filter(u => 
+                    (u.name || '').toLowerCase().includes(f) ||
+                    (u.email || '').toLowerCase().includes(f)
+                );
+            }
+
+            if (users.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No wallet data</p>';
+                return;
+            }
+
+            container.innerHTML = users.map(u => `
+                <div class="payment-row">
+                    <div class="payment-info">
+                        <div class="payment-amount">GH₵ ${(u.wallet_balance || 0).toFixed(2)}</div>
+                        <div class="payment-meta">${u.name || 'Unknown'} • ${u.email || 'N/A'}</div>
+                    </div>
+                    <span class="status-badge badge-approved">Active</span>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // STORAGE MANAGER
+        // ============================================================
+        async function loadStorageData() {
+            try {
+                // List files from registration-photos bucket
+                const { data: files, error } = await supabase
+                    .storage
+                    .from('registration-photos')
+                    .list();
+
+                if (error) throw error;
+
+                let totalSize = 0;
+                const fileDetails = [];
+
+                if (files && files.length > 0) {
+                    for (const file of files) {
+                        totalSize += (file.metadata?.size || 0);
+                        fileDetails.push({
+                            name: file.name,
+                            size: formatBytes(file.metadata?.size || 0),
+                            updated: file.updated_at ? new Date(file.updated_at).toLocaleDateString() : 'N/A'
+                        });
+                    }
+                }
+
+                // Also check for folder structures
+                try {
+                    const { data: folders } = await supabase
+                        .storage
+                        .from('registration-photos')
+                        .list('uploads');
+                    
+                    if (folders) {
+                        for (const folder of folders) {
+                            if (folder.id) { // It's a folder
+                                const { data: subFiles } = await supabase
+                                    .storage
+                                    .from('registration-photos')
+                                    .list(`uploads/${folder.name}`);
+                                
+                                if (subFiles) {
+                                    for (const f of subFiles) {
+                                        totalSize += (f.metadata?.size || 0);
+                                        fileDetails.push({
+                                            name: `uploads/${folder.name}/${f.name}`,
+                                            size: formatBytes(f.metadata?.size || 0),
+                                            updated: f.updated_at ? new Date(f.updated_at).toLocaleDateString() : 'N/A'
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+
+                // Check profile pictures
+                try {
+                    const { data: profileFiles } = await supabase
+                        .storage
+                        .from('registration-photos')
+                        .list('profilePictures');
+                    
+                    if (profileFiles) {
+                        for (const f of profileFiles) {
+                            totalSize += (f.metadata?.size || 0);
+                            fileDetails.push({
+                                name: `profilePictures/${f.name}`,
+                                size: formatBytes(f.metadata?.size || 0),
+                                updated: f.updated_at ? new Date(f.updated_at).toLocaleDateString() : 'N/A'
+                            });
+                        }
+                    }
+                } catch(e) {}
+
+                const maxSize = 1024 * 1024 * 1024; // 1 GB
+                const usedPercent = (totalSize / maxSize) * 100;
+                
+                document.getElementById('storageUsedText').textContent = `${formatBytes(totalSize)} / 1 GB`;
+                document.getElementById('storageFill').style.width = `${Math.min(usedPercent, 100)}%`;
+
+                const fileList = document.getElementById('storageFileList');
+                if (fileDetails.length === 0) {
+                    fileList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No files uploaded yet</p>';
+                } else {
+                    fileList.innerHTML = fileDetails.map(f => `
+                        <div class="file-item">
+                            <div>
+                                <div class="file-name">${f.name}</div>
+                                <div class="file-size">${f.size} • ${f.updated}</div>
+                            </div>
+                            <button class="btn-delete-file" onclick="deleteFile('${f.name}')">Delete</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Storage error:', e);
+                document.getElementById('storageFileList').innerHTML = 
+                    '<p style="text-align:center;color:var(--text-muted);">Unable to load storage data</p>';
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // ============================================================
+        // ANALYTICS
+        // ============================================================
+        function updateAnalytics() {
+            const days = {};
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                days[d.toLocaleDateString('en-GB', { weekday: 'short' })] = 0;
+            }
+
+            allRegistrations.forEach(r => {
+                if (r.created_at) {
+                    const d = new Date(r.created_at);
+                    const key = d.toLocaleDateString('en-GB', { weekday: 'short' });
+                    if (days.hasOwnProperty(key)) days[key]++;
+                }
+            });
+
+            const maxVal = Math.max(...Object.values(days), 1);
+            const chart = document.getElementById('analyticsChart');
+            chart.innerHTML = Object.entries(days).map(([label, value]) => {
+                const height = (value / maxVal) * 100;
+                return `<div class="chart-bar-item" style="height: ${Math.max(height, 10)}%" data-label="${label}" data-value="${value}"></div>`;
+            }).join('');
+        }
+
+        // ============================================================
+        // TAB SWITCHING & SEARCH
+        // ============================================================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.data-section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('section-' + tabName).classList.add('active');
+
+            const searchBar = document.getElementById('searchBar');
+            if (tabName === 'analytics' || tabName === 'storage') {
+                searchBar.style.display = 'none';
+            } else {
+                searchBar.style.display = 'flex';
+            }
+
+            if (tabName === 'users') renderUsers();
+            if (tabName === 'registrations') renderRegistrations();
+            if (tabName === 'payments') renderPayments();
+            if (tabName === 'wallets') renderWallets();
+            if (tabName === 'storage') loadStorageData();
+        }
+
+        function handleSearch() {
+            const filter = document.getElementById('searchInput').value.trim();
+            const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
+            
+            if (activeTab.includes('user')) renderUsers(filter);
+            else if (activeTab.includes('registration')) renderRegistrations(filter);
+            else if (activeTab.includes('payment')) renderPayments(filter);
+            else if (activeTab.includes('wallet')) renderWallets(filter);
+        }
+
+        // ============================================================
+        // ADMIN ACTIONS (Edge Function Calls)
+        // ============================================================
+        async function approveRegistration(regId) {
+            showLoading(true);
+            const note = document.getElementById('note-' + regId)?.value || '';
+            
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/admin-approve-registration`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        registration_id: regId,
+                        admin_note: note,
+                        admin_id: currentAdmin.id,
+                        admin_email: currentAdmin.email
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Approval failed');
+
+                showLoading(false);
+                showToast('Registration approved successfully!', 'success');
+                
+                // Refresh data
+                await loadRegistrations();
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function rejectRegistration(regId) {
+            showLoading(true);
+            const note = document.getElementById('note-' + regId)?.value || '';
+            
+            if (!note) {
+                showLoading(false);
+                showToast('Please add a note explaining the rejection.', 'error');
+                return;
+            }
+
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/admin-reject-registration`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        registration_id: regId,
+                        admin_note: note,
+                        admin_id: currentAdmin.id,
+                        admin_email: currentAdmin.email
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Rejection failed');
+
+                showLoading(false);
+                showToast('Registration rejected. Refund processed.', 'success');
+                await loadRegistrations();
+                await loadUsers(); // Refresh wallet balances
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function suspendUser(userId) {
+            if (!confirm('Are you sure you want to suspend this user?')) return;
+            
+            showLoading(true);
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/admin-suspend-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        admin_id: currentAdmin.id,
+                        admin_email: currentAdmin.email
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Suspend failed');
+
+                showLoading(false);
+                showToast('User suspended successfully', 'success');
+                await loadUsers();
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function enableUser(userId) {
+            showLoading(true);
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/admin-enable-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        admin_id: currentAdmin.id,
+                        admin_email: currentAdmin.email
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Enable failed');
+
+                showLoading(false);
+                showToast('User enabled successfully', 'success');
+                await loadUsers();
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('WARNING: This will permanently delete the user and all their data. Continue?')) return;
+            if (!confirm('Are you absolutely sure? This action cannot be undone.')) return;
+            
+            showLoading(true);
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/admin-delete-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        admin_id: currentAdmin.id,
+                        admin_email: currentAdmin.email
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Delete failed');
+
+                showLoading(false);
+                showToast('User deleted successfully', 'success');
+                await loadUsers();
+                await loadRegistrations();
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteFile(filePath) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            
+            showLoading(true);
+            try {
+                const { error } = await supabase
+                    .storage
+                    .from('registration-photos')
+                    .remove([filePath]);
+
+                if (error) throw error;
+
+                showLoading(false);
+                showToast('File deleted successfully', 'success');
+                loadStorageData();
+
+            } catch (error) {
+                showLoading(false);
+                showToast('Error deleting file: ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // UI HELPERS
+        // ============================================================
+        function openImgModal(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('imgModal').classList.add('show');
+        }
+
+        function closeImgModal() {
+            document.getElementById('imgModal').classList.remove('show');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('show', show);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeImgModal();
+        });
+    </script>
+</body>
+</html>
