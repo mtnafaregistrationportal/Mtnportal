@@ -149,14 +149,12 @@
         </header>
 
         <div class="auth-content" style="flex: 1;">
-            <!-- Welcome Section -->
             <div style="margin-bottom: 24px;">
                 <span class="badge">MTN AFA User Login</span>
                 <h2 class="welcome-title">Welcome back</h2>
                 <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
             </div>
 
-            <!-- Sign In Card -->
             <div class="auth-card">
                 <h3>Sign in</h3>
                 <p class="subtitle">Enter your account details below.</p>
@@ -174,7 +172,6 @@
                     </div>
                 </div>
 
-                <!-- Forgot Password - Always visible under password input -->
                 <p class="forgot-link" id="forgotLink" onclick="showForgotModal()">Forgot Password?</p>
 
                 <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
@@ -184,12 +181,10 @@
                 </div>
             </div>
 
-            <!-- Info Box -->
             <div class="info-box">
                 Use the same email address you registered with to access your dashboard.
             </div>
 
-            <!-- Feature Cards - Moved to Last -->
             <div class="feature-cards">
                 <div class="feature-card">
                     <div class="feature-label">Orders</div>
@@ -207,7 +202,6 @@
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
     <div class="modal-overlay" id="forgotModal">
         <div class="modal-card">
             <h4>Reset Password</h4>
@@ -220,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Reset Success Modal -->
     <div class="modal-overlay" id="resetSuccessModal">
         <div class="modal-card">
             <h4>Check Your Email</h4>
@@ -229,16 +222,15 @@
         </div>
     </div>
 
-    <script type="module">
-        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
-        const SUPABASE_URL = "https://iqzjpdynmnucxswbrkho.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ";
-
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function togglePassword(inputId, btn) {
-            const input = document.getElementById(inputId);
+            var input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = 'Hide';
@@ -247,12 +239,11 @@
                 btn.textContent = 'Show';
             }
         }
-        window.togglePassword = togglePassword;
 
         async function handleSignIn() {
-            const email = document.getElementById('signinEmail').value.trim();
-            const password = document.getElementById('signinPassword').value;
-            const btn = document.getElementById('signinBtn');
+            var email = document.getElementById('signinEmail').value.trim();
+            var password = document.getElementById('signinPassword').value;
+            var btn = document.getElementById('signinBtn');
 
             if (!email || !password) {
                 alert('Please enter both email and password.');
@@ -263,23 +254,35 @@
             btn.textContent = 'Signing In...';
 
             try {
-                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                var authResult = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
 
-                if (authError) throw authError;
+                if (authResult.error) throw authResult.error;
 
-                const user = authData.user;
+                var user = authResult.data.user;
 
-                // Check if user is suspended
-                const { data: userData, error: userError } = await supabase
+                // Fetch user profile - use .maybeSingle() instead of .single() to avoid errors
+                var userResult = await supabase
                     .from('users')
                     .select('status, name, phone_number')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
 
-                if (userError) throw userError;
+                var userData = userResult.data;
+
+                // If no user profile found, create one or just proceed
+                if (!userData) {
+                    // User exists in auth but not in users table - create basic profile
+                    await supabase.from('users').insert({
+                        id: user.id,
+                        email: email,
+                        name: user.user_metadata?.full_name || 'User',
+                        status: 'active'
+                    });
+                    userData = { status: 'active', name: user.user_metadata?.full_name || 'User', phone_number: '' };
+                }
 
                 if (userData.status === 'suspended') {
                     await supabase.auth.signOut();
@@ -289,7 +292,6 @@
                     return;
                 }
 
-                // Store user data
                 localStorage.setItem('userName', userData.name || user.user_metadata?.full_name || 'User');
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
@@ -297,36 +299,34 @@
 
                 window.location.href = 'dashboard.html';
             } catch (error) {
+                console.error('Signin error:', error);
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
-                alert('Wrong password or email. Please try again or click "Forgot Password".');
+                alert('Error: ' + error.message);
             }
         }
-        window.handleSignIn = handleSignIn;
 
         function showForgotModal() {
             document.getElementById('forgotModal').classList.add('show');
         }
-        window.showForgotModal = showForgotModal;
 
         function closeForgotModal() {
             document.getElementById('forgotModal').classList.remove('show');
         }
-        window.closeForgotModal = closeForgotModal;
 
         async function sendResetEmail() {
-            const email = document.getElementById('resetEmail').value.trim();
+            var email = document.getElementById('resetEmail').value.trim();
             if (!email) {
                 alert('Please enter your email.');
                 return;
             }
 
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                var result = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + '/reset-password.html'
                 });
 
-                if (error) throw error;
+                if (result.error) throw result.error;
 
                 closeForgotModal();
                 document.getElementById('resetSuccessModal').classList.add('show');
@@ -334,12 +334,10 @@
                 alert('Error: ' + error.message);
             }
         }
-        window.sendResetEmail = sendResetEmail;
 
         function closeResetSuccessModal() {
             document.getElementById('resetSuccessModal').classList.remove('show');
         }
-        window.closeResetSuccessModal = closeResetSuccessModal;
     </script>
 </body>
 </html>
