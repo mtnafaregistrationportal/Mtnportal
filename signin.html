@@ -81,7 +81,7 @@
             color: #1a1a1a; font-size: 14px; font-weight: 600;
             border: none; border-radius: 14px; cursor: pointer;
         }
-        .auth-link { text-align: center; margin-size: 20px; font-size: 14px; color: #666; margin-top: 20px; }
+        .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
         .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; cursor: pointer; }
         .forgot-link {
             color: #e74c3c;
@@ -417,7 +417,6 @@
 
         function showForgotModal() {
             document.getElementById('forgotModal').classList.add('show');
-            // Reset to step 1
             showStep('step1');
             document.getElementById('resetEmail').value = document.getElementById('signinEmail').value;
         }
@@ -425,7 +424,6 @@
 
         function closeForgotModal() {
             document.getElementById('forgotModal').classList.remove('show');
-            // Reset steps after a delay
             setTimeout(() => {
                 showStep('step1');
                 clearCodeInputs();
@@ -444,6 +442,7 @@
             document.querySelectorAll('.code-input').forEach(input => input.value = '');
         }
 
+        // FIXED: Use resetPasswordForEmail to send the "Reset Password" template with {{ .Token }}
         async function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
             const btn = document.getElementById('sendCodeBtn');
@@ -457,12 +456,8 @@
             btn.textContent = 'Sending...';
 
             try {
-                // Supabase sends a nonce/token via email — we use OTP flow
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: false
-                    }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/signin.html'
                 });
 
                 if (error) throw error;
@@ -471,7 +466,6 @@
                 document.getElementById('codeEmail').textContent = email;
                 showStep('step2');
                 
-                // Focus first code input
                 setTimeout(() => document.querySelector('.code-input').focus(), 100);
 
             } catch (error) {
@@ -500,6 +494,7 @@
         }
         window.handleBackspace = handleBackspace;
 
+        // FIXED: Use type: 'recovery' to verify the reset password code
         async function verifyResetCode() {
             const inputs = document.querySelectorAll('.code-input');
             const code = Array.from(inputs).map(i => i.value).join('');
@@ -514,16 +509,14 @@
             btn.textContent = 'Verifying...';
 
             try {
-                // Verify the OTP code
                 const { data, error } = await supabase.auth.verifyOtp({
                     email: resetEmail,
                     token: code,
-                    type: 'email'
+                    type: 'recovery'
                 });
 
                 if (error) throw error;
 
-                // Store the session for password reset
                 resetToken = data.session;
                 showStep('step3');
 
@@ -544,9 +537,8 @@
             btn.textContent = 'Resending...';
 
             try {
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: resetEmail,
-                    options: { shouldCreateUser: false }
+                const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                    redirectTo: window.location.origin + '/signin.html'
                 });
                 if (error) throw error;
                 alert('New code sent! Check your email.');
@@ -585,14 +577,12 @@
             btn.textContent = 'Resetting...';
 
             try {
-                // Update password using the session from OTP verification
                 const { error } = await supabase.auth.updateUser({
                     password: newPass
                 });
 
                 if (error) throw error;
 
-                // Sign out after reset
                 await supabase.auth.signOut();
                 
                 showStep('step4');
