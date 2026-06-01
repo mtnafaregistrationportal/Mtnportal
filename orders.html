@@ -342,20 +342,20 @@
 
             var userId = session.user.id;
 
-            // Fetch orders from Supabase
+            // FIXED: Fetch from 'registrations' table (not 'orders')
             var result = await supabase
-                .from('orders')
+                .from('registrations')
                 .select('*')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
             if (result.error) {
-                console.error('Error fetching orders:', result.error);
+                console.error('Error fetching registrations:', result.error);
                 return;
             }
 
-            var orders = result.data || [];
-            renderOrders(orders);
+            var registrations = result.data || [];
+            renderOrders(registrations);
         }
 
         function renderOrders(orders) {
