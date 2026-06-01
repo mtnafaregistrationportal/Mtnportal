@@ -121,7 +121,6 @@
             max-width: 480px;
             margin: 0 auto;
         }
-        /* Profile Picture Upload Section */
         .profile-upload-section {
             text-align: center;
             margin-bottom: 20px;
@@ -264,20 +263,6 @@
             text-align: center;
             display: block;
         }
-        .btn-black-block {
-            width: 100%;
-            padding: 14px;
-            background: #1a1a1a;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            display: block;
-        }
         .status-badge {
             display: inline-block;
             padding: 6px 14px;
@@ -289,25 +274,6 @@
         .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
         .status-approved { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
         .status-rejected { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-        .upload-alert {
-            background: rgba(255, 215, 0, 0.15);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .upload-alert p { font-size: 14px; margin-bottom: 10px; }
-        .upload-alert a {
-            display: inline-block;
-            background: var(--primary-yellow);
-            color: #1a1a1a;
-            padding: 10px 20px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-        }
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -352,8 +318,6 @@
         .tx-type { font-size: 14px; font-weight: 600; }
         .tx-date { font-size: 11px; color: var(--text-muted); }
         .tx-amount { font-size: 14px; font-weight: 700; }
-        .tx-credit { color: #4CAF50; }
-        .tx-debit { color: #e74c3c; }
         @media (min-width: 768px) {
             .dash-content {
                 max-width: 520px;
@@ -496,18 +460,27 @@
                 const userId = session.user.id;
 
                 const fileExt = file.name.split('.').pop();
-                const fileName = `avatars/${userId}_${Date.now()}.${fileExt}`;
+                const fileName = `${userId}_${Date.now()}.${fileExt}`;
 
+                // Upload to 'avatars' bucket
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('avatars')
                     .upload(fileName, file, { upsert: true });
 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                    // If bucket doesn't exist, show helpful message
+                    if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('bucket')) {
+                        alert('Storage bucket not found. Please create a "avatars" bucket in your Supabase dashboard under Storage.');
+                        return;
+                    }
+                    throw uploadError;
+                }
 
                 const { data: { publicUrl } } = supabase.storage
                     .from('avatars')
                     .getPublicUrl(fileName);
 
+                // Update users table with profile picture URL
                 const { error: updateError } = await supabase
                     .from('users')
                     .update({ profile_picture: publicUrl })
@@ -515,17 +488,14 @@
 
                 if (updateError) throw updateError;
 
+                // Update auth user metadata
                 await supabase.auth.updateUser({
                     data: { avatar_url: publicUrl }
                 });
 
-                document.getElementById('profilePicDash').src = publicUrl;
-                document.getElementById('profilePicDash').style.display = 'block';
-                document.getElementById('profilePicPlaceholderDash').style.display = 'none';
+                // Show the picture immediately
+                showProfilePicture(publicUrl);
                 localStorage.setItem('profilePicture', publicUrl);
-
-                // Update header icon too
-                document.getElementById('headerIcon').innerHTML = `<img src="${publicUrl}" class="profile-pic-small" alt="Profile">`;
 
                 alert('Profile picture updated!');
             } catch (error) {
@@ -533,6 +503,17 @@
             }
         }
         window.uploadProfilePictureDash = uploadProfilePictureDash;
+
+        function showProfilePicture(url) {
+            const img = document.getElementById('profilePicDash');
+            const placeholder = document.getElementById('profilePicPlaceholderDash');
+            const headerIcon = document.getElementById('headerIcon');
+            
+            img.src = url;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+            headerIcon.innerHTML = `<img src="${url}" class="profile-pic-small" alt="Profile">`;
+        }
 
         async function loadDashboard() {
             const { data: { session } } = await supabase.auth.getSession();
@@ -542,13 +523,8 @@
                 return;
             }
 
-            // CRITICAL: Verify email is confirmed before allowing dashboard access
-            if (!session.user.email_confirmed_at) {
-                await supabase.auth.signOut();
-                alert('Your email is not verified. Please verify your email before accessing the dashboard.');
-                window.location.href = 'signin.html';
-                return;
-            }
+            // REMOVED: Email verification check - users can access dashboard without verification
+            // since we turned off "Confirm email" in Supabase settings
 
             const userId = session.user.id;
             const userName = session.user.user_metadata?.full_name || localStorage.getItem('userName') || 'User';
@@ -556,59 +532,31 @@
             document.getElementById('greeting').textContent = 'Hello, ' + userName;
             document.getElementById('welcomeText').textContent = 'Welcome, ' + userName;
 
-            // Load profile picture
-            const { data: userData } = await supabase
+            // Load profile picture from localStorage first (fast), then from DB
+            const cachedPic = localStorage.getItem('profilePicture');
+            if (cachedPic) {
+                showProfilePicture(cachedPic);
+            }
+
+            // Load from database
+            const { data: userRows, error: userError } = await supabase
                 .from('users')
                 .select('profile_picture, total_registrations')
                 .eq('id', userId)
-                .single();
+                .limit(1);
 
-            if (userData?.profile_picture) {
-                document.getElementById('profilePicDash').src = userData.profile_picture;
-                document.getElementById('profilePicDash').style.display = 'block';
-                document.getElementById('profilePicPlaceholderDash').style.display = 'none';
-                document.getElementById('headerIcon').innerHTML = `<img src="${userData.profile_picture}" class="profile-pic-small" alt="Profile">`;
-                localStorage.setItem('profilePicture', userData.profile_picture);
+            if (!userError && userRows && userRows.length > 0) {
+                const userData = userRows[0];
+                
+                if (userData.profile_picture) {
+                    showProfilePicture(userData.profile_picture);
+                    localStorage.setItem('profilePicture', userData.profile_picture);
+                }
+                
+                document.getElementById('totalRegistrations').textContent = userData.total_registrations || 0;
             }
 
-            // Real-time subscription to user data
-            supabase
-                .channel('user-data-' + userId)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'users',
-                    filter: 'id=eq.' + userId
-                }, (payload) => {
-                    const data = payload.new;
-                    document.getElementById('totalRegistrations').textContent = data.total_registrations || 0;
-                    
-                    if (data.name) {
-                        document.getElementById('greeting').textContent = 'Hello, ' + data.name;
-                        document.getElementById('welcomeText').textContent = 'Welcome, ' + data.name;
-                    }
-                    if (data.profile_picture) {
-                        localStorage.setItem('profilePicture', data.profile_picture);
-                        document.getElementById('profilePicDash').src = data.profile_picture;
-                        document.getElementById('profilePicDash').style.display = 'block';
-                        document.getElementById('profilePicPlaceholderDash').style.display = 'none';
-                        document.getElementById('headerIcon').innerHTML = `<img src="${data.profile_picture}" class="profile-pic-small" alt="Profile">`;
-                    }
-                })
-                .subscribe();
-
-            // Initial load
-            const { data: initialData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (initialData) {
-                document.getElementById('totalRegistrations').textContent = initialData.total_registrations || 0;
-            }
-
-            // Load recent registrations (2 most recent)
+            // Load recent registrations
             loadRecentRegistrations(userId);
         }
 
