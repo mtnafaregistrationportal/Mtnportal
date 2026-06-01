@@ -542,6 +542,14 @@
                 return;
             }
 
+            // CRITICAL: Verify email is confirmed before allowing dashboard access
+            if (!session.user.email_confirmed_at) {
+                await supabase.auth.signOut();
+                alert('Your email is not verified. Please verify your email before accessing the dashboard.');
+                window.location.href = 'signin.html';
+                return;
+            }
+
             const userId = session.user.id;
             const userName = session.user.user_metadata?.full_name || localStorage.getItem('userName') || 'User';
 
