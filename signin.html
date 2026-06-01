@@ -134,18 +134,18 @@
         .feature-value { font-size: 16px; font-weight: 600; color: #ffffff; }
         .code-inputs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
             margin-bottom: 20px;
         }
         .code-input {
-            width: 48px;
-            height: 56px;
+            width: 38px;
+            height: 50px;
             text-align: center;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            border-radius: 10px;
             background: #fafafa;
             color: #1a1a1a;
             outline: none;
@@ -275,7 +275,7 @@
 
             <div class="step" id="step2">
                 <h4>Enter Reset Code</h4>
-                <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent a 6-digit code to <strong id="codeEmail"></strong></p>
+                <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent an 8-digit code to <strong id="codeEmail"></strong></p>
                 <div class="code-inputs">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, this, 0)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, this, 1)">
@@ -283,6 +283,8 @@
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, this, 3)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, this, 4)">
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleBackspace(event, this, 6)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 7)" onkeydown="handleBackspace(event, this, 7)">
                 </div>
                 <button type="button" class="btn-submit" id="verifyCodeBtn" onclick="verifyResetCode()">Verify Code</button>
                 <p class="timer-text">Didn't receive it? <span id="resendLink" onclick="resendCode()">Resend</span></p>
@@ -549,8 +551,8 @@
             const code = Array.from(inputs).map(i => i.value).join('');
             const btn = document.getElementById('verifyCodeBtn');
 
-            if (code.length !== 6) {
-                alert('Please enter all 6 digits of the code.');
+            if (code.length !== 8) {
+                alert('Please enter all 8 digits of the code.');
                 return;
             }
 
