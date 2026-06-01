@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Supabase Test</h1>
+    <p id="status">Loading...</p>
+    <p id="error"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        var status = document.getElementById('status');
+        var errorEl = document.getElementById('error');
+
+        try {
+            var supabase = window.supabase.createClient(
+                'https://iqzjpdynmnucxswbrkho.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ'
+            );
+
+            status.textContent = 'Supabase loaded OK. Testing signup...';
+
+            supabase.auth.signUp({
+                email: 'test' + Date.now() + '@test.com',
+                password: '123456'
+            }).then(function(result) {
+                if (result.error) {
+                    status.textContent = 'Signup returned error';
+                    errorEl.textContent = result.error.message;
+                } else {
+                    status.textContent = 'Signup SUCCESS! User ID: ' + result.data.user.id;
+                }
+            }).catch(function(err) {
+                status.textContent = 'Signup crashed';
+                errorEl.textContent = err.message;
+            });
+
+        } catch (err) {
+            status.textContent = 'Supabase failed to load';
+            errorEl.textContent = err.message;
+        }
+    </script>
+</body>
+</html>
