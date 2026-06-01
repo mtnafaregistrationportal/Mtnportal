@@ -149,10 +149,21 @@
             background: #fafafa;
             color: #1a1a1a;
             outline: none;
+            -webkit-appearance: none;
+            appearance: none;
         }
         .code-input:focus {
             border-color: #FFD700;
             background: #fff;
+        }
+        /* Hide number spinner arrows */
+        .code-input::-webkit-outer-spin-button,
+        .code-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .code-input[type=number] {
+            -moz-appearance: textfield;
         }
         .step { display: none; }
         .step.active { display: block; }
@@ -277,14 +288,14 @@
                 <h4>Enter Reset Code</h4>
                 <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent an 8-digit code to <strong id="codeEmail"></strong></p>
                 <div class="code-inputs">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, this, 0)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, this, 1)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleBackspace(event, this, 2)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, this, 3)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, this, 4)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleBackspace(event, this, 6)">
-                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 7)" onkeydown="handleBackspace(event, this, 7)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, this, 0)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, this, 1)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleBackspace(event, this, 2)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, this, 3)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, this, 4)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleBackspace(event, this, 6)">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 7)" onkeydown="handleBackspace(event, this, 7)">
                 </div>
                 <button type="button" class="btn-submit" id="verifyCodeBtn" onclick="verifyResetCode()">Verify Code</button>
                 <p class="timer-text">Didn't receive it? <span id="resendLink" onclick="resendCode()">Resend</span></p>
@@ -373,13 +384,26 @@
 
                 const user = authData.user;
 
+                // FIXED: Use .maybeSingle() instead of .single() to handle missing user rows
                 const { data: userData, error: userError } = await supabase
                     .from('users')
                     .select('status, name, phone_number, username')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
 
-                if (userError) throw userError;
+                // If user row doesn't exist in users table, use auth metadata and still log in
+                if (userError || !userData) {
+                    console.log('User row not found, using auth metadata');
+                    
+                    localStorage.setItem('userName', user.user_metadata?.full_name || 'User');
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userId', user.id);
+                    localStorage.setItem('userPhone', user.user_metadata?.phone || '');
+                    localStorage.setItem('userUsername', user.user_metadata?.username || '');
+                    
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
 
                 if (userData.status === 'suspended') {
                     await supabase.auth.signOut();
