@@ -64,6 +64,7 @@
         }
         .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
         .form-input::placeholder { color: #aaa; }
+        .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
         .password-toggle {
             position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
             background: none; border: 1.5px solid #ddd; border-radius: 8px;
@@ -75,7 +76,12 @@
             border: none; border-radius: 14px; cursor: pointer; margin-top: 8px;
         }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+        .btn-yellow-full {
+            width: 100%; padding: 14px; background: #FFD700;
+            color: #1a1a1a; font-size: 14px; font-weight: 600;
+            border: none; border-radius: 14px; cursor: pointer;
+        }
+        .auth-link { text-align: center; margin-size: 20px; font-size: 14px; color: #666; margin-top: 20px; }
         .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; cursor: pointer; }
         .forgot-link {
             color: #e74c3c;
@@ -126,6 +132,48 @@
         }
         .feature-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 4px; text-transform: uppercase; }
         .feature-value { font-size: 16px; font-weight: 600; color: #ffffff; }
+        .code-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .code-input {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            color: #1a1a1a;
+            outline: none;
+        }
+        .code-input:focus {
+            border-color: #FFD700;
+            background: #fff;
+        }
+        .step { display: none; }
+        .step.active { display: block; }
+        .success-icon {
+            width: 60px; height: 60px;
+            background: rgba(76, 175, 80, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .timer-text {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .timer-text span {
+            color: #1a1a1a;
+            font-weight: 600;
+            cursor: pointer;
+        }
         @media (min-width: 768px) {
             .auth-content { max-width: 520px; padding: 40px 24px; }
         }
@@ -157,7 +205,7 @@
             </div>
 
             <!-- Sign In Card -->
-            <div class="auth-card">
+            <div class="auth-card" id="signinCard">
                 <h3>Sign in</h3>
                 <p class="subtitle">Enter your account details below.</p>
 
@@ -174,8 +222,7 @@
                     </div>
                 </div>
 
-                <!-- Forgot Password - Always visible under password input -->
-                <p class="forgot-link" id="forgotLink" onclick="showForgotModal()">Forgot Password?</p>
+                <p class="forgot-link" onclick="showForgotModal()">Forgot Password?</p>
 
                 <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
 
@@ -189,7 +236,7 @@
                 Use the same email address you registered with to access your dashboard.
             </div>
 
-            <!-- Feature Cards - Moved to Last -->
+            <!-- Feature Cards -->
             <div class="feature-cards">
                 <div class="feature-card">
                     <div class="feature-label">Orders</div>
@@ -210,22 +257,67 @@
     <!-- Forgot Password Modal -->
     <div class="modal-overlay" id="forgotModal">
         <div class="modal-card">
-            <h4>Reset Password</h4>
-            <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your registered email to receive a reset link.</p>
-            <div class="form-group">
-                <input type="email" id="resetEmail" class="form-input" placeholder="you@example.com">
+            <!-- Step 1: Enter Email -->
+            <div class="step active" id="step1">
+                <h4>Reset Password</h4>
+                <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your registered email to receive a reset code.</p>
+                <div class="form-group">
+                    <input type="email" id="resetEmail" class="form-input" placeholder="you@example.com">
+                </div>
+                <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetCode()">Send Reset Code</button>
+                <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
             </div>
-            <button type="button" class="btn-submit" onclick="sendResetEmail()">Send Reset Link</button>
-            <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
-        </div>
-    </div>
 
-    <!-- Reset Success Modal -->
-    <div class="modal-overlay" id="resetSuccessModal">
-        <div class="modal-card">
-            <h4>Check Your Email</h4>
-            <p style="color:#666; font-size:14px; margin-bottom:16px;">A password reset link has been sent to your email. Click the link to reset your password.</p>
-            <button type="button" class="btn-submit" onclick="closeResetSuccessModal()">OK</button>
+            <!-- Step 2: Enter Code -->
+            <div class="step" id="step2">
+                <h4>Enter Reset Code</h4>
+                <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent a 6-digit code to <strong id="codeEmail"></strong></p>
+                <div class="code-inputs">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, this, 0)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, this, 1)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleBackspace(event, this, 2)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, this, 3)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, this, 4)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
+                </div>
+                <button type="button" class="btn-submit" id="verifyCodeBtn" onclick="verifyResetCode()">Verify Code</button>
+                <p class="timer-text">Didn't receive it? <span onclick="resendCode()">Resend</span></p>
+                <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="backToStep1()">Back</button>
+            </div>
+
+            <!-- Step 3: New Password -->
+            <div class="step" id="step3">
+                <h4>Set New Password</h4>
+                <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your new password below.</p>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="newResetPassword" class="form-input" placeholder="Minimum 6 characters">
+                        <button type="button" class="password-toggle" onclick="togglePassword('newResetPassword', this)">Show</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmResetPassword" class="form-input" placeholder="Re-enter password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmResetPassword', this)">Show</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-submit" id="resetPassBtn" onclick="resetPassword()">Reset Password</button>
+            </div>
+
+            <!-- Step 4: Success -->
+            <div class="step" id="step4">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h4 style="text-align:center; color:#1a1a1a; margin-bottom:8px;">Password Reset!</h4>
+                <p style="color:#666; font-size:14px; text-align:center; margin-bottom:20px;">Your password has been reset successfully. You can now sign in with your new password.</p>
+                <button type="button" class="btn-yellow-full" onclick="closeForgotModal()">Sign In Now</button>
+            </div>
         </div>
     </div>
 
@@ -236,6 +328,9 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ";
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let resetEmail = '';
+        let resetToken = '';
 
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -272,39 +367,23 @@
 
                 const user = authData.user;
 
-                // Check if email is verified
                 if (!user.email_confirmed_at) {
-                    // Check if this is an old account (created before email verification was enabled)
-                    // by checking if user has data in the users table
-                    const { data: existingUser, error: checkError } = await supabase
-                        .from('users')
-                        .select('id')
-                        .eq('id', user.id)
-                        .single();
-
-                    // If user exists in database but email not confirmed, allow them to verify now
-                    if (existingUser && !checkError) {
-                        await supabase.auth.signOut();
-                        alert('Your email is not verified yet. Please check your inbox and click the verification link. If you did not receive it, you can request a new one from the Create Account page.');
-                        btn.disabled = false;
-                        btn.textContent = 'Sign In';
-                        return;
-                    }
+                    await supabase.auth.signOut();
+                    alert('Your email is not verified yet. Please check your inbox and click the verification link before signing in.');
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                    return;
                 }
 
-                // Check if user is suspended
                 const { data: userData, error: userError } = await supabase
                     .from('users')
                     .select('status, name, phone_number, username')
                     .eq('id', user.id)
                     .single();
 
-                if (userError) {
-                    // User not found in users table — might be new or data missing
-                    console.error('User data error:', userError);
-                }
+                if (userError) throw userError;
 
-                if (userData && userData.status === 'suspended') {
+                if (userData.status === 'suspended') {
                     await supabase.auth.signOut();
                     alert('Your account has been suspended. Please contact support.');
                     btn.disabled = false;
@@ -312,19 +391,17 @@
                     return;
                 }
 
-                // Store user data
-                localStorage.setItem('userName', userData?.name || user.user_metadata?.full_name || 'User');
+                localStorage.setItem('userName', userData.name || user.user_metadata?.full_name || 'User');
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
-                localStorage.setItem('userPhone', userData?.phone_number || '');
-                localStorage.setItem('userUsername', userData?.username || user.user_metadata?.username || '');
+                localStorage.setItem('userPhone', userData.phone_number || '');
+                localStorage.setItem('userUsername', userData.username || user.user_metadata?.username || '');
 
                 window.location.href = 'dashboard.html';
             } catch (error) {
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
                 
-                // Better error messages for different cases
                 if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
                     alert('Wrong email or password. Please try again or click "Forgot Password" to reset.');
                 } else if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
@@ -336,42 +413,197 @@
         }
         window.handleSignIn = handleSignIn;
 
+        // ========== FORGOT PASSWORD FLOW ==========
+
         function showForgotModal() {
             document.getElementById('forgotModal').classList.add('show');
+            // Reset to step 1
+            showStep('step1');
+            document.getElementById('resetEmail').value = document.getElementById('signinEmail').value;
         }
         window.showForgotModal = showForgotModal;
 
         function closeForgotModal() {
             document.getElementById('forgotModal').classList.remove('show');
+            // Reset steps after a delay
+            setTimeout(() => {
+                showStep('step1');
+                clearCodeInputs();
+                document.getElementById('newResetPassword').value = '';
+                document.getElementById('confirmResetPassword').value = '';
+            }, 300);
         }
         window.closeForgotModal = closeForgotModal;
 
-        async function sendResetEmail() {
+        function showStep(stepId) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
+
+        function clearCodeInputs() {
+            document.querySelectorAll('.code-input').forEach(input => input.value = '');
+        }
+
+        async function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
+            const btn = document.getElementById('sendCodeBtn');
+
             if (!email) {
-                alert('Please enter your email.');
+                alert('Please enter your email address.');
                 return;
             }
 
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '/reset-password.html'
+                // Supabase sends a nonce/token via email — we use OTP flow
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: false
+                    }
                 });
 
                 if (error) throw error;
 
-                closeForgotModal();
-                document.getElementById('resetSuccessModal').classList.add('show');
+                resetEmail = email;
+                document.getElementById('codeEmail').textContent = email;
+                showStep('step2');
+                
+                // Focus first code input
+                setTimeout(() => document.querySelector('.code-input').focus(), 100);
+
             } catch (error) {
                 alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Reset Code';
             }
         }
-        window.sendResetEmail = sendResetEmail;
+        window.sendResetCode = sendResetCode;
 
-        function closeResetSuccessModal() {
-            document.getElementById('resetSuccessModal').classList.remove('show');
+        function moveToNext(input, index) {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            const inputs = document.querySelectorAll('.code-input');
+            if (input.value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
         }
-        window.closeResetSuccessModal = closeResetSuccessModal;
+        window.moveToNext = moveToNext;
+
+        function handleBackspace(e, input, index) {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+                const inputs = document.querySelectorAll('.code-input');
+                inputs[index - 1].focus();
+            }
+        }
+        window.handleBackspace = handleBackspace;
+
+        async function verifyResetCode() {
+            const inputs = document.querySelectorAll('.code-input');
+            const code = Array.from(inputs).map(i => i.value).join('');
+            const btn = document.getElementById('verifyCodeBtn');
+
+            if (code.length !== 6) {
+                alert('Please enter all 6 digits of the code.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Verify the OTP code
+                const { data, error } = await supabase.auth.verifyOtp({
+                    email: resetEmail,
+                    token: code,
+                    type: 'email'
+                });
+
+                if (error) throw error;
+
+                // Store the session for password reset
+                resetToken = data.session;
+                showStep('step3');
+
+            } catch (error) {
+                alert('Invalid code. Please try again or request a new code.');
+                clearCodeInputs();
+                document.querySelector('.code-input').focus();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Verify Code';
+            }
+        }
+        window.verifyResetCode = verifyResetCode;
+
+        async function resendCode() {
+            const btn = document.getElementById('verifyCodeBtn');
+            btn.disabled = true;
+            btn.textContent = 'Resending...';
+
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: resetEmail,
+                    options: { shouldCreateUser: false }
+                });
+                if (error) throw error;
+                alert('New code sent! Check your email.');
+                clearCodeInputs();
+                document.querySelector('.code-input').focus();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Verify Code';
+            }
+        }
+        window.resendCode = resendCode;
+
+        function backToStep1() {
+            showStep('step1');
+            clearCodeInputs();
+        }
+        window.backToStep1 = backToStep1;
+
+        async function resetPassword() {
+            const newPass = document.getElementById('newResetPassword').value;
+            const confirmPass = document.getElementById('confirmResetPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPass || newPass.length < 6) {
+                alert('Password must be at least 6 characters.');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                // Update password using the session from OTP verification
+                const { error } = await supabase.auth.updateUser({
+                    password: newPass
+                });
+
+                if (error) throw error;
+
+                // Sign out after reset
+                await supabase.auth.signOut();
+                
+                showStep('step4');
+
+            } catch (error) {
+                alert('Error resetting password: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+        window.resetPassword = resetPassword;
     </script>
 </body>
 </html>
