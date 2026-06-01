@@ -168,11 +168,11 @@
                     <label>Password</label>
                     <div class="input-wrapper">
                         <input type="password" id="signinPassword" class="form-input" placeholder="Enter your password">
-                        <button type="button" class="password-toggle" onclick="togglePassword('signinPassword', this)">Show</button>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
                     </div>
                 </div>
 
-                <p class="forgot-link" id="forgotLink" onclick="showForgotModal()">Forgot Password?</p>
+                <p class="forgot-link" onclick="showForgotModal()">Forgot Password?</p>
 
                 <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
 
@@ -217,20 +217,21 @@
     <div class="modal-overlay" id="resetSuccessModal">
         <div class="modal-card">
             <h4>Check Your Email</h4>
-            <p style="color:#666; font-size:14px; margin-bottom:16px;">A password reset link has been sent to your email. Click the link to reset your password.</p>
+            <p style="color:#666; font-size:14px; margin-bottom:16px;">A password reset link has been sent to your email.</p>
             <button type="button" class="btn-submit" onclick="closeResetSuccessModal()">OK</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+        var SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function togglePassword(inputId, btn) {
-            var input = document.getElementById(inputId);
+        function togglePassword() {
+            var input = document.getElementById('signinPassword');
+            var btn = event.target;
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = 'Hide';
@@ -254,34 +255,33 @@
             btn.textContent = 'Signing In...';
 
             try {
-                var authResult = await supabase.auth.signInWithPassword({
+                var result = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
 
-                if (authResult.error) throw authResult.error;
+                if (result.error) throw result.error;
 
-                var user = authResult.data.user;
+                var user = result.data.user;
 
-                // Fetch user profile - use .maybeSingle() instead of .single() to avoid errors
-                var userResult = await supabase
+                // Get user profile
+                var profileResult = await supabase
                     .from('users')
-                    .select('status, name, phone_number')
+                    .select('*')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                var userData = userResult.data;
+                var userData = profileResult.data;
 
-                // If no user profile found, create one or just proceed
+                // If no profile exists, create one
                 if (!userData) {
-                    // User exists in auth but not in users table - create basic profile
                     await supabase.from('users').insert({
                         id: user.id,
                         email: email,
-                        name: user.user_metadata?.full_name || 'User',
+                        name: user.user_metadata?.full_name || email.split('@')[0],
                         status: 'active'
                     });
-                    userData = { status: 'active', name: user.user_metadata?.full_name || 'User', phone_number: '' };
+                    userData = { name: user.user_metadata?.full_name || email.split('@')[0], status: 'active', phone_number: '' };
                 }
 
                 if (userData.status === 'suspended') {
@@ -292,17 +292,18 @@
                     return;
                 }
 
-                localStorage.setItem('userName', userData.name || user.user_metadata?.full_name || 'User');
+                localStorage.setItem('userName', userData.name || 'User');
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
                 localStorage.setItem('userPhone', userData.phone_number || '');
 
                 window.location.href = 'dashboard.html';
+
             } catch (error) {
                 console.error('Signin error:', error);
+                alert('Error: ' + (error.message || 'Login failed'));
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
-                alert('Error: ' + error.message);
             }
         }
 
@@ -320,14 +321,11 @@
                 alert('Please enter your email.');
                 return;
             }
-
             try {
                 var result = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + '/reset-password.html'
                 });
-
                 if (result.error) throw result.error;
-
                 closeForgotModal();
                 document.getElementById('resetSuccessModal').classList.add('show');
             } catch (error) {
