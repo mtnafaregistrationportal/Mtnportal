@@ -143,7 +143,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase
         var SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
@@ -195,7 +194,6 @@
             showFieldError('createPassword', 'passwordError', false);
 
             var hasError = false;
-
             if (!name) { showFieldError('fullName', 'nameError', true); hasError = true; }
             if (!validatePhone(phone)) { showFieldError('phoneNumber', 'phoneError', true); hasError = true; }
             if (!validateEmail(email)) { showFieldError('email', 'emailError', true); hasError = true; }
@@ -207,9 +205,7 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                console.log('Starting signup...');
-                
-                // Step 1: Sign up with Supabase Auth
+                // Step 1: Sign up
                 var authResult = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -221,49 +217,49 @@
                     }
                 });
 
-                console.log('Auth result:', authResult);
-
-                if (authResult.error) {
-                    throw authResult.error;
-                }
+                if (authResult.error) throw authResult.error;
 
                 var user = authResult.data.user;
-
                 if (!user) {
-                    throw new Error('User creation failed - no user returned');
+                    throw new Error('Signup failed - no user returned');
                 }
 
-                console.log('User created:', user.id);
+                // Step 2: Immediately sign in to get active session
+                var signinResult = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
 
-                // Step 2: Insert into users table
+                if (signinResult.error) throw signinResult.error;
+
+                var sessionUser = signinResult.data.user;
+
+                // Step 3: Insert into users table
                 var profileResult = await supabase
                     .from('users')
                     .insert({
-                        id: user.id,
+                        id: sessionUser.id,
                         name: name,
                         email: email,
                         phone_number: phone,
                         status: 'active'
                     });
 
-                console.log('Profile result:', profileResult);
-
                 if (profileResult.error) {
-                    console.error('Profile insert error:', profileResult.error);
-                    // Don't fail - auth user is created, just log the error
+                    console.error('Profile insert error (non-fatal):', profileResult.error);
                 }
 
-                // Step 3: Store and redirect
+                // Step 4: Store and redirect
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', user.id);
+                localStorage.setItem('userId', sessionUser.id);
                 localStorage.setItem('userPhone', phone);
 
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
-                console.error('Full error:', error);
-                alert('Error: ' + (error.message || 'Unknown error occurred'));
+                console.error('Error:', error);
+                alert('Error: ' + (error.message || 'Something went wrong'));
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
             }
