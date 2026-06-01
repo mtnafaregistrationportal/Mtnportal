@@ -62,8 +62,8 @@
             color: #1a1a1a; background: #fafafa; outline: none;
         }
         .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
-        .form-input::placeholder { color: #aaa; }
         .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
+        .form-input::placeholder { color: #aaa; }
         .error-msg { color: #e74c3c; font-size: 12px; margin-top: 6px; display: none; }
         .error-msg.show { display: block; }
         .password-toggle {
@@ -127,7 +127,7 @@
                     <label>Password</label>
                     <div class="input-wrapper">
                         <input type="password" id="createPassword" class="form-input" placeholder="Minimum 6 characters">
-                        <button type="button" class="password-toggle" onclick="togglePassword('createPassword', this)">Show</button>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
                     </div>
                     <p class="error-msg" id="passwordError">Password must be at least 6 characters.</p>
                 </div>
@@ -143,13 +143,15 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+        // Initialize Supabase
+        var SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function togglePassword(inputId, btn) {
-            var input = document.getElementById(inputId);
+        function togglePassword() {
+            var input = document.getElementById('createPassword');
+            var btn = event.target;
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = 'Hide';
@@ -160,26 +162,22 @@
         }
 
         function validateEmail(email) {
-            var re = /^[^\s@]+@[^\s@]+\.com$/;
-            return re.test(email);
+            return /^[^\s@]+@[^\s@]+\.com$/.test(email);
         }
 
         function validatePhone(phone) {
             return /^\d{10}$/.test(phone);
         }
 
-        function showError(id, show) {
-            var el = document.getElementById(id);
-            var input = el.previousElementSibling;
-            while (input && input.tagName !== 'INPUT' && input.tagName !== 'DIV') {
-                input = input.previousElementSibling;
-            }
+        function showFieldError(inputId, errorId, show) {
+            var input = document.getElementById(inputId);
+            var error = document.getElementById(errorId);
             if (show) {
-                el.classList.add('show');
-                if (input) input.classList.add('error');
+                input.classList.add('error');
+                error.classList.add('show');
             } else {
-                el.classList.remove('show');
-                if (input) input.classList.remove('error');
+                input.classList.remove('error');
+                error.classList.remove('show');
             }
         }
 
@@ -190,12 +188,18 @@
             var password = document.getElementById('createPassword').value;
             var btn = document.getElementById('createBtn');
 
+            // Reset errors
+            showFieldError('fullName', 'nameError', false);
+            showFieldError('phoneNumber', 'phoneError', false);
+            showFieldError('email', 'emailError', false);
+            showFieldError('createPassword', 'passwordError', false);
+
             var hasError = false;
 
-            if (!name) { showError('nameError', true); hasError = true; } else { showError('nameError', false); }
-            if (!validatePhone(phone)) { showError('phoneError', true); hasError = true; } else { showError('phoneError', false); }
-            if (!validateEmail(email)) { showError('emailError', true); hasError = true; } else { showError('emailError', false); }
-            if (password.length < 6) { showError('passwordError', true); hasError = true; } else { showError('passwordError', false); }
+            if (!name) { showFieldError('fullName', 'nameError', true); hasError = true; }
+            if (!validatePhone(phone)) { showFieldError('phoneNumber', 'phoneError', true); hasError = true; }
+            if (!validateEmail(email)) { showFieldError('email', 'emailError', true); hasError = true; }
+            if (password.length < 6) { showFieldError('createPassword', 'passwordError', true); hasError = true; }
 
             if (hasError) return;
 
@@ -203,6 +207,8 @@
             btn.textContent = 'Creating Account...';
 
             try {
+                console.log('Starting signup...');
+                
                 // Step 1: Sign up with Supabase Auth
                 var authResult = await supabase.auth.signUp({
                     email: email,
@@ -215,15 +221,21 @@
                     }
                 });
 
-                if (authResult.error) throw authResult.error;
+                console.log('Auth result:', authResult);
+
+                if (authResult.error) {
+                    throw authResult.error;
+                }
 
                 var user = authResult.data.user;
 
                 if (!user) {
-                    throw new Error('User creation failed. Please try again.');
+                    throw new Error('User creation failed - no user returned');
                 }
 
-                // Step 2: Insert into users table (no trigger, we do it manually)
+                console.log('User created:', user.id);
+
+                // Step 2: Insert into users table
                 var profileResult = await supabase
                     .from('users')
                     .insert({
@@ -234,12 +246,14 @@
                         status: 'active'
                     });
 
+                console.log('Profile result:', profileResult);
+
                 if (profileResult.error) {
-                    // If insert fails, still continue since auth user was created
                     console.error('Profile insert error:', profileResult.error);
+                    // Don't fail - auth user is created, just log the error
                 }
 
-                // Step 3: Store in localStorage and redirect
+                // Step 3: Store and redirect
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
@@ -248,8 +262,8 @@
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
-                console.error('Signup error:', error);
-                alert('Error: ' + error.message);
+                console.error('Full error:', error);
+                alert('Error: ' + (error.message || 'Unknown error occurred'));
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
             }
