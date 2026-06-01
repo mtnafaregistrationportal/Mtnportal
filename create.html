@@ -62,8 +62,8 @@
             color: #1a1a1a; background: #fafafa; outline: none;
         }
         .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
-        .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
         .form-input::placeholder { color: #aaa; }
+        .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
         .error-msg { color: #e74c3c; font-size: 12px; margin-top: 6px; display: none; }
         .error-msg.show { display: block; }
         .password-toggle {
@@ -101,33 +101,39 @@
         </header>
 
         <div class="auth-content" style="flex: 1;">
-            <div class="auth-card">
+            <div class="auth-card" id="authCard">
                 <h3>Create Account</h3>
                 <p class="subtitle">Register to manage your AFA activity, and track orders</p>
 
                 <div class="form-group">
-                    <label>Full Name</label>
+                    <label>Full Name <span style="color:#e74c3c">*</span></label>
                     <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe">
                     <p class="error-msg" id="nameError">Please enter your full name.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Phone Number</label>
+                    <label>Username <span style="color:#e74c3c">*</span></label>
+                    <input type="text" id="username" class="form-input" placeholder="e.g. johndoe">
+                    <p class="error-msg" id="usernameError">Please enter a username.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number <span style="color:#e74c3c">*</span></label>
                     <input type="tel" id="phoneNumber" class="form-input" placeholder="0240000000" maxlength="10">
                     <p class="error-msg" id="phoneError">Phone number must be exactly 10 digits.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Email Address</label>
+                    <label>Email Address <span style="color:#e74c3c">*</span></label>
                     <input type="email" id="email" class="form-input" placeholder="you@example.com">
                     <p class="error-msg" id="emailError">Please enter a valid email ending with .com</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
+                    <label>Password <span style="color:#e74c3c">*</span></label>
                     <div class="input-wrapper">
                         <input type="password" id="createPassword" class="form-input" placeholder="Minimum 6 characters">
-                        <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
+                        <button type="button" class="password-toggle" onclick="togglePassword('createPassword', this)">Show</button>
                     </div>
                     <p class="error-msg" id="passwordError">Password must be at least 6 characters.</p>
                 </div>
@@ -141,16 +147,16 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        var SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://iqzjpdynmnucxswbrkho.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ";
 
-        function togglePassword() {
-            var input = document.getElementById('createPassword');
-            var btn = event.target;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = 'Hide';
@@ -159,45 +165,53 @@
                 btn.textContent = 'Show';
             }
         }
+        window.togglePassword = togglePassword;
 
         function validateEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.com$/.test(email);
+            const re = /^[^\s@]+@[^\s@]+\.com$/;
+            return re.test(email);
         }
 
         function validatePhone(phone) {
             return /^\d{10}$/.test(phone);
         }
 
-        function showFieldError(inputId, errorId, show) {
-            var input = document.getElementById(inputId);
-            var error = document.getElementById(errorId);
+        function showError(id, show) {
+            const el = document.getElementById(id);
+            const input = el.previousElementSibling;
             if (show) {
-                input.classList.add('error');
-                error.classList.add('show');
+                el.classList.add('show');
+                if (input && input.classList) input.classList.add('error');
             } else {
-                input.classList.remove('error');
-                error.classList.remove('show');
+                el.classList.remove('show');
+                if (input && input.classList) input.classList.remove('error');
             }
         }
 
         async function handleCreateAccount() {
-            var name = document.getElementById('fullName').value.trim();
-            var phone = document.getElementById('phoneNumber').value.trim();
-            var email = document.getElementById('email').value.trim();
-            var password = document.getElementById('createPassword').value;
-            var btn = document.getElementById('createBtn');
+            const name = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const phone = document.getElementById('phoneNumber').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('createPassword').value;
+            const btn = document.getElementById('createBtn');
 
-            // Reset errors
-            showFieldError('fullName', 'nameError', false);
-            showFieldError('phoneNumber', 'phoneError', false);
-            showFieldError('email', 'emailError', false);
-            showFieldError('createPassword', 'passwordError', false);
+            let hasError = false;
 
-            var hasError = false;
-            if (!name) { showFieldError('fullName', 'nameError', true); hasError = true; }
-            if (!validatePhone(phone)) { showFieldError('phoneNumber', 'phoneError', true); hasError = true; }
-            if (!validateEmail(email)) { showFieldError('email', 'emailError', true); hasError = true; }
-            if (password.length < 6) { showFieldError('createPassword', 'passwordError', true); hasError = true; }
+            if (!name) { showError('nameError', true); hasError = true; } else { showError('nameError', false); }
+            
+            if (!username) { 
+                showError('usernameError', true); 
+                document.getElementById('username').classList.add('error');
+                hasError = true; 
+            } else { 
+                showError('usernameError', false); 
+                document.getElementById('username').classList.remove('error');
+            }
+            
+            if (!validatePhone(phone)) { showError('phoneError', true); hasError = true; } else { showError('phoneError', false); }
+            if (!validateEmail(email)) { showError('emailError', true); hasError = true; } else { showError('emailError', false); }
+            if (password.length < 6) { showError('passwordError', true); hasError = true; } else { showError('passwordError', false); }
 
             if (hasError) return;
 
@@ -205,65 +219,78 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                // Step 1: Sign up
-                var authResult = await supabase.auth.signUp({
+                const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         data: {
                             full_name: name,
-                            phone: phone
-                        }
+                            phone: phone,
+                            username: username
+                        },
+                        emailRedirectTo: window.location.origin + '/signin.html'
                     }
                 });
 
-                if (authResult.error) throw authResult.error;
+                if (authError) throw authError;
 
-                var user = authResult.data.user;
-                if (!user) {
-                    throw new Error('Signup failed - no user returned');
+                // Check if email confirmation is required
+                if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+                    alert('An account with this email already exists. Please sign in instead.');
+                    btn.disabled = false;
+                    btn.textContent = 'Create Account';
+                    return;
                 }
 
-                // Step 2: Immediately sign in to get active session
-                var signinResult = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+                // Store pending user info temporarily (do NOT redirect to dashboard)
+                sessionStorage.setItem('pendingEmail', email);
+                sessionStorage.setItem('pendingName', name);
 
-                if (signinResult.error) throw signinResult.error;
-
-                var sessionUser = signinResult.data.user;
-
-                // Step 3: Insert into users table
-                var profileResult = await supabase
-                    .from('users')
-                    .insert({
-                        id: sessionUser.id,
-                        name: name,
-                        email: email,
-                        phone_number: phone,
-                        status: 'active'
-                    });
-
-                if (profileResult.error) {
-                    console.error('Profile insert error (non-fatal):', profileResult.error);
-                }
-
-                // Step 4: Store and redirect
-                localStorage.setItem('userName', name);
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', sessionUser.id);
-                localStorage.setItem('userPhone', phone);
-
-                window.location.href = 'dashboard.html';
+                // Show verification message instead of redirecting
+                document.getElementById('authCard').innerHTML = `
+                    <div style="text-align:center; padding: 20px 0;">
+                        <div style="width: 60px; height: 60px; background: rgba(76, 175, 80, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <h3 style="color: #1a1a1a; font-size: 22px; font-weight: 700; margin-bottom: 12px;">Verify Your Email</h3>
+                        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+                            We've sent a verification link to <strong>${email}</strong>.<<br><br>
+                            Please check your inbox and click the link to activate your account. You will not be able to access the dashboard until your email is verified.
+                        </p>
+                        <a href="signin.html" class="btn-submit" style="display: inline-block; text-decoration: none; text-align: center; margin-top: 0;">Go to Login</a>
+                        <p style="margin-top: 16px; font-size: 13px; color: #999;">
+                            Didn't receive it? <span style="color: #1a1a1a; font-weight: 600; cursor: pointer; text-decoration: underline;" onclick="resendVerification('${email}', '${password}')">Resend</span>
+                        </p>
+                    </div>
+                `;
 
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error: ' + (error.message || 'Something went wrong'));
+                alert('Error: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
             }
         }
+        window.handleCreateAccount = handleCreateAccount;
+
+        async function resendVerification(email, password) {
+            try {
+                const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.origin + '/signin.html'
+                    }
+                });
+                if (error) throw error;
+                alert('Verification email resent! Please check your inbox.');
+            } catch (err) {
+                alert('Error resending: ' + err.message);
+            }
+        }
+        window.resendVerification = resendVerification;
     </script>
 </body>
 </html>
