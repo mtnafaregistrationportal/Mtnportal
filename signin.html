@@ -357,13 +357,7 @@
 
                 const user = authData.user;
 
-                if (!user.email_confirmed_at) {
-                    await supabase.auth.signOut();
-                    alert('Your email is not verified yet. Please check your inbox and click the verification link before signing in.');
-                    btn.disabled = false;
-                    btn.textContent = 'Sign In';
-                    return;
-                }
+                // REMOVED: Email verification check - users can sign in immediately after creating account
 
                 const { data: userData, error: userError } = await supabase
                     .from('users')
@@ -394,8 +388,6 @@
                 
                 if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
                     alert('Wrong email or password. Please try again or click "Forgot Password" to reset.');
-                } else if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
-                    alert('Your email is not verified. Please check your inbox for the verification link.');
                 } else {
                     alert('Error: ' + error.message);
                 }
@@ -430,8 +422,6 @@
             document.querySelectorAll('.code-input').forEach(input => input.value = '');
         }
 
-        // FIXED: Use signInWithOtp with shouldCreateUser: false
-        // This sends the Magic Link template which shows {{ .Token }} as a 6-digit code
         async function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
             const btn = document.getElementById('sendCodeBtn');
@@ -486,7 +476,6 @@
         }
         window.handleBackspace = handleBackspace;
 
-        // FIXED: Verify OTP with type: 'email', then update password, then sign out
         async function verifyResetCode() {
             const inputs = document.querySelectorAll('.code-input');
             const code = Array.from(inputs).map(i => i.value).join('');
@@ -501,7 +490,6 @@
             btn.textContent = 'Verifying...';
 
             try {
-                // Verify the OTP - this logs the user in temporarily
                 const { data, error } = await supabase.auth.verifyOtp({
                     email: resetEmail,
                     token: code,
@@ -510,7 +498,6 @@
 
                 if (error) throw error;
 
-                // User is now logged in. Move to password reset step.
                 showStep('step3');
 
             } catch (error) {
@@ -553,7 +540,6 @@
         }
         window.backToStep1 = backToStep1;
 
-        // FIXED: Update password then sign out so user must log in again
         async function resetPassword() {
             const newPass = document.getElementById('newResetPassword').value;
             const confirmPass = document.getElementById('confirmResetPassword').value;
@@ -572,14 +558,12 @@
             btn.textContent = 'Resetting...';
 
             try {
-                // Update password (user is logged in from OTP verification)
                 const { error } = await supabase.auth.updateUser({
                     password: newPass
                 });
 
                 if (error) throw error;
 
-                // Sign out so they have to log in with new password
                 await supabase.auth.signOut();
                 
                 showStep('step4');
