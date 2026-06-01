@@ -174,6 +174,16 @@
             font-weight: 600;
             cursor: pointer;
         }
+        .cooldown-text {
+            font-size: 13px;
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+        .cooldown-text.show {
+            display: block;
+        }
         @media (min-width: 768px) {
             .auth-content { max-width: 520px; padding: 40px 24px; }
         }
@@ -259,6 +269,7 @@
                     <input type="email" id="resetEmail" class="form-input" placeholder="you@example.com">
                 </div>
                 <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetCode()">Send Reset Code</button>
+                <p class="cooldown-text" id="cooldownMsg">Please wait <span id="cooldownSeconds">60</span> seconds before requesting another code.</p>
                 <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
             </div>
 
@@ -274,7 +285,8 @@
                     <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
                 </div>
                 <button type="button" class="btn-submit" id="verifyCodeBtn" onclick="verifyResetCode()">Verify Code</button>
-                <p class="timer-text">Didn't receive it? <span onclick="resendCode()">Resend</span></p>
+                <p class="timer-text">Didn't receive it? <span id="resendLink" onclick="resendCode()">Resend</span></p>
+                <p class="cooldown-text" id="resendCooldownMsg">Please wait <span id="resendCooldownSeconds">60</span> seconds before resending.</p>
                 <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="backToStep1()">Back</button>
             </div>
 
@@ -321,6 +333,8 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let resetEmail = '';
+        let lastOtpSent = 0;
+        let resendCooldownTimer = null;
 
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -356,8 +370,6 @@
                 if (authError) throw authError;
 
                 const user = authData.user;
-
-                // REMOVED: Email verification check - users can sign in immediately after creating account
 
                 const { data: userData, error: userError } = await supabase
                     .from('users')
@@ -399,6 +411,7 @@
             document.getElementById('forgotModal').classList.add('show');
             showStep('step1');
             document.getElementById('resetEmail').value = document.getElementById('signinEmail').value;
+            document.getElementById('cooldownMsg').classList.remove('show');
         }
         window.showForgotModal = showForgotModal;
 
@@ -409,6 +422,8 @@
                 clearCodeInputs();
                 document.getElementById('newResetPassword').value = '';
                 document.getElementById('confirmResetPassword').value = '';
+                document.getElementById('cooldownMsg').classList.remove('show');
+                stopResendCooldown();
             }, 300);
         }
         window.closeForgotModal = closeForgotModal;
@@ -422,6 +437,36 @@
             document.querySelectorAll('.code-input').forEach(input => input.value = '');
         }
 
+        function startCooldown(elementId, secondsId, duration, callback) {
+            const msgEl = document.getElementById(elementId);
+            const secEl = document.getElementById(secondsId);
+            let remaining = duration;
+            
+            msgEl.classList.add('show');
+            secEl.textContent = remaining;
+            
+            const timer = setInterval(() => {
+                remaining--;
+                secEl.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    msgEl.classList.remove('show');
+                    if (callback) callback();
+                }
+            }, 1000);
+            
+            return timer;
+        }
+
+        function stopResendCooldown() {
+            if (resendCooldownTimer) {
+                clearInterval(resendCooldownTimer);
+                resendCooldownTimer = null;
+            }
+            document.getElementById('resendCooldownMsg').classList.remove('show');
+            document.getElementById('resendLink').style.display = 'inline';
+        }
+
         async function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
             const btn = document.getElementById('sendCodeBtn');
@@ -431,8 +476,18 @@
                 return;
             }
 
+            const now = Date.now();
+            const timeSinceLast = (now - lastOtpSent) / 1000;
+            if (timeSinceLast < 60 && lastOtpSent > 0) {
+                const remaining = Math.ceil(60 - timeSinceLast);
+                document.getElementById('cooldownSeconds').textContent = remaining;
+                document.getElementById('cooldownMsg').classList.add('show');
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Sending...';
+            document.getElementById('cooldownMsg').classList.remove('show');
 
             try {
                 const { error } = await supabase.auth.signInWithOtp({
@@ -444,20 +499,33 @@
 
                 if (error) throw error;
 
+                lastOtpSent = Date.now();
                 resetEmail = email;
                 document.getElementById('codeEmail').textContent = email;
                 showStep('step2');
+                startResendCooldown();
                 
                 setTimeout(() => document.querySelector('.code-input').focus(), 100);
 
             } catch (error) {
-                alert('Error: ' + error.message);
+                if (error.message && error.message.toLowerCase().includes('rate limit')) {
+                    alert('Too many requests. Please wait a minute and try again.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Send Reset Code';
             }
         }
         window.sendResetCode = sendResetCode;
+
+        function startResendCooldown() {
+            document.getElementById('resendLink').style.display = 'none';
+            resendCooldownTimer = startCooldown('resendCooldownMsg', 'resendCooldownSeconds', 60, () => {
+                document.getElementById('resendLink').style.display = 'inline';
+            });
+        }
 
         function moveToNext(input, index) {
             input.value = input.value.replace(/[^0-9]/g, '');
@@ -498,6 +566,7 @@
 
                 if (error) throw error;
 
+                stopResendCooldown();
                 showStep('step3');
 
             } catch (error) {
@@ -512,6 +581,12 @@
         window.verifyResetCode = verifyResetCode;
 
         async function resendCode() {
+            const now = Date.now();
+            const timeSinceLast = (now - lastOtpSent) / 1000;
+            if (timeSinceLast < 60 && lastOtpSent > 0) {
+                return;
+            }
+
             const btn = document.getElementById('verifyCodeBtn');
             btn.disabled = true;
             btn.textContent = 'Resending...';
@@ -522,9 +597,12 @@
                     options: { shouldCreateUser: false }
                 });
                 if (error) throw error;
+                
+                lastOtpSent = Date.now();
                 alert('New code sent! Check your email.');
                 clearCodeInputs();
                 document.querySelector('.code-input').focus();
+                startResendCooldown();
             } catch (error) {
                 alert('Error: ' + error.message);
             } finally {
@@ -537,6 +615,7 @@
         function backToStep1() {
             showStep('step1');
             clearCodeInputs();
+            stopResendCooldown();
         }
         window.backToStep1 = backToStep1;
 
