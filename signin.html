@@ -197,14 +197,12 @@
         </header>
 
         <div class="auth-content" style="flex: 1;">
-            <!-- Welcome Section -->
             <div style="margin-bottom: 24px;">
                 <span class="badge">MTN AFA User Login</span>
                 <h2 class="welcome-title">Welcome back</h2>
                 <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
             </div>
 
-            <!-- Sign In Card -->
             <div class="auth-card" id="signinCard">
                 <h3>Sign in</h3>
                 <p class="subtitle">Enter your account details below.</p>
@@ -231,12 +229,10 @@
                 </div>
             </div>
 
-            <!-- Info Box -->
             <div class="info-box">
                 Use the same email address you registered with to access your dashboard.
             </div>
 
-            <!-- Feature Cards -->
             <div class="feature-cards">
                 <div class="feature-card">
                     <div class="feature-label">Orders</div>
@@ -254,10 +250,8 @@
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
     <div class="modal-overlay" id="forgotModal">
         <div class="modal-card">
-            <!-- Step 1: Enter Email -->
             <div class="step active" id="step1">
                 <h4>Reset Password</h4>
                 <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your registered email to receive a reset code.</p>
@@ -268,7 +262,6 @@
                 <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
             </div>
 
-            <!-- Step 2: Enter Code -->
             <div class="step" id="step2">
                 <h4>Enter Reset Code</h4>
                 <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent a 6-digit code to <strong id="codeEmail"></strong></p>
@@ -285,7 +278,6 @@
                 <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="backToStep1()">Back</button>
             </div>
 
-            <!-- Step 3: New Password -->
             <div class="step" id="step3">
                 <h4>Set New Password</h4>
                 <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your new password below.</p>
@@ -306,7 +298,6 @@
                 <button type="button" class="btn-submit" id="resetPassBtn" onclick="resetPassword()">Reset Password</button>
             </div>
 
-            <!-- Step 4: Success -->
             <div class="step" id="step4">
                 <div class="success-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -330,7 +321,6 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let resetEmail = '';
-        let resetToken = '';
 
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -413,8 +403,6 @@
         }
         window.handleSignIn = handleSignIn;
 
-        // ========== FORGOT PASSWORD FLOW ==========
-
         function showForgotModal() {
             document.getElementById('forgotModal').classList.add('show');
             showStep('step1');
@@ -442,7 +430,8 @@
             document.querySelectorAll('.code-input').forEach(input => input.value = '');
         }
 
-        // FIXED: Use resetPasswordForEmail to send the "Reset Password" template with {{ .Token }}
+        // FIXED: Use signInWithOtp with shouldCreateUser: false
+        // This sends the Magic Link template which shows {{ .Token }} as a 6-digit code
         async function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
             const btn = document.getElementById('sendCodeBtn');
@@ -456,8 +445,11 @@
             btn.textContent = 'Sending...';
 
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '/signin.html'
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: false
+                    }
                 });
 
                 if (error) throw error;
@@ -494,7 +486,7 @@
         }
         window.handleBackspace = handleBackspace;
 
-        // FIXED: Use type: 'recovery' to verify the reset password code
+        // FIXED: Verify OTP with type: 'email', then update password, then sign out
         async function verifyResetCode() {
             const inputs = document.querySelectorAll('.code-input');
             const code = Array.from(inputs).map(i => i.value).join('');
@@ -509,15 +501,16 @@
             btn.textContent = 'Verifying...';
 
             try {
+                // Verify the OTP - this logs the user in temporarily
                 const { data, error } = await supabase.auth.verifyOtp({
                     email: resetEmail,
                     token: code,
-                    type: 'recovery'
+                    type: 'email'
                 });
 
                 if (error) throw error;
 
-                resetToken = data.session;
+                // User is now logged in. Move to password reset step.
                 showStep('step3');
 
             } catch (error) {
@@ -537,8 +530,9 @@
             btn.textContent = 'Resending...';
 
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                    redirectTo: window.location.origin + '/signin.html'
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: resetEmail,
+                    options: { shouldCreateUser: false }
                 });
                 if (error) throw error;
                 alert('New code sent! Check your email.');
@@ -559,6 +553,7 @@
         }
         window.backToStep1 = backToStep1;
 
+        // FIXED: Update password then sign out so user must log in again
         async function resetPassword() {
             const newPass = document.getElementById('newResetPassword').value;
             const confirmPass = document.getElementById('confirmResetPassword').value;
@@ -577,12 +572,14 @@
             btn.textContent = 'Resetting...';
 
             try {
+                // Update password (user is logged in from OTP verification)
                 const { error } = await supabase.auth.updateUser({
                     password: newPass
                 });
 
                 if (error) throw error;
 
+                // Sign out so they have to log in with new password
                 await supabase.auth.signOut();
                 
                 showStep('step4');
