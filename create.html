@@ -219,7 +219,6 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                // Step 1: Create auth user in Supabase (email + password stored automatically)
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -234,7 +233,6 @@
 
                 if (authError) throw authError;
 
-                // Check if user already exists
                 if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
                     alert('An account with this email already exists. Please sign in instead.');
                     btn.disabled = false;
@@ -251,7 +249,6 @@
                     return;
                 }
 
-                // Step 2: Insert user profile data into users table
                 const { error: insertError } = await supabase
                     .from('users')
                     .insert({
@@ -268,14 +265,12 @@
                     throw insertError;
                 }
 
-                // Step 3: Store session info in localStorage
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
                 localStorage.setItem('userPhone', phone);
                 localStorage.setItem('userUsername', username);
 
-                // Step 4: Go straight to dashboard - NO email verification needed
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
