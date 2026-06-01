@@ -685,6 +685,49 @@
         .toast-success { background: #4CAF50; color: white; }
         .toast-error { background: #e74c3c; color: white; }
 
+        /* SMS Settings Modal */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .settings-modal.show { display: flex; }
+        .settings-card {
+            background: rgba(10, 22, 40, 0.98);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .settings-card h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        .settings-card .form-group {
+            margin-bottom: 16px;
+        }
+        .settings-card label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .settings-card input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
         @media (min-width: 768px) {
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
             .admin-content { padding: 40px 24px; }
@@ -723,6 +766,7 @@
             </div>
             <div class="header-actions">
                 <a href="index.html" class="btn-header">🏠 Home</a>
+                <button class="btn-header" onclick="toggleSettings()">⚙️ SMS</button>
                 <button class="btn-logout" onclick="adminLogout()">Logout</button>
             </div>
         </header>
@@ -821,6 +865,24 @@
         </div>
     </div>
 
+    <!-- SMS Settings Modal -->
+    <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)toggleSettings()">
+        <div class="settings-card">
+            <h3>🔔 SMS Notification Settings</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Get SMS alerts when new registrations arrive.</p>
+            <div class="form-group">
+                <label>Admin Phone Number (for SMS alerts)</label>
+                <input type="tel" id="adminPhone" placeholder="e.g. 0241234567" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label>SMS Provider</label>
+                <input type="text" value="Africa's Talking" disabled style="opacity: 0.6;">
+            </div>
+            <button class="btn-submit" onclick="saveSettings()" style="margin-bottom: 10px;">Save Settings</button>
+            <button class="btn-submit" onclick="toggleSettings()" style="background: var(--glass-bg); border: 1px solid var(--glass-border);">Cancel</button>
+        </div>
+    </div>
+
     <!-- Image Modal -->
     <div class="img-modal" id="imgModal" onclick="closeImgModal()">
         <button class="img-modal-close" onclick="closeImgModal()">&times;</button>
@@ -853,6 +915,7 @@
         let allRegistrations = [];
         let allPayments = [];
         let realtimeChannels = [];
+        let adminPhone = localStorage.getItem('adminPhone') || '';
 
         // ============================================================
         // AUTH & LOGIN
@@ -966,6 +1029,26 @@
         }
 
         // ============================================================
+        // SMS NOTIFICATION SETTINGS
+        // ============================================================
+        function toggleSettings() {
+            document.getElementById('settingsModal').classList.toggle('show');
+            document.getElementById('adminPhone').value = adminPhone;
+        }
+
+        function saveSettings() {
+            const phone = document.getElementById('adminPhone').value.trim();
+            if (phone && !/^\d{10}$/.test(phone)) {
+                showToast('Please enter a valid 10-digit phone number', 'error');
+                return;
+            }
+            adminPhone = phone;
+            localStorage.setItem('adminPhone', phone);
+            toggleSettings();
+            showToast('SMS settings saved!', 'success');
+        }
+
+        // ============================================================
         // DATA LOADING & REALTIME
         // ============================================================
         async function loadAllData() {
@@ -1012,24 +1095,15 @@
         }
 
         async function loadPayments() {
-            const { data, error } = await supabase
-                .from('transactions')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading payments:', error);
-                return;
-            }
-
-            allPayments = data || [];
+            // FIXED: Calculate revenue from registrations table (not transactions)
             let revenue = 0;
-            allPayments.forEach(p => {
-                if (p.status === 'success') revenue += (p.amount || 0);
+            allRegistrations.forEach(r => {
+                if (r.status !== 'rejected' && r.amount) {
+                    revenue += r.amount;
+                }
             });
             document.getElementById('statRevenue').textContent = revenue.toFixed(2);
             renderPayments();
-            updateStats();
         }
 
         function setupRealtimeSubscriptions() {
@@ -1042,23 +1116,51 @@
                 .subscribe();
             realtimeChannels.push(usersChannel);
 
-            // Realtime registrations
+            // Realtime registrations - with SMS notification on INSERT
             const regChannel = supabase
                 .channel('registrations_changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'registrations' }, (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        // New registration arrived - show toast and send SMS
+                        showToast('🎉 New registration received!', 'success');
+                        sendSMSNotification(payload.new);
+                    }
                     loadRegistrations();
                 })
                 .subscribe();
             realtimeChannels.push(regChannel);
+        }
 
-            // Realtime transactions
-            const transChannel = supabase
-                .channel('transactions_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
-                    loadPayments();
-                })
-                .subscribe();
-            realtimeChannels.push(transChannel);
+        // Send SMS notification for new registration
+        async function sendSMSNotification(registration) {
+            if (!adminPhone) return; // No phone number set
+            
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const token = sessionData.session.access_token;
+
+                const response = await fetch(`${EDGE_FUNCTION_URL}/send-sms-notification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        to: adminPhone,
+                        message: `New AFA Registration! Name: ${registration.applicant_name || 'Unknown'}, Phone: ${registration.applicant_phone || 'N/A'}, Amount: GH₵${registration.amount || 15}. Check admin dashboard.`,
+                        registration_id: registration.id
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    console.error('SMS failed:', result.error);
+                } else {
+                    console.log('SMS sent:', result);
+                }
+            } catch (error) {
+                console.error('SMS error:', error);
+            }
         }
 
         function updateStats() {
@@ -1167,19 +1269,17 @@
                                   status === 'rejected' ? 'Rejected' : 
                                   status === 'paid' ? 'Paid - Pending' : 'Pending';
 
+                // FIXED: Show uploads using selfie_url, front_url, back_url
                 let uploadsHtml = '';
-                if (r.uploads) {
-                    const thumbs = [];
-                    if (r.uploads.profile_photo) thumbs.push(r.uploads.profile_photo);
-                    if (r.uploads.selfie) thumbs.push(r.uploads.selfie);
-                    if (r.uploads.ghana_card_front) thumbs.push(r.uploads.ghana_card_front);
-                    if (r.uploads.ghana_card_back) thumbs.push(r.uploads.ghana_card_back);
-                    
-                    if (thumbs.length > 0) {
-                        uploadsHtml = '<div class="uploads-row">' + 
-                            thumbs.map(url => `<img src="${url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${url}')" alt="Upload" onerror="this.style.display='none'">`).join('') + 
-                            '</div>';
-                    }
+                const thumbs = [];
+                if (r.selfie_url) thumbs.push({ url: r.selfie_url, label: 'Selfie' });
+                if (r.front_url) thumbs.push({ url: r.front_url, label: 'ID Front' });
+                if (r.back_url) thumbs.push({ url: r.back_url, label: 'ID Back' });
+                
+                if (thumbs.length > 0) {
+                    uploadsHtml = '<div class="uploads-row">' + 
+                        thumbs.map(t => `<img src="${t.url}" class="upload-thumb" onclick="event.stopPropagation();openImgModal('${t.url}')" alt="${t.label}" onerror="this.style.display='none'">`).join('') + 
+                        '</div>';
                 }
 
                 const showActions = status !== 'approved' && status !== 'rejected';
@@ -1230,13 +1330,13 @@
 
         function renderPayments(filter = '') {
             const container = document.getElementById('paymentsList');
-            let payments = allPayments;
+            let payments = allRegistrations; // Show registrations as payments
             
             if (filter) {
                 const f = filter.toLowerCase();
                 payments = payments.filter(p => 
-                    (p.email || '').toLowerCase().includes(f) ||
-                    (p.reference || '').includes(f)
+                    (p.applicant_name || '').toLowerCase().includes(f) ||
+                    (p.payment_reference || '').includes(f)
                 );
             }
 
@@ -1250,13 +1350,13 @@
                     <div class="payment-info">
                         <div class="payment-amount">GH₵ ${(p.amount || 0).toFixed(2)}</div>
                         <div class="payment-meta">
-                            ${p.type || 'unknown'} • ${p.reference || 'N/A'} • ${p.email || 'N/A'}
+                            ${p.applicant_name || 'Unknown'} • ${p.payment_reference || 'N/A'} • ${p.applicant_phone || 'N/A'}
                         </div>
                         <div class="payment-meta">
                             ${p.created_at ? new Date(p.created_at).toLocaleString() : 'N/A'}
                         </div>
                     </div>
-                    <span class="status-badge ${p.status === 'success' ? 'badge-approved' : 'badge-pending'}">
+                    <span class="status-badge ${p.status === 'approved' ? 'badge-approved' : (p.status === 'rejected' ? 'badge-rejected' : 'badge-pending')}">
                         ${p.status || 'pending'}
                     </span>
                 </div>
@@ -1296,7 +1396,6 @@
         // ============================================================
         async function loadStorageData() {
             try {
-                // List files from registration-photos bucket
                 const { data: files, error } = await supabase
                     .storage
                     .from('registration-photos')
@@ -1318,56 +1417,7 @@
                     }
                 }
 
-                // Also check for folder structures
-                try {
-                    const { data: folders } = await supabase
-                        .storage
-                        .from('registration-photos')
-                        .list('uploads');
-                    
-                    if (folders) {
-                        for (const folder of folders) {
-                            if (folder.id) { // It's a folder
-                                const { data: subFiles } = await supabase
-                                    .storage
-                                    .from('registration-photos')
-                                    .list(`uploads/${folder.name}`);
-                                
-                                if (subFiles) {
-                                    for (const f of subFiles) {
-                                        totalSize += (f.metadata?.size || 0);
-                                        fileDetails.push({
-                                            name: `uploads/${folder.name}/${f.name}`,
-                                            size: formatBytes(f.metadata?.size || 0),
-                                            updated: f.updated_at ? new Date(f.updated_at).toLocaleDateString() : 'N/A'
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch(e) {}
-
-                // Check profile pictures
-                try {
-                    const { data: profileFiles } = await supabase
-                        .storage
-                        .from('registration-photos')
-                        .list('profilePictures');
-                    
-                    if (profileFiles) {
-                        for (const f of profileFiles) {
-                            totalSize += (f.metadata?.size || 0);
-                            fileDetails.push({
-                                name: `profilePictures/${f.name}`,
-                                size: formatBytes(f.metadata?.size || 0),
-                                updated: f.updated_at ? new Date(f.updated_at).toLocaleDateString() : 'N/A'
-                            });
-                        }
-                    }
-                } catch(e) {}
-
-                const maxSize = 1024 * 1024 * 1024; // 1 GB
+                const maxSize = 1024 * 1024 * 1024;
                 const usedPercent = (totalSize / maxSize) * 100;
                 
                 document.getElementById('storageUsedText').textContent = `${formatBytes(totalSize)} / 1 GB`;
@@ -1495,8 +1545,6 @@
 
                 showLoading(false);
                 showToast('Registration approved successfully!', 'success');
-                
-                // Refresh data
                 await loadRegistrations();
 
             } catch (error) {
@@ -1540,7 +1588,7 @@
                 showLoading(false);
                 showToast('Registration rejected. Refund processed.', 'success');
                 await loadRegistrations();
-                await loadUsers(); // Refresh wallet balances
+                await loadUsers();
 
             } catch (error) {
                 showLoading(false);
