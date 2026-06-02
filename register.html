@@ -427,6 +427,7 @@
 
         let currentUser = null;
         let registrationData = null;
+        let uploadedFiles = null;
 
         async function initRegister() {
             try {
@@ -469,37 +470,17 @@
         }
 
         function handleFile(input, boxId, previewId, textId) {
-            var box = document.getElementById(boxId);
-            var text = document.getElementById(textId);
-            var preview = document.getElementById(previewId);
-            
-            if (input.files && input.files[0]) {
-                var file = input.files[0];
-                text.textContent = file.name;
-                box.classList.add('has-file');
-                
-                if (file.type.startsWith('image/')) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                        preview.classList.add('show');
-                    };
-                    reader.onerror = function() {
-                        alert('Error reading file. Please try again.');
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.style.display = 'none';
-                    preview.classList.remove('show');
-                }
-            } else {
-                text.textContent = 'Choose File — No file chosen';
-                box.classList.remove('has-file');
-                preview.style.display = 'none';
-                preview.classList.remove('show');
-                preview.src = '';
-            }
+            const file = input.files[0];
+            const box = document.getElementById(boxId);
+            const preview = document.getElementById(previewId);
+            const text = document.getElementById(textId);
+            if (!file) return;
+            text.textContent = file.name;
+            box.classList.add('has-file');
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+            preview.classList.add('show');
         }
 
         function openCamera() {
@@ -512,6 +493,9 @@
         }
 
         async function submitRegistration() {
+            console.log('Current User:', currentUser);
+            alert('Submit button clicked');
+
             if (!currentUser) {
                 alert('Please wait... Loading user session.');
                 return;
@@ -541,96 +525,88 @@
             if (!frontFile) { alert('Please upload Ghana Card Front.'); return; }
             if (!backFile) { alert('Please upload Ghana Card Back.'); return; }
 
+            // Store files for later upload after payment
+            uploadedFiles = { selfie, frontFile, backFile };
+
+            var prefix = phone.substring(0, 3);
+            var mtn = ['024','025','053','054','055','059'];
+            var airteltigo = ['026','027','056','057'];
+            var telecel = ['020','050'];
+            var detectedNetwork = 'Unknown';
+            if (mtn.indexOf(prefix) !== -1) detectedNetwork = 'MTN';
+            else if (airteltigo.indexOf(prefix) !== -1) detectedNetwork = 'AirtelTigo';
+            else if (telecel.indexOf(prefix) !== -1) detectedNetwork = 'Telecel';
+
+            registrationData = {
+                userId: currentUser.id,
+                applicantName: name,
+                applicantPhone: phone,
+                idType: idType,
+                idNumber: idNumber,
+                location: location,
+                dob: dob,
+                occupation: occupation,
+                detectedNetwork: detectedNetwork,
+                amount: 15
+            };
+
             var btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.textContent = 'Uploading files...';
+            btn.textContent = 'Opening payment...';
 
+            var timestamp = Date.now();
+
+            var handler = PaystackPop.setup({
+                key: PAYSTACK_PUBLIC_KEY,
+                email: currentUser.email,
+                amount: 1500,
+                currency: 'GHS',
+                ref: 'AFA_' + timestamp + '_' + Math.floor(Math.random() * 1000000),
+                metadata: {
+                    custom_fields: [
+                        { display_name: "Registration Type", variable_name: "registration_type", value: "MTN AFA Bundle" },
+                        { display_name: "Applicant Name", variable_name: "applicant_name", value: name },
+                        { display_name: "Phone Number", variable_name: "phone_number", value: phone }
+                    ]
+                },
+                callback: async function(response) {
+                    btn.textContent = 'Uploading files...';
+                    await processAfterPayment(response.reference, timestamp);
+                },
+                onClose: function() {
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Registration';
+                    alert('Payment window closed. Please complete payment to submit your registration.');
+                }
+            });
+            
+            handler.openIframe();
+        }
+
+        async function processAfterPayment(transactionReference, timestamp) {
+            var btn = document.getElementById('submitBtn');
+            
             try {
-                var timestamp = Date.now();
-                var userId = currentUser.id;
-
+                var userId = registrationData.userId;
                 var selfiePath = 'registrations/' + userId + '/' + timestamp + '_selfie.jpg';
                 var frontPath = 'registrations/' + userId + '/' + timestamp + '_front.jpg';
                 var backPath = 'registrations/' + userId + '/' + timestamp + '_back.jpg';
 
-                var selfieResult = await supabase.storage.from('registration-photos').upload(selfiePath, selfie);
+                // Upload files AFTER payment
+                var selfieResult = await supabase.storage.from('registration-photos').upload(selfiePath, uploadedFiles.selfie);
                 if (selfieResult.error) throw selfieResult.error;
 
-                var frontResult = await supabase.storage.from('registration-photos').upload(frontPath, frontFile);
+                var frontResult = await supabase.storage.from('registration-photos').upload(frontPath, uploadedFiles.frontFile);
                 if (frontResult.error) throw frontResult.error;
 
-                var backResult = await supabase.storage.from('registration-photos').upload(backPath, backFile);
+                var backResult = await supabase.storage.from('registration-photos').upload(backPath, uploadedFiles.backFile);
                 if (backResult.error) throw backResult.error;
 
                 var selfieUrlData = supabase.storage.from('registration-photos').getPublicUrl(selfiePath);
                 var frontUrlData = supabase.storage.from('registration-photos').getPublicUrl(frontPath);
                 var backUrlData = supabase.storage.from('registration-photos').getPublicUrl(backPath);
 
-                var prefix = phone.substring(0, 3);
-                var mtn = ['024','025','053','054','055','059'];
-                var airteltigo = ['026','027','056','057'];
-                var telecel = ['020','050'];
-                var detectedNetwork = 'Unknown';
-                if (mtn.indexOf(prefix) !== -1) detectedNetwork = 'MTN';
-                else if (airteltigo.indexOf(prefix) !== -1) detectedNetwork = 'AirtelTigo';
-                else if (telecel.indexOf(prefix) !== -1) detectedNetwork = 'Telecel';
-
-                registrationData = {
-                    userId: userId,
-                    applicantName: name,
-                    applicantPhone: phone,
-                    idType: idType,
-                    idNumber: idNumber,
-                    location: location,
-                    dob: dob,
-                    occupation: occupation,
-                    selfieUrl: selfieUrlData.data.publicUrl,
-                    frontUrl: frontUrlData.data.publicUrl,
-                    backUrl: backUrlData.data.publicUrl,
-                    detectedNetwork: detectedNetwork,
-                    amount: 15
-                };
-
-                btn.textContent = 'Opening payment...';
-
-                var handler = PaystackPop.setup({
-                    key: PAYSTACK_PUBLIC_KEY,
-                    email: currentUser.email,
-                    amount: 1500,
-                    currency: 'GHS',
-                    ref: 'AFA_' + timestamp + '_' + Math.floor(Math.random() * 1000000),
-                    metadata: {
-                        custom_fields: [
-                            { display_name: "Registration Type", variable_name: "registration_type", value: "MTN AFA Bundle" },
-                            { display_name: "Applicant Name", variable_name: "applicant_name", value: name },
-                            { display_name: "Phone Number", variable_name: "phone_number", value: phone }
-                        ]
-                    },
-                    callback: async function(response) {
-                        btn.textContent = 'Processing payment...';
-                        await processAfterPayment(response.reference);
-                    },
-                    onClose: function() {
-                        btn.disabled = false;
-                        btn.textContent = 'Submit Registration';
-                        alert('Payment window closed. Please complete payment to submit your registration.');
-                    }
-                });
-                
-                handler.openIframe();
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error: ' + (error.message || error));
-                btn.disabled = false;
-                btn.textContent = 'Submit Registration';
-            }
-        }
-
-        async function processAfterPayment(transactionReference) {
-            var btn = document.getElementById('submitBtn');
-            
-            try {
+                // Save registration with URLs
                 var result = await supabase.from('registrations').insert([{
                     user_id: registrationData.userId,
                     applicant_name: registrationData.applicantName,
@@ -640,9 +616,9 @@
                     location: registrationData.location,
                     dob: registrationData.dob,
                     occupation: registrationData.occupation,
-                    selfie_url: registrationData.selfieUrl,
-                    front_url: registrationData.frontUrl,
-                    back_url: registrationData.backUrl,
+                    selfie_url: selfieUrlData.data.publicUrl,
+                    front_url: frontUrlData.data.publicUrl,
+                    back_url: backUrlData.data.publicUrl,
                     detected_network: registrationData.detectedNetwork,
                     amount: registrationData.amount,
                     status: 'pending',
@@ -657,7 +633,7 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('Payment received but registration failed. Please contact support with reference: ' + transactionReference);
+                alert('Payment received but file upload failed. Please contact support with reference: ' + transactionReference);
                 btn.disabled = false;
                 btn.textContent = 'Submit Registration';
             }
