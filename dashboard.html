@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard - MTN AFA Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -24,6 +24,7 @@
             color: var(--text-white);
             overflow-x: hidden;
             padding-bottom: 80px;
+            -webkit-text-size-adjust: 100%;
         }
         .dash-header {
             display: flex;
@@ -120,6 +121,7 @@
             padding: 20px;
             max-width: 480px;
             margin: 0 auto;
+            min-height: calc(100vh - 80px);
         }
         .profile-upload-section {
             text-align: center;
@@ -127,21 +129,21 @@
         }
         .profile-upload-container {
             position: relative;
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             margin: 0 auto 12px;
         }
         .profile-pic-dash {
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid var(--primary-yellow);
             display: block;
         }
         .profile-pic-placeholder-dash {
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             background: rgba(255,255,255,0.1);
             border: 3px solid var(--primary-yellow);
@@ -151,16 +153,16 @@
             margin: 0 auto;
         }
         .profile-pic-placeholder-dash svg {
-            width: 40px;
-            height: 40px;
+            width: 56px;
+            height: 56px;
             color: var(--text-muted);
         }
         .change-pic-btn-dash {
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             background: var(--primary-yellow);
             border-radius: 50%;
             display: flex;
@@ -171,8 +173,8 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .change-pic-btn-dash svg {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             color: #1a1a1a;
         }
         .change-pic-btn-dash input[type="file"] {
