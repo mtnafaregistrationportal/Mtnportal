@@ -162,7 +162,6 @@
             font-size: 11px; color: #999;
             margin-bottom: 8px;
         }
-        /* Updated upload box styles to match screenshot */
         .upload-box {
             border: 2px dashed #ccc;
             border-radius: 12px;
@@ -214,7 +213,6 @@
         .upload-preview.show {
             display: block;
         }
-        /* Updated camera button style */
         .camera-btn {
             display: inline-flex; align-items: center; gap: 6px;
             margin-top: 10px; padding: 10px 18px;
@@ -431,12 +429,24 @@
         let registrationData = null;
 
         async function initRegister() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'signin.html';
-                return;
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) {
+                    console.error('Session error:', error);
+                    alert('Authentication error. Please sign in again.');
+                    window.location.href = 'signin.html';
+                    return;
+                }
+                if (!session) {
+                    window.location.href = 'signin.html';
+                    return;
+                }
+                currentUser = session.user;
+                console.log('User loaded:', currentUser.email);
+            } catch (err) {
+                console.error('Init error:', err);
+                alert('Failed to initialize. Please refresh the page.');
             }
-            currentUser = session.user;
         }
 
         function detectNetwork(phone) {
@@ -494,11 +504,19 @@
 
         function openCamera() {
             var selfieInput = document.getElementById('selfieFile');
-            selfieInput.setAttribute('capture', 'user');
-            selfieInput.click();
+            selfieInput.removeAttribute('capture');
+            setTimeout(function() {
+                selfieInput.setAttribute('capture', 'user');
+                selfieInput.click();
+            }, 50);
         }
 
         async function submitRegistration() {
+            if (!currentUser) {
+                alert('Please wait... Loading user session.');
+                return;
+            }
+
             var name = document.getElementById('appName').value.trim();
             var phone = document.getElementById('appPhone').value.trim();
             var idType = document.getElementById('idType').value;
@@ -510,7 +528,6 @@
             var frontFile = document.getElementById('frontFile').files[0];
             var backFile = document.getElementById('backFile').files[0];
 
-            // Validation: check all required fields
             if (!name) { alert('Please enter Full Name.'); return; }
             if (!phone) { alert('Please enter Phone Number.'); return; }
             if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
@@ -614,7 +631,6 @@
             var btn = document.getElementById('submitBtn');
             
             try {
-                // Save to 'registrations' table with pending status
                 var result = await supabase.from('registrations').insert([{
                     user_id: registrationData.userId,
                     applicant_name: registrationData.applicantName,
