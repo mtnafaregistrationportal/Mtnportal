@@ -58,6 +58,44 @@
             display: flex; align-items: center; gap: 6px;
             font-weight: 500;
         }
+        .menu-btn {
+            width: 40px; height: 40px;
+            background: none; border: none; cursor: pointer;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 4px;
+        }
+        .menu-btn span {
+            width: 20px; height: 2px;
+            background: var(--text-white);
+            border-radius: 2px; transition: all 0.3s ease;
+        }
+        .menu-btn.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+        .menu-btn.active span:nth-child(2) { opacity: 0; }
+        .menu-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+        .side-menu {
+            position: fixed; top: 0; right: -300px;
+            width: 280px; height: 100vh;
+            background: rgba(10, 22, 40, 0.98);
+            backdrop-filter: blur(30px);
+            border-left: 1px solid var(--glass-border);
+            z-index: 100; transition: right 0.3s ease;
+            padding: 80px 24px 24px;
+        }
+        .side-menu.open { right: 0; }
+        .side-menu-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 99; display: none;
+        }
+        .side-menu-overlay.show { display: block; }
+        .menu-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 0; color: var(--text-light);
+            text-decoration: none; font-size: 15px; font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: color 0.2s;
+        }
+        .menu-item:hover { color: var(--primary-yellow); }
+        .menu-icon { width: 24px; height: 24px; }
         .reg-content {
             padding: 20px;
             max-width: 480px;
@@ -151,24 +189,21 @@
                 padding: 12px 14px;
             }
         }
-        .file-input-wrapper { margin-bottom: 16px; }
-        .file-input-wrapper > label {
+        .file-input-wrapper { margin-bottom: 12px; }
+        .file-input-wrapper label {
             display: block; font-size: 13px;
             font-weight: 500; color: #1a1a1a;
             margin-bottom: 6px;
         }
-        .file-input-wrapper > label .required { color: #e74c3c; }
+        .file-input-wrapper label .required { color: #e74c3c; }
         .file-hint {
             font-size: 11px; color: #999;
             margin-bottom: 8px;
         }
         .upload-box {
             border: 2px dashed #ccc;
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            background: #fafafa;
-            cursor: pointer;
+            border-radius: 12px; padding: 30px 20px;
+            text-align: center; cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -212,15 +247,6 @@
         }
         .upload-preview.show {
             display: block;
-        }
-        .camera-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 10px; padding: 10px 18px;
-            background: #1a1a1a;
-            border: none;
-            color: #ffffff;
-            border-radius: 10px; font-size: 13px;
-            font-weight: 600; cursor: pointer;
         }
         .network-badge {
             display: inline-block; padding: 4px 10px;
@@ -269,38 +295,21 @@
             transform: translateY(0);
         }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .debug-box {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #000;
-            color: #0f0;
-            font-size: 11px;
-            padding: 8px;
-            z-index: 9999;
-            max-height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
-            border-top: 2px solid #333;
+        .camera-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 10px; padding: 10px 18px;
+            background: #1a1a1a;
+            border: none;
+            color: #ffffff;
+            border-radius: 10px; font-size: 13px;
+            font-weight: 600; cursor: pointer;
         }
-        .debug-box div {
-            margin-bottom: 2px;
-            word-break: break-all;
-        }
-        .error-text { color: #ff4444; }
-        .success-text { color: #44ff44; }
-        .info-text { color: #ffff44; }
         @media (min-width: 768px) {
             .reg-content { max-width: 520px; padding: 40px 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="debug-box" id="debugBox">
-        <div class="info-text">Debug mode ON - Loading...</div>
-    </div>
-
     <header class="reg-header">
         <a href="dashboard.html" class="back-btn">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -316,8 +325,26 @@
                 <h2>MTN AFA Portal</h2>
             </div>
         </div>
-        <div style="width: 40px;"></div>
+        <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </button>
     </header>
+
+    <div class="side-menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <a href="register.html" class="menu-item">
+            <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            New Registration
+        </a>
+        <a href="orders.html" class="menu-item">
+            <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+            Orders
+        </a>
+        <a href="profile.html" class="menu-item">
+            <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            Profile
+        </a>
+    </div>
 
     <div class="reg-content">
         <h1 class="reg-title">Register AFA</h1>
@@ -446,7 +473,7 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script>
         const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IlsxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
         const PAYSTACK_PUBLIC_KEY = 'pk_live_096a3512f06978f9da895a53906347b45da766a7';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -455,34 +482,27 @@
         let registrationData = null;
         let uploadedFiles = null;
 
-        function debug(msg, type) {
-            var box = document.getElementById('debugBox');
-            var line = document.createElement('div');
-            line.textContent = new Date().toLocaleTimeString() + ' | ' + msg;
-            if (type === 'error') line.className = 'error-text';
-            else if (type === 'success') line.className = 'success-text';
-            else line.className = 'info-text';
-            box.appendChild(line);
-            box.scrollTop = box.scrollHeight;
-        }
-
         async function initRegister() {
-            debug('Checking Supabase session...');
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) {
-                    debug('Supabase error: ' + error.message, 'error');
+                    console.error('Session error:', error);
                     return;
                 }
                 if (!session) {
-                    debug('No session found - user not logged in', 'error');
+                    window.location.href = 'signin.html';
                     return;
                 }
                 currentUser = session.user;
-                debug('User loaded: ' + currentUser.email, 'success');
             } catch (err) {
-                debug('Init error: ' + err.message, 'error');
+                console.error('Init error:', err);
             }
+        }
+
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('show');
+            document.getElementById('menuBtn').classList.toggle('active');
         }
 
         function detectNetwork(phone) {
@@ -516,11 +536,9 @@
             preview.src = url;
             preview.style.display = 'block';
             preview.classList.add('show');
-            debug('File selected: ' + file.name, 'success');
         }
 
         function openCamera() {
-            debug('Opening camera...');
             var selfieInput = document.getElementById('selfieFile');
             selfieInput.removeAttribute('capture');
             setTimeout(function() {
@@ -530,15 +548,10 @@
         }
 
         async function submitRegistration() {
-            debug('=== SUBMIT CLICKED ===', 'success');
-
             if (!currentUser) {
-                debug('ERROR: No user logged in', 'error');
-                alert('You are not logged in. Please sign in first.');
+                alert('Please wait... Loading user session.');
                 return;
             }
-
-            debug('User: ' + currentUser.email);
 
             var name = document.getElementById('appName').value.trim();
             var phone = document.getElementById('appPhone').value.trim();
@@ -551,20 +564,18 @@
             var frontFile = document.getElementById('frontFile').files[0];
             var backFile = document.getElementById('backFile').files[0];
 
-            if (!name) { debug('Validation: Name empty', 'error'); alert('Please enter Full Name.'); return; }
-            if (!phone) { debug('Validation: Phone empty', 'error'); alert('Please enter Phone Number.'); return; }
+            if (!name) { alert('Please enter Full Name.'); return; }
+            if (!phone) { alert('Please enter Phone Number.'); return; }
             if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-                debug('Validation: Phone invalid', 'error'); alert('Phone number must be exactly 10 digits.'); return;
+                alert('Phone number must be exactly 10 digits.'); return;
             }
-            if (!idNumber) { debug('Validation: ID empty', 'error'); alert('Please enter ID Number.'); return; }
-            if (!location) { debug('Validation: Location empty', 'error'); alert('Please enter Location.'); return; }
-            if (!dob) { debug('Validation: DOB empty', 'error'); alert('Please select Date of Birth.'); return; }
-            if (!occupation) { debug('Validation: Occupation empty', 'error'); alert('Please enter Occupation.'); return; }
-            if (!selfie) { debug('Validation: Selfie missing', 'error'); alert('Please upload Selfie Photo.'); return; }
-            if (!frontFile) { debug('Validation: Front missing', 'error'); alert('Please upload Ghana Card Front.'); return; }
-            if (!backFile) { debug('Validation: Back missing', 'error'); alert('Please upload Ghana Card Back.'); return; }
-
-            debug('All fields valid', 'success');
+            if (!idNumber) { alert('Please enter ID Number.'); return; }
+            if (!location) { alert('Please enter Location.'); return; }
+            if (!dob) { alert('Please select Date of Birth.'); return; }
+            if (!occupation) { alert('Please enter Occupation.'); return; }
+            if (!selfie) { alert('Please upload Selfie Photo.'); return; }
+            if (!frontFile) { alert('Please upload Ghana Card Front.'); return; }
+            if (!backFile) { alert('Please upload Ghana Card Back.'); return; }
 
             uploadedFiles = { selfie, frontFile, backFile };
 
@@ -594,17 +605,12 @@
             btn.disabled = true;
             btn.textContent = 'Opening payment...';
 
-            debug('Paystack type: ' + typeof PaystackPop);
-
             if (typeof PaystackPop === 'undefined') {
-                debug('ERROR: Paystack not loaded!', 'error');
-                alert('Paystack payment system failed to load. Check your internet connection.');
+                alert('Paystack is not loaded. Please check your internet and refresh.');
                 btn.disabled = false;
                 btn.textContent = 'Submit Registration';
                 return;
             }
-
-            debug('Opening Paystack...', 'info');
 
             var timestamp = Date.now();
 
@@ -622,12 +628,10 @@
                     ]
                 },
                 callback: async function(response) {
-                    debug('Payment success! Ref: ' + response.reference, 'success');
                     btn.textContent = 'Uploading files...';
                     await processAfterPayment(response.reference, timestamp);
                 },
                 onClose: function() {
-                    debug('Payment window closed', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Submit Registration';
                     alert('Payment window closed. Please complete payment to submit your registration.');
@@ -635,7 +639,6 @@
             });
             
             handler.openIframe();
-            debug('Paystack iframe opened', 'success');
         }
 
         async function processAfterPayment(transactionReference, timestamp) {
@@ -647,26 +650,19 @@
                 var frontPath = 'registrations/' + userId + '/' + timestamp + '_front.jpg';
                 var backPath = 'registrations/' + userId + '/' + timestamp + '_back.jpg';
 
-                debug('Uploading selfie...', 'info');
                 var selfieResult = await supabase.storage.from('registration-photos').upload(selfiePath, uploadedFiles.selfie);
                 if (selfieResult.error) throw selfieResult.error;
-                debug('Selfie uploaded', 'success');
 
-                debug('Uploading front...', 'info');
                 var frontResult = await supabase.storage.from('registration-photos').upload(frontPath, uploadedFiles.frontFile);
                 if (frontResult.error) throw frontResult.error;
-                debug('Front uploaded', 'success');
 
-                debug('Uploading back...', 'info');
                 var backResult = await supabase.storage.from('registration-photos').upload(backPath, uploadedFiles.backFile);
                 if (backResult.error) throw backResult.error;
-                debug('Back uploaded', 'success');
 
                 var selfieUrlData = supabase.storage.from('registration-photos').getPublicUrl(selfiePath);
                 var frontUrlData = supabase.storage.from('registration-photos').getPublicUrl(frontPath);
                 var backUrlData = supabase.storage.from('registration-photos').getPublicUrl(backPath);
 
-                debug('Saving to database...', 'info');
                 var result = await supabase.from('registrations').insert([{
                     user_id: registrationData.userId,
                     applicant_name: registrationData.applicantName,
@@ -688,13 +684,12 @@
 
                 if (result.error) throw result.error;
 
-                debug('Registration saved!', 'success');
                 alert('Registration submitted successfully! Redirecting to your orders...');
                 window.location.href = 'orders.html';
 
             } catch (error) {
-                debug('ERROR: ' + error.message, 'error');
-                alert('Payment received but file upload failed. Please contact support with reference: ' + transactionReference);
+                console.error('Error:', error);
+                alert('Payment received but registration failed. Please contact support with reference: ' + transactionReference);
                 btn.disabled = false;
                 btn.textContent = 'Submit Registration';
             }
