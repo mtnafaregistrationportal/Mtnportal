@@ -304,29 +304,12 @@
             border-radius: 10px; font-size: 13px;
             font-weight: 600; cursor: pointer;
         }
-        .session-error {
-            background: rgba(244, 67, 54, 0.2);
-            color: #F44336;
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .session-error a {
-            color: #FFD700;
-            text-decoration: underline;
-        }
         @media (min-width: 768px) {
             .reg-content { max-width: 520px; padding: 40px 24px; }
         }
     </style>
 </head>
 <body>
-    <div id="sessionError" class="session-error" style="display:none;">
-        Session not found. <a href="signin.html">Click here to sign in again</a>
-    </div>
-
     <header class="reg-header">
         <a href="dashboard.html" class="back-btn">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -504,25 +487,17 @@
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) {
                     console.error('Session error:', error);
-                    showSessionError();
                     return;
                 }
                 if (!session) {
                     console.log('No session found');
-                    showSessionError();
                     return;
                 }
                 currentUser = session.user;
                 console.log('User loaded:', currentUser.email);
-                document.getElementById('sessionError').style.display = 'none';
             } catch (err) {
                 console.error('Init error:', err);
-                showSessionError();
             }
-        }
-
-        function showSessionError() {
-            document.getElementById('sessionError').style.display = 'block';
         }
 
         function toggleMenu() {
@@ -574,11 +549,13 @@
         }
 
         async function submitRegistration() {
+            alert('1. Button clicked!');
+
             if (!currentUser) {
-                alert('You are not logged in. Please sign in first.');
-                showSessionError();
+                alert('2. ERROR: No user logged in');
                 return;
             }
+            alert('2. User OK: ' + currentUser.email);
 
             var name = document.getElementById('appName').value.trim();
             var phone = document.getElementById('appPhone').value.trim();
@@ -591,18 +568,20 @@
             var frontFile = document.getElementById('frontFile').files[0];
             var backFile = document.getElementById('backFile').files[0];
 
-            if (!name) { alert('Please enter Full Name.'); return; }
-            if (!phone) { alert('Please enter Phone Number.'); return; }
+            if (!name) { alert('Validation: Name empty'); return; }
+            if (!phone) { alert('Validation: Phone empty'); return; }
             if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-                alert('Phone number must be exactly 10 digits.'); return;
+                alert('Validation: Phone invalid'); return;
             }
-            if (!idNumber) { alert('Please enter ID Number.'); return; }
-            if (!location) { alert('Please enter Location.'); return; }
-            if (!dob) { alert('Please select Date of Birth.'); return; }
-            if (!occupation) { alert('Please enter Occupation.'); return; }
-            if (!selfie) { alert('Please upload Selfie Photo.'); return; }
-            if (!frontFile) { alert('Please upload Ghana Card Front.'); return; }
-            if (!backFile) { alert('Please upload Ghana Card Back.'); return; }
+            if (!idNumber) { alert('Validation: ID empty'); return; }
+            if (!location) { alert('Validation: Location empty'); return; }
+            if (!dob) { alert('Validation: DOB empty'); return; }
+            if (!occupation) { alert('Validation: Occupation empty'); return; }
+            if (!selfie) { alert('Validation: Selfie missing'); return; }
+            if (!frontFile) { alert('Validation: Front missing'); return; }
+            if (!backFile) { alert('Validation: Back missing'); return; }
+
+            alert('3. All validations passed!');
 
             uploadedFiles = { selfie, frontFile, backFile };
 
@@ -632,14 +611,19 @@
             btn.disabled = true;
             btn.textContent = 'Opening payment...';
 
+            alert('4. Checking Paystack...');
+
             if (typeof PaystackPop === 'undefined') {
-                alert('Paystack is not loaded. Please check your internet and refresh.');
+                alert('5. ERROR: Paystack not loaded!');
                 btn.disabled = false;
                 btn.textContent = 'Submit Registration';
                 return;
             }
+            alert('5. Paystack OK!');
 
             var timestamp = Date.now();
+
+            alert('6. Opening Paystack popup...');
 
             var handler = PaystackPop.setup({
                 key: PAYSTACK_PUBLIC_KEY,
@@ -655,21 +639,24 @@
                     ]
                 },
                 callback: async function(response) {
+                    alert('7. Payment success! Ref: ' + response.reference);
                     btn.textContent = 'Uploading files...';
                     await processAfterPayment(response.reference, timestamp);
                 },
                 onClose: function() {
+                    alert('7. Payment window closed');
                     btn.disabled = false;
                     btn.textContent = 'Submit Registration';
-                    alert('Payment window closed. Please complete payment to submit your registration.');
                 }
             });
             
             handler.openIframe();
+            alert('8. Paystack iframe opened!');
         }
 
         async function processAfterPayment(transactionReference, timestamp) {
             var btn = document.getElementById('submitBtn');
+            alert('9. Processing after payment...');
             
             try {
                 var userId = registrationData.userId;
@@ -677,19 +664,26 @@
                 var frontPath = 'registrations/' + userId + '/' + timestamp + '_front.jpg';
                 var backPath = 'registrations/' + userId + '/' + timestamp + '_back.jpg';
 
+                alert('10. Uploading selfie...');
                 var selfieResult = await supabase.storage.from('registration-photos').upload(selfiePath, uploadedFiles.selfie);
                 if (selfieResult.error) throw selfieResult.error;
+                alert('11. Selfie uploaded!');
 
+                alert('12. Uploading front...');
                 var frontResult = await supabase.storage.from('registration-photos').upload(frontPath, uploadedFiles.frontFile);
                 if (frontResult.error) throw frontResult.error;
+                alert('13. Front uploaded!');
 
+                alert('14. Uploading back...');
                 var backResult = await supabase.storage.from('registration-photos').upload(backPath, uploadedFiles.backFile);
                 if (backResult.error) throw backResult.error;
+                alert('15. Back uploaded!');
 
                 var selfieUrlData = supabase.storage.from('registration-photos').getPublicUrl(selfiePath);
                 var frontUrlData = supabase.storage.from('registration-photos').getPublicUrl(frontPath);
                 var backUrlData = supabase.storage.from('registration-photos').getPublicUrl(backPath);
 
+                alert('16. Saving to database...');
                 var result = await supabase.from('registrations').insert([{
                     user_id: registrationData.userId,
                     applicant_name: registrationData.applicantName,
@@ -711,12 +705,11 @@
 
                 if (result.error) throw result.error;
 
-                alert('Registration submitted successfully! Redirecting to your orders...');
+                alert('17. SUCCESS! Registration saved!');
                 window.location.href = 'orders.html';
 
             } catch (error) {
-                console.error('Error:', error);
-                alert('Payment received but registration failed. Please contact support with reference: ' + transactionReference);
+                alert('ERROR: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = 'Submit Registration';
             }
