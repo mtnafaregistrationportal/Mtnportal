@@ -64,7 +64,6 @@
         }
         .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
         .form-input::placeholder { color: #aaa; }
-        .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
         .password-toggle {
             position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
             background: none; border: 1.5px solid #ddd; border-radius: 8px;
@@ -76,11 +75,6 @@
             border: none; border-radius: 14px; cursor: pointer; margin-top: 8px;
         }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-yellow-full {
-            width: 100%; padding: 14px; background: #FFD700;
-            color: #1a1a1a; font-size: 14px; font-weight: 600;
-            border: none; border-radius: 14px; cursor: pointer;
-        }
         .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
         .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; cursor: pointer; }
         .forgot-link {
@@ -94,20 +88,61 @@
             text-align: right;
         }
         .forgot-link:hover { text-decoration: underline; }
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); display: none;
-            align-items: center; justify-content: center; z-index: 1000;
-            padding: 20px;
+        .otp-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
         }
-        .modal-overlay.show { display: flex; }
-        .modal-card {
-            background: white; border-radius: 20px; padding: 28px 24px;
-            width: 100%; max-width: 400px;
+        .otp-digit {
+            width: 44px;
+            height: 52px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            color: #1a1a1a;
+            outline: none;
         }
-        .modal-card h4 { color: #1a1a1a; font-size: 18px; margin-bottom: 16px; }
-        .modal-card .form-group { margin-bottom: 16px; }
-        .modal-card .btn-submit { margin-top: 0; }
+        .otp-digit:focus {
+            border-color: #FFD700;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.15);
+        }
+        .success-msg {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .success-msg.show { display: block; }
+        .error-msg {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+        .resend-code {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-top: 12px;
+        }
+        .resend-code span {
+            color: #1a1a1a;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
         .info-box {
             background: rgba(255,255,255,0.9);
             backdrop-filter: blur(20px);
@@ -132,69 +167,6 @@
         }
         .feature-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 4px; text-transform: uppercase; }
         .feature-value { font-size: 16px; font-weight: 600; color: #ffffff; }
-        .code-inputs {
-            display: flex;
-            gap: 6px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .code-input {
-            width: 38px;
-            height: 50px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            background: #fafafa;
-            color: #1a1a1a;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        .code-input:focus {
-            border-color: #FFD700;
-            background: #fff;
-        }
-        /* Hide number spinner arrows */
-        .code-input::-webkit-outer-spin-button,
-        .code-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .code-input[type=number] {
-            -moz-appearance: textfield;
-        }
-        .step { display: none; }
-        .step.active { display: block; }
-        .success-icon {
-            width: 60px; height: 60px;
-            background: rgba(76, 175, 80, 0.15);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px;
-        }
-        .timer-text {
-            font-size: 13px;
-            color: #666;
-            text-align: center;
-            margin-top: 12px;
-        }
-        .timer-text span {
-            color: #1a1a1a;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .cooldown-text {
-            font-size: 13px;
-            color: #e74c3c;
-            text-align: center;
-            margin-top: 12px;
-            display: none;
-        }
-        .cooldown-text.show {
-            display: block;
-        }
         @media (min-width: 768px) {
             .auth-content { max-width: 520px; padding: 40px 24px; }
         }
@@ -224,6 +196,7 @@
                 <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
             </div>
 
+            <!-- Sign In Card -->
             <div class="auth-card" id="signinCard">
                 <h3>Sign in</h3>
                 <p class="subtitle">Enter your account details below.</p>
@@ -241,13 +214,65 @@
                     </div>
                 </div>
 
-                <p class="forgot-link" onclick="showForgotModal()">Forgot Password?</p>
+                <p class="forgot-link" onclick="showForgotCard()">Forgot Password?</p>
 
                 <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
 
                 <div class="auth-link">
                     Do not have an account? <a href="create.html">Create one</a>
                 </div>
+            </div>
+
+            <!-- Forgot Password Card -->
+            <div class="auth-card" id="forgotCard" style="display: none;">
+                <h3>Reset Password</h3>
+                <p class="subtitle" id="forgotSubtitle">Enter your email to receive an 8-digit reset code.</p>
+                
+                <div class="success-msg" id="forgotSuccess"></div>
+                <div class="error-msg" id="forgotError"></div>
+
+                <!-- Step 1: Email Input -->
+                <div id="forgotStep1">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetCode()">Send Reset Code</button>
+                </div>
+
+                <!-- Step 2: 8-Digit OTP + New Password -->
+                <div id="forgotStep2" style="display: none;">
+                    <div class="form-group">
+                        <label>Enter 8-Digit Code</label>
+                        <div class="otp-inputs" id="otpInputs">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="0" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKeydown(event, 0)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(event, 1)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="2" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(event, 2)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="3" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(event, 3)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="4" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKeydown(event, 4)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="5" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKeydown(event, 5)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="6" oninput="handleOtpInput(this, 6)" onkeydown="handleOtpKeydown(event, 6)">
+                            <input type="text" class="otp-digit" maxlength="1" data-index="7" oninput="handleOtpInput(this, 7)" onkeydown="handleOtpKeydown(event, 7)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="newResetPassword" class="form-input" placeholder="Minimum 6 characters">
+                            <button type="button" class="password-toggle" onclick="togglePassword('newResetPassword', this)">Show</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmResetPassword" class="form-input" placeholder="Re-enter password">
+                    </div>
+                    <button type="button" class="btn-submit" id="resetPassBtn" onclick="resetPasswordWithCode()">Reset Password</button>
+                    <div class="resend-code">
+                        Didn't receive code? <span onclick="resendCode()">Resend</span>
+                    </div>
+                </div>
+
+                <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="backToSignIn()">← Back to Sign In</button>
             </div>
 
             <div class="info-box">
@@ -271,84 +296,8 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="forgotModal">
-        <div class="modal-card">
-            <div class="step active" id="step1">
-                <h4>Reset Password</h4>
-                <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your registered email to receive a reset code.</p>
-                <div class="form-group">
-                    <input type="email" id="resetEmail" class="form-input" placeholder="you@example.com">
-                </div>
-                <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetCode()">Send Reset Code</button>
-                <p class="cooldown-text" id="cooldownMsg">Please wait <span id="cooldownSeconds">60</span> seconds before requesting another code.</p>
-                <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="closeForgotModal()">Cancel</button>
-            </div>
-
-            <div class="step" id="step2">
-                <h4>Enter Reset Code</h4>
-                <p style="color:#666; font-size:13px; margin-bottom:16px;">We sent an 8-digit code to <strong id="codeEmail"></strong></p>
-                <div class="code-inputs">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, this, 0)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, this, 1)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleBackspace(event, this, 2)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, this, 3)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, this, 4)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, this, 5)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleBackspace(event, this, 6)">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="code-input" maxlength="1" oninput="moveToNext(this, 7)" onkeydown="handleBackspace(event, this, 7)">
-                </div>
-                <button type="button" class="btn-submit" id="verifyCodeBtn" onclick="verifyResetCode()">Verify Code</button>
-                <p class="timer-text">Didn't receive it? <span id="resendLink" onclick="resendCode()">Resend</span></p>
-                <p class="cooldown-text" id="resendCooldownMsg">Please wait <span id="resendCooldownSeconds">60</span> seconds before resending.</p>
-                <button type="button" style="width:100%; padding:12px; background:none; border:none; color:#666; margin-top:8px; cursor:pointer;" onclick="backToStep1()">Back</button>
-            </div>
-
-            <div class="step" id="step3">
-                <h4>Set New Password</h4>
-                <p style="color:#666; font-size:13px; margin-bottom:16px;">Enter your new password below.</p>
-                <div class="form-group">
-                    <label>New Password</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="newResetPassword" class="form-input" placeholder="Minimum 6 characters">
-                        <button type="button" class="password-toggle" onclick="togglePassword('newResetPassword', this)">Show</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="confirmResetPassword" class="form-input" placeholder="Re-enter password">
-                        <button type="button" class="password-toggle" onclick="togglePassword('confirmResetPassword', this)">Show</button>
-                    </div>
-                </div>
-                <button type="button" class="btn-submit" id="resetPassBtn" onclick="resetPassword()">Reset Password</button>
-            </div>
-
-            <div class="step" id="step4">
-                <div class="success-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <h4 style="text-align:center; color:#1a1a1a; margin-bottom:8px;">Password Reset!</h4>
-                <p style="color:#666; font-size:14px; text-align:center; margin-bottom:20px;">Your password has been reset successfully. You can now sign in with your new password.</p>
-                <button type="button" class="btn-yellow-full" onclick="closeForgotModal()">Sign In Now</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-        const SUPABASE_URL = "https://iqzjpdynmnucxswbrkho.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ";
-
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let resetEmail = '';
-        let lastOtpSent = 0;
-        let resendCooldownTimer = null;
-
+    <script src="config.js"></script>
+    <script>
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -359,7 +308,20 @@
                 btn.textContent = 'Show';
             }
         }
-        window.togglePassword = togglePassword;
+
+        function showForgotSuccess(msg) {
+            const el = document.getElementById('forgotSuccess');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function showForgotError(msg) {
+            const el = document.getElementById('forgotError');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
 
         async function handleSignIn() {
             const email = document.getElementById('signinEmail').value.trim();
@@ -375,311 +337,149 @@
             btn.textContent = 'Signing In...';
 
             try {
-                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (authError) throw authError;
-
-                const user = authData.user;
-
-                // FIXED: Use .maybeSingle() instead of .single() to handle missing user rows
-                const { data: userData, error: userError } = await supabase
-                    .from('users')
-                    .select('status, name, phone_number, username')
-                    .eq('id', user.id)
-                    .maybeSingle();
-
-                // If user row doesn't exist in users table, use auth metadata and still log in
-                if (userError || !userData) {
-                    console.log('User row not found, using auth metadata');
-                    
-                    localStorage.setItem('userName', user.user_metadata?.full_name || 'User');
-                    localStorage.setItem('userEmail', email);
-                    localStorage.setItem('userId', user.id);
-                    localStorage.setItem('userPhone', user.user_metadata?.phone || '');
-                    localStorage.setItem('userUsername', user.user_metadata?.username || '');
-                    
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-
-                if (userData.status === 'suspended') {
-                    await supabase.auth.signOut();
-                    alert('Your account has been suspended. Please contact support.');
-                    btn.disabled = false;
-                    btn.textContent = 'Sign In';
-                    return;
-                }
-
-                localStorage.setItem('userName', userData.name || user.user_metadata?.full_name || 'User');
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', user.id);
-                localStorage.setItem('userPhone', userData.phone_number || '');
-                localStorage.setItem('userUsername', userData.username || user.user_metadata?.username || '');
-
+                const data = await apiCall('/api/auth/signin', 'POST', { email, password });
+                
+                if (!data.success) throw new Error(data.error);
+                
+                setSession(data.session);
+                setUser(data.user);
+                
                 window.location.href = 'dashboard.html';
             } catch (error) {
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
-                
-                if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
-                    alert('Wrong email or password. Please try again or click "Forgot Password" to reset.');
-                } else {
-                    alert('Error: ' + error.message);
-                }
+                alert('Wrong password or email. Please try again or click "Forgot Password".');
             }
         }
-        window.handleSignIn = handleSignIn;
 
-        function showForgotModal() {
-            document.getElementById('forgotModal').classList.add('show');
-            showStep('step1');
-            document.getElementById('resetEmail').value = document.getElementById('signinEmail').value;
-            document.getElementById('cooldownMsg').classList.remove('show');
-        }
-        window.showForgotModal = showForgotModal;
-
-        function closeForgotModal() {
-            document.getElementById('forgotModal').classList.remove('show');
-            setTimeout(() => {
-                showStep('step1');
-                clearCodeInputs();
-                document.getElementById('newResetPassword').value = '';
-                document.getElementById('confirmResetPassword').value = '';
-                document.getElementById('cooldownMsg').classList.remove('show');
-                stopResendCooldown();
-            }, 300);
-        }
-        window.closeForgotModal = closeForgotModal;
-
-        function showStep(stepId) {
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById(stepId).classList.add('active');
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
         }
 
-        function clearCodeInputs() {
-            document.querySelectorAll('.code-input').forEach(input => input.value = '');
-        }
-
-        function startCooldown(elementId, secondsId, duration, callback) {
-            const msgEl = document.getElementById(elementId);
-            const secEl = document.getElementById(secondsId);
-            let remaining = duration;
-            
-            msgEl.classList.add('show');
-            secEl.textContent = remaining;
-            
-            const timer = setInterval(() => {
-                remaining--;
-                secEl.textContent = remaining;
-                if (remaining <= 0) {
-                    clearInterval(timer);
-                    msgEl.classList.remove('show');
-                    if (callback) callback();
-                }
-            }, 1000);
-            
-            return timer;
-        }
-
-        function stopResendCooldown() {
-            if (resendCooldownTimer) {
-                clearInterval(resendCooldownTimer);
-                resendCooldownTimer = null;
-            }
-            document.getElementById('resendCooldownMsg').classList.remove('show');
-            document.getElementById('resendLink').style.display = 'inline';
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            clearOtpInputs();
+            document.getElementById('newResetPassword').value = '';
+            document.getElementById('confirmResetPassword').value = '';
+            document.getElementById('forgotSubtitle').textContent = 'Enter your email to receive an 8-digit reset code.';
         }
 
         async function sendResetCode() {
-            const email = document.getElementById('resetEmail').value.trim();
+            const email = document.getElementById('forgotEmail').value.trim();
             const btn = document.getElementById('sendCodeBtn');
-
+            
             if (!email) {
-                alert('Please enter your email address.');
+                showForgotError('Please enter your email.');
                 return;
             }
-
-            const now = Date.now();
-            const timeSinceLast = (now - lastOtpSent) / 1000;
-            if (timeSinceLast < 60 && lastOtpSent > 0) {
-                const remaining = Math.ceil(60 - timeSinceLast);
-                document.getElementById('cooldownSeconds').textContent = remaining;
-                document.getElementById('cooldownMsg').classList.add('show');
-                return;
-            }
-
+            
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            document.getElementById('cooldownMsg').classList.remove('show');
-
+            
             try {
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: false
-                    }
-                });
-
-                if (error) throw error;
-
-                lastOtpSent = Date.now();
-                resetEmail = email;
-                document.getElementById('codeEmail').textContent = email;
-                showStep('step2');
-                startResendCooldown();
+                const data = await apiCall('/api/auth/reset-password', 'POST', { email });
                 
-                setTimeout(() => document.querySelector('.code-input').focus(), 100);
-
+                if (!data.success) throw new Error(data.error);
+                
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+                document.getElementById('forgotSubtitle').textContent = 'Enter the 8-digit code sent to ' + email;
+                showForgotSuccess('Reset code sent! Check your email.');
+                
+                setTimeout(() => document.querySelector('.otp-digit[data-index="0"]').focus(), 100);
+                
             } catch (error) {
-                if (error.message && error.message.toLowerCase().includes('rate limit')) {
-                    alert('Too many requests. Please wait a minute and try again.');
-                } else {
-                    alert('Error: ' + error.message);
-                }
-            } finally {
+                showForgotError('Error: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = 'Send Reset Code';
             }
         }
-        window.sendResetCode = sendResetCode;
 
-        function startResendCooldown() {
-            document.getElementById('resendLink').style.display = 'none';
-            resendCooldownTimer = startCooldown('resendCooldownMsg', 'resendCooldownSeconds', 60, () => {
-                document.getElementById('resendLink').style.display = 'inline';
-            });
-        }
-
-        function moveToNext(input, index) {
-            input.value = input.value.replace(/[^0-9]/g, '');
-            const inputs = document.querySelectorAll('.code-input');
-            if (input.value && index < inputs.length - 1) {
-                inputs[index + 1].focus();
-            }
-        }
-        window.moveToNext = moveToNext;
-
-        function handleBackspace(e, input, index) {
-            if (e.key === 'Backspace' && !input.value && index > 0) {
-                const inputs = document.querySelectorAll('.code-input');
-                inputs[index - 1].focus();
-            }
-        }
-        window.handleBackspace = handleBackspace;
-
-        async function verifyResetCode() {
-            const inputs = document.querySelectorAll('.code-input');
-            const code = Array.from(inputs).map(i => i.value).join('');
-            const btn = document.getElementById('verifyCodeBtn');
-
-            if (code.length !== 8) {
-                alert('Please enter all 8 digits of the code.');
+        function handleOtpInput(input, index) {
+            const val = input.value;
+            if (val && !/^\d$/.test(val)) {
+                input.value = '';
                 return;
             }
-
-            btn.disabled = true;
-            btn.textContent = 'Verifying...';
-
-            try {
-                const { data, error } = await supabase.auth.verifyOtp({
-                    email: resetEmail,
-                    token: code,
-                    type: 'email'
-                });
-
-                if (error) throw error;
-
-                stopResendCooldown();
-                showStep('step3');
-
-            } catch (error) {
-                alert('Invalid code. Please try again or request a new code.');
-                clearCodeInputs();
-                document.querySelector('.code-input').focus();
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Verify Code';
+            if (val && index < 7) {
+                document.querySelector('.otp-digit[data-index="' + (index + 1) + '"]').focus();
             }
         }
-        window.verifyResetCode = verifyResetCode;
+
+        function handleOtpKeydown(event, index) {
+            if (event.key === 'Backspace' && !event.target.value && index > 0) {
+                document.querySelector('.otp-digit[data-index="' + (index - 1) + '"]').focus();
+            }
+        }
+
+        function getOtpCode() {
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += document.querySelector('.otp-digit[data-index="' + i + '"]').value;
+            }
+            return code;
+        }
+
+        function clearOtpInputs() {
+            for (let i = 0; i < 8; i++) {
+                document.querySelector('.otp-digit[data-index="' + i + '"]').value = '';
+            }
+        }
 
         async function resendCode() {
-            const now = Date.now();
-            const timeSinceLast = (now - lastOtpSent) / 1000;
-            if (timeSinceLast < 60 && lastOtpSent > 0) {
-                return;
-            }
-
-            const btn = document.getElementById('verifyCodeBtn');
-            btn.disabled = true;
-            btn.textContent = 'Resending...';
-
-            try {
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: resetEmail,
-                    options: { shouldCreateUser: false }
-                });
-                if (error) throw error;
-                
-                lastOtpSent = Date.now();
-                alert('New code sent! Check your email.');
-                clearCodeInputs();
-                document.querySelector('.code-input').focus();
-                startResendCooldown();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Verify Code';
-            }
+            clearOtpInputs();
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('sendCodeBtn').disabled = false;
+            document.getElementById('sendCodeBtn').textContent = 'Send Reset Code';
+            document.getElementById('forgotSubtitle').textContent = 'Enter your email to receive an 8-digit reset code.';
         }
-        window.resendCode = resendCode;
 
-        function backToStep1() {
-            showStep('step1');
-            clearCodeInputs();
-            stopResendCooldown();
-        }
-        window.backToStep1 = backToStep1;
-
-        async function resetPassword() {
+        async function resetPasswordWithCode() {
+            const code = getOtpCode();
             const newPass = document.getElementById('newResetPassword').value;
             const confirmPass = document.getElementById('confirmResetPassword').value;
             const btn = document.getElementById('resetPassBtn');
-
-            if (!newPass || newPass.length < 6) {
-                alert('Password must be at least 6 characters.');
+            
+            if (code.length !== 8) {
+                showForgotError('Please enter all 8 digits.');
+                return;
+            }
+            if (newPass.length < 6) {
+                showForgotError('Password must be at least 6 characters.');
                 return;
             }
             if (newPass !== confirmPass) {
-                alert('Passwords do not match.');
+                showForgotError('Passwords do not match.');
                 return;
             }
-
+            
             btn.disabled = true;
             btn.textContent = 'Resetting...';
-
+            
             try {
-                const { error } = await supabase.auth.updateUser({
-                    password: newPass
+                const data = await apiCall('/api/auth/verify-otp', 'POST', {
+                    email: document.getElementById('forgotEmail').value.trim(),
+                    token: code,
+                    newPassword: newPass
                 });
-
-                if (error) throw error;
-
-                await supabase.auth.signOut();
                 
-                showStep('step4');
-
+                if (!data.success) throw new Error(data.error);
+                
+                alert('Password reset successful! Please sign in with your new password.');
+                backToSignIn();
+                
             } catch (error) {
-                alert('Error resetting password: ' + error.message);
+                showForgotError('Error: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = 'Reset Password';
             }
         }
-        window.resetPassword = resetPassword;
     </script>
 </body>
 </html>
