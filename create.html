@@ -79,6 +79,27 @@
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
         .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
         .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; }
+        .success-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            display: none;
+        }
+        .success-card.show { display: block; }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: rgba(76, 175, 80, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .success-icon svg { width: 32px; height: 32px; color: #4CAF50; }
+        .success-title { color: #1a1a1a; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .success-text { color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 24px; }
         @media (min-width: 768px) {
             .auth-content { max-width: 520px; padding: 40px 24px; }
         }
@@ -101,7 +122,8 @@
         </header>
 
         <div class="auth-content" style="flex: 1;">
-            <div class="auth-card">
+            <!-- Signup Form -->
+            <div class="auth-card" id="signupForm">
                 <h3>Create Account</h3>
                 <p class="subtitle">Register to manage your AFA activity, and track orders</p>
 
@@ -141,6 +163,34 @@
 
                 <div class="auth-link">
                     Already have an account? <a href="signin.html">Login</a>
+                </div>
+            </div>
+
+            <!-- Success Message (Email Confirmation Required) -->
+            <div class="success-card" id="successCard">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div class="success-title">Account Created!</div>
+                <div class="success-text">
+                    Please check your email and click the confirmation link to activate your account. 
+                    If you don't see it, check your spam folder.
+                </div>
+                <a href="signin.html" class="btn-submit" style="display: inline-block; text-decoration: none; text-align: center;">Go to Sign In</a>
+            </div>
+
+            <!-- Success Message (Instant Access - No Confirmation) -->
+            <div class="success-card" id="instantSuccessCard">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="success-title">Welcome!</div>
+                <div class="success-text">
+                    Your account is ready. Redirecting to your dashboard...
                 </div>
             </div>
         </div>
@@ -205,12 +255,39 @@
                 
                 if (!data.success) throw new Error(data.error);
                 
-                localStorage.setItem('userName', name);
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', data.user.id);
-                localStorage.setItem('userPhone', phone);
-
-                window.location.href = 'dashboard.html';
+                // Check if email confirmation is required
+                // Supabase returns identities array when confirmation is needed
+                const confirmationRequired = data.user && data.user.identities && data.user.identities.length === 0;
+                
+                if (confirmationRequired) {
+                    // Show email confirmation message
+                    document.getElementById('signupForm').style.display = 'none';
+                    document.getElementById('successCard').classList.add('show');
+                } else {
+                    // Instant access - store session and redirect
+                    localStorage.setItem('userName', name);
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('userPhone', phone);
+                    
+                    // Store session if available
+                    if (data.session) {
+                        setSession(data.session);
+                        setUser({
+                            id: data.user.id,
+                            name: name,
+                            email: email,
+                            phone: phone
+                        });
+                    }
+                    
+                    document.getElementById('signupForm').style.display = 'none';
+                    document.getElementById('instantSuccessCard').classList.add('show');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                }
             } catch (error) {
                 alert('Error: ' + error.message);
                 btn.disabled = false;
