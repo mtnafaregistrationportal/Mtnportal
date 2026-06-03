@@ -14,7 +14,6 @@
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
             --text-white: #ffffff;
-            --text-light: rgba(255, 255, 255, 0.85);
             --text-muted: rgba(255, 255, 255, 0.6);
         }
         body {
@@ -34,25 +33,6 @@
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
         }
-        .settings-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .settings-icon {
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .settings-icon svg {
-            width: 20px; height: 20px;
-            color: var(--primary-yellow);
-        }
-        .settings-header-text h2 {
-            font-size: 16px; font-weight: 700;
-        }
         .back-btn {
             background: none;
             border: none;
@@ -61,13 +41,16 @@
             cursor: pointer;
             text-decoration: none;
         }
-        .settings-content {
-            padding: 20px;
-            max-width: 480px;
-            margin: 0 auto;
+        .settings-header-left { display: flex; align-items: center; gap: 12px; }
+        .settings-icon {
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
-        
-        /* Form Cards */
+        .settings-icon svg { width: 20px; height: 20px; color: var(--primary-yellow); }
+        .settings-content { padding: 20px; max-width: 480px; margin: 0 auto; }
         .form-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(30px);
@@ -76,124 +59,39 @@
             margin-bottom: 16px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
-        .form-card h3 {
-            color: #1a1a1a;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #1a1a1a;
-            margin-bottom: 6px;
-        }
+        .form-card h3 { color: #1a1a1a; font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: #1a1a1a; margin-bottom: 6px; }
         .form-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 14px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #1a1a1a;
-            background: #fafafa;
-            outline: none;
+            width: 100%; padding: 14px 16px; border: 1.5px solid #e0e0e0;
+            border-radius: 14px; font-size: 15px; font-family: inherit;
+            color: #1a1a1a; background: #fafafa; outline: none;
         }
-        .form-input:focus {
-            border-color: var(--primary-yellow);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(255,215,0,0.15);
-        }
-        .form-input::placeholder {
-            color: #aaa;
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 16px;
-            background: #1a1a1a;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .btn-yellow {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary-yellow);
-            color: #1a1a1a;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-        .btn-red {
-            width: 100%;
-            padding: 16px;
-            background: #e74c3c;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-top: 12px;
-        }
+        .form-input:focus { border-color: var(--primary-yellow); background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
+        .btn-submit { width: 100%; padding: 16px; background: #1a1a1a; color: white; font-size: 16px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-yellow { width: 100%; padding: 16px; background: var(--primary-yellow); color: #1a1a1a; font-size: 16px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; }
+        .btn-red { width: 100%; padding: 16px; background: #e74c3c; color: white; font-size: 16px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; margin-top: 12px; }
         .success-msg {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4CAF50;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
+            background: rgba(76, 175, 80, 0.15); color: #4CAF50;
+            padding: 12px 16px; border-radius: 12px; font-size: 14px;
+            margin-bottom: 16px; display: none;
         }
-        .success-msg.show {
-            display: block;
-        }
+        .success-msg.show { display: block; }
         .error-msg {
-            background: rgba(231, 76, 60, 0.15);
-            color: #e74c3c;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
+            background: rgba(231, 76, 60, 0.15); color: #e74c3c;
+            padding: 12px 16px; border-radius: 12px; font-size: 14px;
+            margin-bottom: 16px; display: none;
         }
-        .error-msg.show {
-            display: block;
-        }
-        .divider {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 24px 0;
-        }
-        .section-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
-        
-        @media (min-width: 768px) {
-            .settings-content { max-width: 520px; padding: 40px 24px; }
-        }
+        .error-msg.show { display: block; }
+        .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0; }
+        .section-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        @media (min-width: 768px) { .settings-content { max-width: 520px; padding: 40px 24px; } }
     </style>
 </head>
 <body>
     <header class="settings-header">
-        <a href="dashboard.html" class="back-btn">&larr; Back</a>
+        <a href="dashboard.html" class="back-btn">← Back</a>
         <div class="settings-header-left">
             <div class="settings-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -201,19 +99,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             </div>
-            <div class="settings-header-text">
-                <h2>Settings</h2>
-            </div>
+            <div><h2 style="font-size:16px;font-weight:700;">Settings</h2></div>
         </div>
         <div style="width: 50px;"></div>
     </header>
 
     <div class="settings-content">
-        <!-- Success/Error Messages -->
-        <div class="success-msg" id="successMsg">Changes saved successfully!</div>
-        <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+        <div class="success-msg" id="successMsg"></div>
+        <div class="error-msg" id="errorMsg"></div>
 
-        <!-- Change Password -->
         <div class="form-card">
             <h3>Change Password</h3>
             <div class="form-group">
@@ -231,19 +125,13 @@
             <button class="btn-yellow" id="updatePasswordBtn" onclick="updatePassword()">Update Password</button>
         </div>
 
-        <!-- Logout -->
         <div class="divider"></div>
         <p class="section-label">Account</p>
         <button class="btn-red" onclick="logout()">Logout</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script>
-        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
-
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let currentUser = null;
 
         function showSuccess(msg) {
@@ -261,15 +149,14 @@
         }
 
         async function initSettings() {
-            var sessionResult = await supabase.auth.getSession();
-            var session = sessionResult.data.session;
+            var user = getUser();
+            var session = getSession();
             
-            if (!session) {
+            if (!user || !session) {
                 window.location.href = 'signin.html';
                 return;
             }
-
-            currentUser = session.user;
+            currentUser = user;
         }
 
         async function updatePassword() {
@@ -295,20 +182,14 @@
             btn.textContent = 'Updating...';
 
             try {
-                var reauthResult = await supabase.auth.signInWithPassword({
-                    email: currentUser.email,
-                    password: currentPass
+                var session = getSession();
+                var data = await apiCall('/api/auth/update-password', 'POST', {
+                    session: session,
+                    currentPassword: currentPass,
+                    newPassword: newPass
                 });
-
-                if (reauthResult.error) {
-                    throw new Error('Current password is incorrect.');
-                }
-
-                var updateResult = await supabase.auth.updateUser({
-                    password: newPass
-                });
-
-                if (updateResult.error) throw updateResult.error;
+                
+                if (!data.success) throw new Error(data.error);
 
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
@@ -321,20 +202,21 @@
                 btn.textContent = 'Update Password';
             }
         }
-        window.updatePassword = updatePassword;
 
         async function logout() {
             try {
-                await supabase.auth.signOut();
+                var session = getSession();
+                if (session) {
+                    await apiCall('/api/auth/signout', 'POST', { session });
+                }
+                clearSession();
                 localStorage.clear();
                 window.location.href = 'signin.html';
             } catch (error) {
                 showError('Error logging out: ' + error.message);
             }
         }
-        window.logout = logout;
 
-        // Initialize
         initSettings();
     </script>
 </body>
