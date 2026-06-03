@@ -3,778 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Register AFA - MTN AFA Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>MTN AFA Portal - Register AFA</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        :root {
-            --primary-yellow: #FFD700;
-            --dark-bg: #0a1628;
-            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --text-white: #ffffff;
-            --text-light: rgba(255, 255, 255, 0.85);
-            --text-muted: rgba(255, 255, 255, 0.6);
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark-bg-gradient);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #0f172a;
+            color: #1e293b;
             min-height: 100vh;
-            color: var(--text-white);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
             padding-bottom: 40px;
+            -webkit-tap-highlight-color: transparent;
         }
-        .reg-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: rgba(10, 22, 40, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky; top: 0; z-index: 50;
-        }
-        .reg-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .reg-icon {
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .reg-icon svg { width: 20px; height: 20px; color: var(--primary-yellow); }
-        .reg-header-text h2 { font-size: 16px; font-weight: 700; }
+        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
         .back-btn {
-            background: none; border: none;
-            color: var(--text-white); font-size: 14px;
-            cursor: pointer; text-decoration: none;
-            display: flex; align-items: center; gap: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 16px;
             font-weight: 500;
-        }
-        .reg-content {
-            padding: 20px;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .reg-title {
-            font-size: 22px; font-weight: 700;
             margin-bottom: 16px;
+            padding-top: 16px;
         }
-        .btn-row {
-            display: flex; gap: 12px;
-            margin-bottom: 20px;
+        .back-btn svg { width: 20px; height: 20px; }
+        .page-title { color: #f8fafc; font-size: 26px; font-weight: 700; margin-bottom: 16px; }
+        .my-orders-btn {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border: none; border-radius: 12px; color: #0f172a;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            margin-bottom: 16px; transition: transform 0.2s, box-shadow 0.2s;
         }
-        .btn-yellow-full {
-            flex: 1; padding: 12px;
-            background: var(--primary-yellow); color: #1a1a1a;
-            font-size: 13px; font-weight: 600;
-            border: none; border-radius: 12px;
-            cursor: pointer; text-decoration: none;
-            text-align: center; display: inline-block;
-            transition: opacity 0.2s;
+        .my-orders-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3); }
+        .package-card {
+            background-color: #1e293b; border-radius: 16px;
+            padding: 16px 20px; margin-bottom: 16px; border: 1px solid #334155;
         }
-        .summary-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px 20px;
-            margin-bottom: 16px;
-        }
-        .summary-row {
-            display: flex; justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-label {
-            font-size: 12px; color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        .summary-value { font-size: 14px; font-weight: 600; }
-        .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(30px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
-        .form-card h4 {
-            font-size: 14px; font-weight: 600;
-            color: #1a1a1a; margin-bottom: 4px;
-        }
-        .form-card > p {
-            font-size: 12px; color: #666;
-            margin-bottom: 16px;
-        }
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block; font-size: 13px;
-            font-weight: 500; color: #1a1a1a;
-            margin-bottom: 6px;
-        }
-        .form-group label .required { color: #e74c3c; }
+        .package-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; }
+        .package-row:last-child { border-bottom: none; }
+        .package-label { color: #94a3b8; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .package-value { color: #f8fafc; font-size: 15px; font-weight: 600; }
+        .form-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .form-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+        .form-subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 6px; }
+        .required { color: #dc2626; }
         .form-input {
-            width: 100%; padding: 12px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 12px; font-size: 14px;
-            font-family: inherit; color: #1a1a1a;
-            background: #fafafa; outline: none;
-            -webkit-appearance: none; appearance: none;
+            width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0;
+            border-radius: 10px; font-size: 15px; color: #0f172a;
+            background-color: #ffffff; transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .form-input:focus {
-            border-color: var(--primary-yellow);
-            background: #fff;
-        }
-        .form-input::placeholder { color: #bbb; }
+        .form-input:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
+        .form-input::placeholder { color: #94a3b8; }
+        input[type="date"].form-input { color: #94a3b8; }
+        input[type="date"].form-input.has-value { color: #0f172a; }
         select.form-input {
-            cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+            background-size: 18px; padding-right: 36px;
         }
-        input[type="date"].form-input {
-            min-height: 44px;
-            line-height: 1.2;
+        .upload-area {
+            border: 2px dashed #fbbf24; border-radius: 12px;
+            padding: 20px; text-align: center; background-color: #ffffff;
+            cursor: pointer; transition: background-color 0.2s;
         }
-        @supports (-webkit-touch-callout: none) {
-            input[type="date"].form-input {
-                padding: 12px 14px;
-            }
-        }
-        .file-input-wrapper { margin-bottom: 16px; }
-        .file-input-wrapper > label {
-            display: block; font-size: 13px;
-            font-weight: 500; color: #1a1a1a;
-            margin-bottom: 6px;
-        }
-        .file-input-wrapper > label .required { color: #e74c3c; }
-        .file-hint {
-            font-size: 11px; color: #999;
-            margin-bottom: 8px;
-        }
-        .upload-box {
-            border: 2px dashed #FFD700;
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            background: #fafafa;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .upload-box:hover {
-            border-color: #e6c200;
-            background: rgba(255, 215, 0, 0.03);
-        }
-        .upload-box input[type="file"] {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 10;
-        }
-        .upload-box-text {
-            font-size: 14px;
-            color: #666;
-            font-weight: 500;
-            position: relative;
-            z-index: 1;
-            pointer-events: none;
-        }
-        .upload-preview {
-            width: 100%;
-            max-height: 250px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-top: 12px;
-            display: none;
-            border: 1px solid #e0e0e0;
-        }
-        .upload-preview.show {
-            display: block;
-        }
-        .camera-btn {
+        .upload-area:hover { background-color: #fef3c7; }
+        .upload-text { color: #64748b; font-size: 14px; font-weight: 500; }
+        .upload-hint { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 10px; line-height: 1.4; }
+        .image-preview { margin-top: 12px; border-radius: 12px; overflow: hidden; display: none; }
+        .image-preview img { width: 100%; height: auto; display: block; border-radius: 12px; }
+        .image-preview.visible { display: block; }
+        .take-selfie-btn {
             display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 10px; padding: 10px 18px;
-            background: #1a1a1a;
-            border: none;
-            color: #ffffff;
-            border-radius: 10px; font-size: 13px;
-            font-weight: 600; cursor: pointer;
+            padding: 10px 18px; background-color: #0f172a; color: #f8fafc;
+            border: none; border-radius: 10px; font-size: 14px;
+            font-weight: 600; cursor: pointer; margin-top: 10px;
         }
-        .network-badge {
-            display: inline-block; padding: 4px 10px;
-            border-radius: 50px; font-size: 11px;
-            font-weight: 600; margin-left: 8px;
-            opacity: 0; transition: opacity 0.3s;
+        .take-selfie-btn svg { width: 16px; height: 16px; }
+        .summary-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .summary-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .summary-label { color: #64748b; font-size: 14px; }
+        .summary-value { color: #0f172a; font-size: 14px; font-weight: 600; }
+        .submit-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border: none; border-radius: 14px; color: #0f172a;
+            font-size: 17px; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
         }
-        .network-badge.show { opacity: 1; }
-        .network-mtn { background: rgba(255, 215, 0, 0.2); color: #FFD700; }
-        .network-airteltigo { background: rgba(0, 150, 136, 0.2); color: #009688; }
-        .network-telecel { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
-        .network-unknown { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-        .submit-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(30px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(251, 191, 36, 0.4); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        input[type="file"] { display: none; }
+        .spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 2px solid rgba(15, 23, 42, 0.3);
+            border-radius: 50%; border-top-color: #0f172a;
+            animation: spin 0.8s linear infinite; margin-right: 8px;
         }
-        .submit-section h4 {
-            font-size: 14px; font-weight: 600;
-            color: #1a1a1a; margin-bottom: 12px;
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg {
+            background-color: #fef2f2; border: 1px solid #fecaca;
+            color: #dc2626; padding: 12px 16px; border-radius: 10px;
+            margin-bottom: 16px; font-size: 14px; display: none;
         }
-        .submit-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 0; font-size: 13px;
-        }
-        .submit-row .label { color: #666; }
-        .submit-row .value { font-weight: 600; color: #1a1a1a; }
-        .btn-submit {
-            width: 100%; padding: 18px;
-            background: var(--primary-yellow);
-            color: #1a1a1a;
-            font-size: 16px; font-weight: 700;
-            border: none; border-radius: 14px;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
-            letter-spacing: 0.5px;
-        }
-        .btn-submit:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(255, 215, 0, 0.4);
-        }
-        .btn-submit:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1a1a1a;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 2000;
-            display: none;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        .toast.show {
-            display: block;
-            animation: slideUp 0.3s ease;
-        }
-        .toast-success { background: #4CAF50; }
-        .toast-error { background: #e74c3c; }
-        .toast-warning { background: #FFC107; color: #1a1a1a; }
-        @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-        @media (min-width: 768px) {
-            .reg-content { max-width: 520px; padding: 40px 24px; }
+        .error-msg.visible { display: block; }
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .page-title { font-size: 22px; }
         }
     </style>
 </head>
 <body>
-    <header class="reg-header">
+    <main class="container">
         <a href="dashboard.html" class="back-btn">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             Back
         </a>
-        <div class="reg-header-left" style="position: absolute; left: 50%; transform: translateX(-50%);">
-            <div class="reg-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <div class="reg-header-text">
-                <h2>MTN AFA Portal</h2>
-            </div>
+
+        <h1 class="page-title">Register AFA</h1>
+        <button class="my-orders-btn" type="button" onclick="window.location.href='orders.html'">My Orders</button>
+
+        <div class="package-card">
+            <div class="package-row"><span class="package-label">Package</span><span class="package-value">MTN AFA Bundle</span></div>
+            <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 15.00</span></div>
+            <div class="package-row"><span class="package-label">Review Time</span><span class="package-value">5-10 minutes</span></div>
         </div>
-        <div style="width: 40px;"></div>
-    </header>
 
-    <div class="reg-content">
-        <h1 class="reg-title">Register AFA</h1>
+        <div class="error-msg" id="errorMsg"></div>
 
-        <div class="btn-row">
-            <a href="orders.html" class="btn-yellow-full">My Orders</a>
+        <div class="form-card">
+            <h2 class="form-title">Applicant Details</h2>
+            <p class="form-subtitle">Fill the form carefully. GH₵15 will be charged via Paystack.</p>
+
+            <form id="afaForm">
+                <div class="form-group">
+                    <label class="form-label">Full Name <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="fullName" placeholder="e.g. John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <input type="tel" class="form-input" id="phone" placeholder="e.g. 0241234567" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ID Type <span class="required">*</span></label>
+                    <select class="form-input" id="idType" required>
+                        <option value="ghana-card" selected>Ghana Card</option>
+                        <option value="passport">Passport</option>
+                        <option value="drivers-license">Driver's License</option>
+                        <option value="voters-id">Voter's ID</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ID Number <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="idNumber" placeholder="e.g. GHA-000000000-0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="location" placeholder="e.g. Tema, Kumasi" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Birth <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="dobInput" placeholder="Select date of birth" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Occupation <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="occupation" placeholder="e.g. Student, Teacher, Business Owner" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Selfie Photo <span class="required">*</span></label>
+                    <p class="upload-hint">Take a live selfie for verification. Accepted: JPG, PNG. Maximum 5MB.</p>
+                    <div class="upload-area" onclick="document.getElementById('selfieInput').click()">
+                        <span class="upload-text" id="selfieText">Choose File — No file chosen</span>
+                    </div>
+                    <input type="file" id="selfieInput" accept="image/jpeg,image/png" required>
+                    <div class="image-preview" id="selfiePreview"><img id="selfieImg" src="" alt="Selfie preview"></div>
+                    <button type="button" class="take-selfie-btn" onclick="document.getElementById('selfieCamera').click()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Take Selfie
+                    </button>
+                    <input type="file" id="selfieCamera" accept="image/*" capture="user" style="display:none;" onchange="handleCameraCapture(this, 'selfieText', 'selfiePreview', 'selfieImg')">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ghana Card Uploads <span class="required">*</span></label>
+                    <p class="upload-hint">Upload both the front and back. Accepted: JPG, PNG, WEBP or PDF. Maximum 5MB each.</p>
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label">Ghana Card Front <span class="required">*</span></label>
+                        <div class="upload-area" onclick="document.getElementById('cardFront').click()">
+                            <span class="upload-text" id="cardFrontText">Choose File — No file chosen</span>
+                        </div>
+                        <input type="file" id="cardFront" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                        <div class="image-preview" id="cardFrontPreview"><img id="cardFrontImg" src="" alt="Ghana Card Front"></div>
+                    </div>
+                    <div>
+                        <label class="form-label">Ghana Card Back <span class="required">*</span></label>
+                        <div class="upload-area" onclick="document.getElementById('cardBack').click()">
+                            <span class="upload-text" id="cardBackText">Choose File — No file chosen</span>
+                        </div>
+                        <input type="file" id="cardBack" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                        <div class="image-preview" id="cardBackPreview"><img id="cardBackImg" src="" alt="Ghana Card Back"></div>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div class="summary-card">
-            <div class="summary-row">
-                <span class="summary-label">Package</span>
-                <span class="summary-value">MTN AFA Bundle</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Fee</span>
-                <span class="summary-value">GH₵ 15.00</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Review Time</span>
-                <span class="summary-value">5-10 minutes</span>
-            </div>
+            <h2 class="summary-title">Submission Summary</h2>
+            <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
+            <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 15.00</span></div>
+            <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
         </div>
 
-        <div class="form-card">
-            <h4>Applicant Details</h4>
-            <p>Fill the form carefully. GH₵15 will be charged via Paystack.</p>
+        <button type="submit" form="afaForm" class="submit-btn" id="submitBtn">Submit Registration</button>
+    </main>
 
-            <div class="form-group">
-                <label>Full Name <span class="required">*</span></label>
-                <input type="text" id="appName" class="form-input" placeholder="e.g. John Doe">
-            </div>
-
-            <div class="form-group">
-                <label>Phone Number <span class="required">*</span></label>
-                <input type="tel" id="appPhone" class="form-input" placeholder="e.g. 0241234567" maxlength="10" oninput="detectNetwork(this.value)">
-                <span class="network-badge" id="networkBadge">Unknown</span>
-            </div>
-
-            <div class="form-group">
-                <label>Email Address <span class="required">*</span></label>
-                <input type="email" id="appEmail" class="form-input" placeholder="you@example.com">
-            </div>
-
-            <div class="form-group">
-                <label>ID Type <span class="required">*</span></label>
-                <select class="form-input" id="idType">
-                    <option>Ghana Card</option>
-                    <option>Passport</option>
-                    <option>Voter's ID</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>ID Number <span class="required">*</span></label>
-                <input type="text" id="idNumber" class="form-input" placeholder="e.g. GHA-000000000-0">
-            </div>
-
-            <div class="form-group">
-                <label>Location <span class="required">*</span></label>
-                <input type="text" id="location" class="form-input" placeholder="e.g. Tema, Kumasi">
-            </div>
-
-            <div class="form-group">
-                <label>Date of Birth <span class="required">*</span></label>
-                <input type="date" id="dob" class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label>Occupation <span class="required">*</span></label>
-                <input type="text" id="occupation" class="form-input" placeholder="e.g. Student, Teacher, Business Owner">
-            </div>
-
-            <div class="file-input-wrapper">
-                <label>Selfie Photo <span class="required">*</span></label>
-                <p class="file-hint">Upload a selfie photo. Accepted: JPG, PNG, WEBP. Maximum 5MB.</p>
-                <div class="upload-box" id="selfieBox">
-                    <input type="file" id="selfieFile" accept="image/*" onchange="handleFile(this, 'selfieBox', 'selfiePreview')">
-                    <div class="upload-box-text" id="selfieText">Choose File — No file chosen</div>
-                </div>
-                <img class="upload-preview" id="selfiePreview" alt="Selfie Preview">
-                <button type="button" class="camera-btn" onclick="showSelfieMenu()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Take Selfie
-                </button>
-            </div>
-
-            <div class="file-input-wrapper">
-                <label>Ghana Card Uploads <span class="required">*</span></label>
-                <p class="file-hint">Upload both the front and back. Accepted: JPG, PNG, WEBP or PDF. Maximum 5MB each.</p>
-            </div>
-
-            <div class="file-input-wrapper">
-                <label>Ghana Card Front <span class="required">*</span></label>
-                <div class="upload-box" id="frontBox">
-                    <input type="file" id="frontFile" accept="image/*,.pdf" onchange="handleFile(this, 'frontBox', 'frontPreview')">
-                    <div class="upload-box-text" id="frontText">Choose File — No file chosen</div>
-                </div>
-                <img class="upload-preview" id="frontPreview" alt="Front Preview">
-            </div>
-
-            <div class="file-input-wrapper">
-                <label>Ghana Card Back <span class="required">*</span></label>
-                <div class="upload-box" id="backBox">
-                    <input type="file" id="backFile" accept="image/*,.pdf" onchange="handleFile(this, 'backBox', 'backPreview')">
-                    <div class="upload-box-text" id="backText">Choose File — No file chosen</div>
-                </div>
-                <img class="upload-preview" id="backPreview" alt="Back Preview">
-            </div>
-        </div>
-
-        <div class="submit-section">
-            <h4>Submission Summary</h4>
-            <div class="submit-row">
-                <span class="label">Package</span>
-                <span class="value">MTN AFA Bundle</span>
-            </div>
-            <div class="submit-row">
-                <span class="label">Charge</span>
-                <span class="value">GH₵ 15.00</span>
-            </div>
-            <div class="submit-row">
-                <span class="label">Payment Method</span>
-                <span class="value">Paystack</span>
-            </div>
-        </div>
-
-        <button class="btn-submit" id="submitBtn" onclick="submitRegistration()">Submit Registration</button>
-    </div>
-
-    <!-- Toast Notification -->
-    <div class="toast" id="toast"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://js.paystack.co/v2/inline.js"></script>
+    <script src="config.js"></script>
     <script>
-        const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
-        const PAYSTACK_PUBLIC_KEY = 'pk_live_096a3512f06978f9da895a53906347b45da766a7';
+        function handleFileUpload(input, textId, previewId, imgId) {
+            const textSpan = document.getElementById(textId);
+            const preview = document.getElementById(previewId);
+            const img = document.getElementById(imgId);
+            const uploadArea = input.previousElementSibling;
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let currentUser = null;
-        let registrationData = null;
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast toast-' + type;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-        window.showToast = showToast;
-
-        function showSelfieMenu() {
-            document.getElementById('selfieMenuModal').style.display = 'flex';
-        }
-        window.showSelfieMenu = showSelfieMenu;
-
-        function closeSelfieMenu() {
-            document.getElementById('selfieMenuModal').style.display = 'none';
-        }
-        window.closeSelfieMenu = closeSelfieMenu;
-
-        async function initRegister() {
-            // Allow guest submissions — no login required
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && session.user) {
-                currentUser = session.user;
-                document.getElementById('appEmail').value = session.user.email || '';
-            }
-        }
-
-        function detectNetwork(phone) {
-            var badge = document.getElementById('networkBadge');
-            if (phone.length < 3) { badge.classList.remove('show'); return; }
-            var prefix = phone.substring(0, 3);
-            var mtn = ['024','025','053','054','055','059'];
-            var airteltigo = ['026','027','056','057'];
-            var telecel = ['020','050'];
-            badge.classList.add('show');
-            if (mtn.indexOf(prefix) !== -1) {
-                badge.textContent = 'MTN'; badge.className = 'network-badge network-mtn show';
-            } else if (airteltigo.indexOf(prefix) !== -1) {
-                badge.textContent = 'AirtelTigo'; badge.className = 'network-badge network-airteltigo show';
-            } else if (telecel.indexOf(prefix) !== -1) {
-                badge.textContent = 'Telecel'; badge.className = 'network-badge network-telecel show';
-            } else {
-                badge.textContent = 'Unknown'; badge.className = 'network-badge network-unknown show';
-            }
-        }
-        window.detectNetwork = detectNetwork;
-
-        function handleFile(input, boxId, previewId) {
-            var box = document.getElementById(boxId);
-            var text = box.querySelector('.upload-box-text');
-            var preview = document.getElementById(previewId);
-            
-            if (input.files && input.files[0]) {
-                var file = input.files[0];
-                
-                if (file.size > 5 * 1024 * 1024) {
-                    showToast('File must be less than 5MB.', 'error');
-                    input.value = '';
-                    text.textContent = 'Choose File — No file chosen';
-                    preview.classList.remove('show');
-                    preview.style.display = 'none';
-                    preview.src = '';
-                    return;
-                }
-                
-                text.textContent = file.name;
-                
+            if (input.files && input.files.length > 0) {
+                const file = input.files[0];
+                textSpan.textContent = file.name;
                 if (file.type.startsWith('image/')) {
-                    var reader = new FileReader();
+                    const reader = new FileReader();
                     reader.onload = function(e) {
-                        preview.src = e.target.result;
-                        preview.classList.add('show');
-                        preview.style.display = 'block';
-                    };
-                    reader.onerror = function() {
-                        showToast('Error reading file. Please try again.', 'error');
+                        img.src = e.target.result;
+                        preview.classList.add('visible');
                     };
                     reader.readAsDataURL(file);
-                } else if (file.type === 'application/pdf') {
-                    preview.src = '';
-                    preview.classList.remove('show');
-                    preview.style.display = 'none';
-                    showToast('PDF file selected. Preview not available.', 'success');
-                } else {
-                    showToast('Invalid file type. Please select an image or PDF.', 'error');
-                    input.value = '';
-                    text.textContent = 'Choose File — No file chosen';
-                    preview.classList.remove('show');
-                    preview.style.display = 'none';
-                    preview.src = '';
                 }
+                uploadArea.style.borderColor = '#22c55e';
+                uploadArea.style.backgroundColor = '#f0fdf4';
             } else {
-                text.textContent = 'Choose File — No file chosen';
-                preview.classList.remove('show');
-                preview.style.display = 'none';
-                preview.src = '';
+                textSpan.textContent = 'Choose File — No file chosen';
+                preview.classList.remove('visible');
+                img.src = '';
+                uploadArea.style.borderColor = '#fbbf24';
+                uploadArea.style.backgroundColor = '#ffffff';
             }
         }
-        window.handleFile = handleFile;
 
-        async function openCamera() {
-            try {
-                var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-                var video = document.createElement('video');
-                video.srcObject = stream;
-                video.autoplay = true;
-                video.playsinline = true;
-                video.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:9999;background:#000;';
-                
-                var captureBtn = document.createElement('button');
-                captureBtn.textContent = 'Capture';
-                captureBtn.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:10000;padding:16px 40px;background:#FFD700;color:#1a1a1a;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;';
-                
-                var cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'Cancel';
-                cancelBtn.style.cssText = 'position:fixed;bottom:40px;right:20px;z-index:10000;padding:12px 24px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;';
-                
-                document.body.appendChild(video);
-                document.body.appendChild(captureBtn);
-                document.body.appendChild(cancelBtn);
-                
-                captureBtn.onclick = function() {
-                    var canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
-                    
-                    canvas.toBlob(function(blob) {
-                        var file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
-                        var dt = new DataTransfer();
-                        dt.items.add(file);
-                        document.getElementById('selfieFile').files = dt.files;
-                        handleFile(document.getElementById('selfieFile'), 'selfieBox', 'selfiePreview');
-                        
-                        stream.getTracks().forEach(function(t) { t.stop(); });
-                        video.remove();
-                        captureBtn.remove();
-                        cancelBtn.remove();
-                    }, 'image/jpeg', 0.9);
-                };
-                
-                cancelBtn.onclick = function() {
-                    stream.getTracks().forEach(function(t) { t.stop(); });
-                    video.remove();
-                    captureBtn.remove();
-                    cancelBtn.remove();
-                };
-                
-            } catch (err) {
-                showToast('Could not access camera. Please use file upload instead.', 'error');
-            }
+        function handleCameraCapture(input, textId, previewId, imgId) {
+            handleFileUpload(input, textId, previewId, imgId);
         }
-        window.openCamera = openCamera;
 
-        async function submitRegistration() {
-            var name = document.getElementById('appName').value.trim();
-            var phone = document.getElementById('appPhone').value.trim();
-            var email = document.getElementById('appEmail').value.trim();
-            var idType = document.getElementById('idType').value;
-            var idNumber = document.getElementById('idNumber').value.trim();
-            var location = document.getElementById('location').value.trim();
-            var dob = document.getElementById('dob').value;
-            var occupation = document.getElementById('occupation').value.trim();
-            var selfie = document.getElementById('selfieFile').files[0];
-            var frontFile = document.getElementById('frontFile').files[0];
-            var backFile = document.getElementById('backFile').files[0];
+        document.getElementById('selfieInput').addEventListener('change', function() {
+            handleFileUpload(this, 'selfieText', 'selfiePreview', 'selfieImg');
+        });
+        document.getElementById('cardFront').addEventListener('change', function() {
+            handleFileUpload(this, 'cardFrontText', 'cardFrontPreview', 'cardFrontImg');
+        });
+        document.getElementById('cardBack').addEventListener('change', function() {
+            handleFileUpload(this, 'cardBackText', 'cardBackPreview', 'cardBackImg');
+        });
 
-            if (!name) { showToast('Please enter Full Name.', 'error'); return; }
-            if (!phone) { showToast('Please enter Phone Number.', 'error'); return; }
-            if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-                showToast('Phone number must be exactly 10 digits.', 'error'); return;
-            }
-            if (!email) { showToast('Please enter Email Address.', 'error'); return; }
-            if (!idNumber) { showToast('Please enter ID Number.', 'error'); return; }
-            if (!location) { showToast('Please enter Location.', 'error'); return; }
-            if (!dob) { showToast('Please select Date of Birth.', 'error'); return; }
-            if (!occupation) { showToast('Please enter Occupation.', 'error'); return; }
-            if (!selfie) { showToast('Please upload Selfie Photo.', 'error'); return; }
-            if (!frontFile) { showToast('Please upload Ghana Card Front.', 'error'); return; }
-            if (!backFile) { showToast('Please upload Ghana Card Back.', 'error'); return; }
+        const dobInput = document.getElementById('dobInput');
+        dobInput.addEventListener('change', function() {
+            if (this.value) this.classList.add('has-value');
+            else this.classList.remove('has-value');
+        });
 
-            var btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Validating...';
-
-            try {
-                var userId = currentUser ? currentUser.id : null;
-
-                var prefix = phone.substring(0, 3);
-                var mtn = ['024','025','053','054','055','059'];
-                var airteltigo = ['026','027','056','057'];
-                var telecel = ['020','050'];
-                var detectedNetwork = 'Unknown';
-                if (mtn.indexOf(prefix) !== -1) detectedNetwork = 'MTN';
-                else if (airteltigo.indexOf(prefix) !== -1) detectedNetwork = 'AirtelTigo';
-                else if (telecel.indexOf(prefix) !== -1) detectedNetwork = 'Telecel';
-
-                registrationData = {
-                    userId: userId,
-                    email: email,
-                    applicantName: name,
-                    applicantPhone: phone,
-                    idType: idType,
-                    idNumber: idNumber,
-                    location: location,
-                    dob: dob,
-                    occupation: occupation,
-                    selfie: selfie,
-                    frontFile: frontFile,
-                    backFile: backFile,
-                    detectedNetwork: detectedNetwork,
-                    amount: 15
-                };
-
-                btn.textContent = 'Opening payment...';
-
-                var handler = PaystackPop.setup({
-                    key: PAYSTACK_PUBLIC_KEY,
-                    email: email,
-                    amount: 1500,
-                    currency: 'GHS',
-                    metadata: {
-                        custom_fields: [
-                            { display_name: "Registration Type", variable_name: "registration_type", value: "MTN AFA Bundle" },
-                            { display_name: "Applicant Name", variable_name: "applicant_name", value: name },
-                            { display_name: "Phone Number", variable_name: "phone_number", value: phone }
-                        ]
-                    },
-                    onSuccess: async function(transaction) {
-                        btn.textContent = 'Processing payment...';
-                        await processAfterPayment(transaction.reference);
-                    },
-                    onCancel: function() {
-                        btn.disabled = false;
-                        btn.textContent = 'Submit Registration';
-                        showToast('Payment was cancelled. Please try again.', 'warning');
-                    },
-                    onError: function(error) {
-                        btn.disabled = false;
-                        btn.textContent = 'Submit Registration';
-                        showToast('Payment error: ' + (error.message || 'Unknown error'), 'error');
-                    }
-                });
-                handler.openIframe();
-
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('Error: ' + (error.message || error), 'error');
-                btn.disabled = false;
-                btn.textContent = 'Submit Registration';
-            }
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('visible');
+            setTimeout(() => errorDiv.classList.remove('visible'), 5000);
         }
-        window.submitRegistration = submitRegistration;
 
-        async function processAfterPayment(transactionReference) {
-            var btn = document.getElementById('submitBtn');
+        document.getElementById('afaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Processing...';
+
             try {
-                btn.textContent = 'Uploading files...';
-                
-                var timestamp = Date.now();
-                var userId = registrationData.userId || 'guest';
+                const user = getUser();
+                if (!user) { window.location.href = 'signin.html'; return; }
 
-                var selfiePath = 'registrations/' + userId + '/' + timestamp + '_selfie.jpg';
-                var frontPath = 'registrations/' + userId + '/' + timestamp + '_front.jpg';
-                var backPath = 'registrations/' + userId + '/' + timestamp + '_back.jpg';
+                const formData = {
+                    fullName: document.getElementById('fullName').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    idType: document.getElementById('idType').value,
+                    idNumber: document.getElementById('idNumber').value.trim(),
+                    location: document.getElementById('location').value.trim(),
+                    dob: document.getElementById('dobInput').value,
+                    occupation: document.getElementById('occupation').value.trim(),
+                    userId: user.id
+                };
 
-                var selfieResult = await supabase.storage.from('registration-photos').upload(selfiePath, registrationData.selfie);
-                if (selfieResult.error) throw selfieResult.error;
+                if (!formData.fullName || !formData.phone || !formData.email || !formData.idNumber || 
+                    !formData.location || !formData.dob || !formData.occupation) {
+                    throw new Error('Please fill in all required fields');
+                }
 
-                var frontResult = await supabase.storage.from('registration-photos').upload(frontPath, registrationData.frontFile);
-                if (frontResult.error) throw frontResult.error;
+                const data = await apiCall('/api/register', 'POST', formData);
+                if (!data.success) throw new Error(data.error);
 
-                var backResult = await supabase.storage.from('registration-photos').upload(backPath, registrationData.backFile);
-                if (backResult.error) throw backResult.error;
-
-                var selfieUrlData = supabase.storage.from('registration-photos').getPublicUrl(selfiePath);
-                var frontUrlData = supabase.storage.from('registration-photos').getPublicUrl(frontPath);
-                var backUrlData = supabase.storage.from('registration-photos').getPublicUrl(backPath);
-
-                btn.textContent = 'Creating order...';
-
-                var orderResult = await supabase.from('orders').insert([{
-                    user_id: registrationData.userId || null,
-                    email: registrationData.email,
-                    applicant_name: registrationData.applicantName,
-                    applicant_phone: registrationData.applicantPhone,
-                    id_type: registrationData.idType,
-                    id_number: registrationData.idNumber,
-                    location: registrationData.location,
-                    dob: registrationData.dob,
-                    occupation: registrationData.occupation,
-                    selfie_url: selfieUrlData.data.publicUrl,
-                    front_url: frontUrlData.data.publicUrl,
-                    back_url: backUrlData.data.publicUrl,
-                    detected_network: registrationData.detectedNetwork,
-                    amount: registrationData.amount,
-                    status: 'pending',
-                    payment_reference: transactionReference,
-                    created_at: new Date().toISOString()
-                }]).select().single();
-
-                if (orderResult.error) throw orderResult.error;
-
-                showToast('Registration submitted successfully! Redirecting to your orders...', 'success');
-                window.location.href = 'orders.html';
-
+                window.location.href = data.authorization_url;
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Payment received but order creation failed. Please contact support with reference: ' + transactionReference, 'error');
-                btn.disabled = false;
-                btn.textContent = 'Submit Registration';
+                showError(error.message || 'Something went wrong. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             }
-        }
-        window.processAfterPayment = processAfterPayment;
-
-        initRegister();
+        });
     </script>
 </body>
 </html>
