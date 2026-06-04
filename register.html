@@ -15,6 +15,15 @@
             -webkit-tap-highlight-color: transparent;
         }
         .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+        
+        /* NEW: Centered header with MTN logo */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-top: 16px;
+        }
         .back-btn {
             display: flex;
             align-items: center;
@@ -23,11 +32,35 @@
             text-decoration: none;
             font-size: 16px;
             font-weight: 500;
-            margin-bottom: 16px;
-            padding-top: 16px;
         }
         .back-btn svg { width: 20px; height: 20px; }
-        .page-title { color: #f8fafc; font-size: 26px; font-weight: 700; margin-bottom: 16px; }
+        
+        /* Centered logo section */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .mtn-icon-box {
+            width: 60px;
+            height: 60px;
+            background: #FFD700;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+            margin: 0 auto 12px;
+        }
+        .page-title {
+            color: #f8fafc;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+        }
+        
         .my-orders-btn {
             width: 100%; padding: 14px;
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
@@ -59,30 +92,12 @@
         .form-input::placeholder { color: #94a3b8; }
         input[type="date"].form-input { color: #94a3b8; }
         input[type="date"].form-input.has-value { color: #0f172a; }
-        select.form-input {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 10px center;
-            background-size: 18px; padding-right: 36px;
+        .input-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+            font-style: italic;
         }
-        .upload-area {
-            border: 2px dashed #fbbf24; border-radius: 12px;
-            padding: 20px; text-align: center; background-color: #ffffff;
-            cursor: pointer; transition: background-color 0.2s;
-        }
-        .upload-area:hover { background-color: #fef3c7; }
-        .upload-text { color: #64748b; font-size: 14px; font-weight: 500; }
-        .upload-hint { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 10px; line-height: 1.4; }
-        .image-preview { margin-top: 12px; border-radius: 12px; overflow: hidden; display: none; }
-        .image-preview img { width: 100%; height: auto; display: block; border-radius: 12px; }
-        .image-preview.visible { display: block; }
-        .take-selfie-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 18px; background-color: #0f172a; color: #f8fafc;
-            border: none; border-radius: 10px; font-size: 14px;
-            font-weight: 600; cursor: pointer; margin-top: 10px;
-        }
-        .take-selfie-btn svg { width: 16px; height: 16px; }
         .summary-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
         .summary-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
         .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -99,7 +114,6 @@
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(251, 191, 36, 0.4); }
         .submit-btn:active { transform: translateY(0); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        input[type="file"] { display: none; }
         .spinner {
             display: inline-block; width: 18px; height: 18px;
             border: 2px solid rgba(15, 23, 42, 0.3);
@@ -115,33 +129,41 @@
         .error-msg.visible { display: block; }
         @media (max-width: 480px) {
             .container { padding: 12px; }
-            .page-title { font-size: 22px; }
+            .page-title { font-size: 24px; }
         }
     </style>
 </head>
 <body>
     <main class="container">
-        <a href="dashboard.html" class="back-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-        </a>
+        <!-- Back button at top left -->
+        <div class="page-header">
+            <a href="dashboard.html" class="back-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+            </a>
+        </div>
 
-        <h1 class="page-title">Register AFA</h1>
+        <!-- Centered MTN logo and title -->
+        <div class="logo-section">
+            <div class="mtn-icon-box">MTN</div>
+            <h1 class="page-title">Register AFA</h1>
+        </div>
+
         <button class="my-orders-btn" type="button" onclick="window.location.href='orders.html'">My Orders</button>
 
         <div class="package-card">
             <div class="package-row"><span class="package-label">Package</span><span class="package-value">MTN AFA Bundle</span></div>
-            <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 15.00</span></div>
-            <div class="package-row"><span class="package-label">Review Time</span><span class="package-value">5-10 minutes</span></div>
+            <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 13.00</span></div>
+            <div class="package-row"><span class="package-label">Review Time</span><span class="package-value"> 5-10 minutes</span></div>
         </div>
 
         <div class="error-msg" id="errorMsg"></div>
 
         <div class="form-card">
             <h2 class="form-title">Applicant Details</h2>
-            <p class="form-subtitle">Fill the form carefully. GH₵15 will be charged via Paystack.</p>
+            <p class="form-subtitle">Fill the form carefully. GH₵13 will be charged via Paystack.</p>
 
             <form id="afaForm">
                 <div class="form-group">
@@ -150,7 +172,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Phone Number <span class="required">*</span></label>
-                    <input type="tel" class="form-input" id="phone" placeholder="e.g. 0241234567" required>
+                    <input type="tel" class="form-input" id="phone" placeholder="0240000000" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email Address <span class="required">*</span></label>
@@ -158,16 +180,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">ID Type <span class="required">*</span></label>
-                    <select class="form-input" id="idType" required>
-                        <option value="ghana-card" selected>Ghana Card</option>
-                        <option value="passport">Passport</option>
-                        <option value="drivers-license">Driver's License</option>
-                        <option value="voters-id">Voter's ID</option>
-                    </select>
+                    <input type="text" class="form-input" id="idType" value="Ghana Card" readonly style="background-color: #e2e8f0; cursor: not-allowed;">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ID Number <span class="required">*</span></label>
+                    <label class="form-label">Ghana Card ID Number <span class="required">*</span></label>
                     <input type="text" class="form-input" id="idNumber" placeholder="e.g. GHA-000000000-0" required>
+                    <p class="input-hint">Put in your correct ID number</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Location <span class="required">*</span></label>
@@ -181,52 +199,13 @@
                     <label class="form-label">Occupation <span class="required">*</span></label>
                     <input type="text" class="form-input" id="occupation" placeholder="e.g. Student, Teacher, Business Owner" required>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">Selfie Photo <span class="required">*</span></label>
-                    <p class="upload-hint">Take a live selfie for verification. Accepted: JPG, PNG. Maximum 5MB.</p>
-                    <div class="upload-area" onclick="document.getElementById('selfieInput').click()">
-                        <span class="upload-text" id="selfieText">Choose File — No file chosen</span>
-                    </div>
-                    <input type="file" id="selfieInput" accept="image/jpeg,image/png" required>
-                    <div class="image-preview" id="selfiePreview"><img id="selfieImg" src="" alt="Selfie preview"></div>
-                    <button type="button" class="take-selfie-btn" onclick="document.getElementById('selfieCamera').click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Take Selfie
-                    </button>
-                    <input type="file" id="selfieCamera" accept="image/*" capture="user" style="display:none;" onchange="handleCameraCapture(this, 'selfieText', 'selfiePreview', 'selfieImg')">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Ghana Card Uploads <span class="required">*</span></label>
-                    <p class="upload-hint">Upload both the front and back. Accepted: JPG, PNG, WEBP or PDF. Maximum 5MB each.</p>
-                    <div style="margin-bottom: 16px;">
-                        <label class="form-label">Ghana Card Front <span class="required">*</span></label>
-                        <div class="upload-area" onclick="document.getElementById('cardFront').click()">
-                            <span class="upload-text" id="cardFrontText">Choose File — No file chosen</span>
-                        </div>
-                        <input type="file" id="cardFront" accept="image/jpeg,image/png,image/webp,application/pdf" required>
-                        <div class="image-preview" id="cardFrontPreview"><img id="cardFrontImg" src="" alt="Ghana Card Front"></div>
-                    </div>
-                    <div>
-                        <label class="form-label">Ghana Card Back <span class="required">*</span></label>
-                        <div class="upload-area" onclick="document.getElementById('cardBack').click()">
-                            <span class="upload-text" id="cardBackText">Choose File — No file chosen</span>
-                        </div>
-                        <input type="file" id="cardBack" accept="image/jpeg,image/png,image/webp,application/pdf" required>
-                        <div class="image-preview" id="cardBackPreview"><img id="cardBackImg" src="" alt="Ghana Card Back"></div>
-                    </div>
-                </div>
             </form>
         </div>
 
         <div class="summary-card">
             <h2 class="summary-title">Submission Summary</h2>
             <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
-            <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 15.00</span></div>
+            <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.00</span></div>
             <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
         </div>
 
@@ -235,48 +214,6 @@
 
     <script src="config.js"></script>
     <script>
-        function handleFileUpload(input, textId, previewId, imgId) {
-            const textSpan = document.getElementById(textId);
-            const preview = document.getElementById(previewId);
-            const img = document.getElementById(imgId);
-            const uploadArea = input.previousElementSibling;
-
-            if (input.files && input.files.length > 0) {
-                const file = input.files[0];
-                textSpan.textContent = file.name;
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        img.src = e.target.result;
-                        preview.classList.add('visible');
-                    };
-                    reader.readAsDataURL(file);
-                }
-                uploadArea.style.borderColor = '#22c55e';
-                uploadArea.style.backgroundColor = '#f0fdf4';
-            } else {
-                textSpan.textContent = 'Choose File — No file chosen';
-                preview.classList.remove('visible');
-                img.src = '';
-                uploadArea.style.borderColor = '#fbbf24';
-                uploadArea.style.backgroundColor = '#ffffff';
-            }
-        }
-
-        function handleCameraCapture(input, textId, previewId, imgId) {
-            handleFileUpload(input, textId, previewId, imgId);
-        }
-
-        document.getElementById('selfieInput').addEventListener('change', function() {
-            handleFileUpload(this, 'selfieText', 'selfiePreview', 'selfieImg');
-        });
-        document.getElementById('cardFront').addEventListener('change', function() {
-            handleFileUpload(this, 'cardFrontText', 'cardFrontPreview', 'cardFrontImg');
-        });
-        document.getElementById('cardBack').addEventListener('change', function() {
-            handleFileUpload(this, 'cardBackText', 'cardBackPreview', 'cardBackImg');
-        });
-
         const dobInput = document.getElementById('dobInput');
         dobInput.addEventListener('change', function() {
             if (this.value) this.classList.add('has-value');
@@ -307,7 +244,7 @@
                     fullName: document.getElementById('fullName').value.trim(),
                     phone: document.getElementById('phone').value.trim(),
                     email: document.getElementById('email').value.trim(),
-                    idType: document.getElementById('idType').value,
+                    idType: 'ghana-card',
                     idNumber: document.getElementById('idNumber').value.trim(),
                     location: document.getElementById('location').value.trim(),
                     dob: document.getElementById('dobInput').value,
@@ -323,6 +260,7 @@
                 const data = await apiCall('/api/register', 'POST', formData);
                 if (!data.success) throw new Error(data.error);
 
+                // Redirect to Paystack payment page
                 window.location.href = data.authorization_url;
             } catch (error) {
                 showError(error.message || 'Something went wrong. Please try again.');
