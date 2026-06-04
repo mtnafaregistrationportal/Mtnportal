@@ -35,20 +35,35 @@
             border-bottom: 1px solid var(--glass-border);
         }
         .dash-header-left { display: flex; align-items: center; gap: 12px; }
-        .dash-icon {
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        
+        /* MTN Yellow Box */
+        .mtn-icon-box {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-yellow);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
         }
-        .dash-icon svg { width: 20px; height: 20px; color: var(--primary-yellow); }
-        .profile-pic-small {
-            width: 40px; height: 40px;
-            border-radius: 50%;
+        
+        .profile-pic-header {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             object-fit: cover;
             border: 2px solid var(--primary-yellow);
+            display: none;
         }
+        .profile-pic-header.show {
+            display: block;
+        }
+        
         .dash-header-text h2 { font-size: 16px; font-weight: 700; }
         .dash-header-text p { font-size: 12px; color: var(--text-muted); }
         .menu-btn {
@@ -93,31 +108,65 @@
         .menu-item:hover { color: var(--primary-yellow); }
         .dash-content { padding: 20px; max-width: 480px; margin: 0 auto; }
         .profile-upload-section { text-align: center; margin-bottom: 20px; }
-        .profile-upload-container { position: relative; width: 100px; height: 100px; margin: 0 auto 12px; }
+        
+        /* BIGGER: Profile picture container */
+        .profile-upload-container { 
+            position: relative; 
+            width: 140px; 
+            height: 140px; 
+            margin: 0 auto 12px; 
+        }
+        
+        /* BIGGER: Profile picture */
         .profile-pic-dash {
-            width: 100px; height: 100px; border-radius: 50%;
-            object-fit: cover; border: 3px solid var(--primary-yellow); display: block;
+            width: 140px; 
+            height: 140px; 
+            border-radius: 50%;
+            object-fit: cover; 
+            border: 3px solid var(--primary-yellow); 
+            display: block;
         }
+        
+        /* BIGGER: Placeholder */
         .profile-pic-placeholder-dash {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: rgba(255,255,255,0.1); border: 3px solid var(--primary-yellow);
-            display: flex; align-items: center; justify-content: center; margin: 0 auto;
+            width: 140px; 
+            height: 140px; 
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1); 
+            border: 3px solid var(--primary-yellow);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto;
         }
-        .profile-pic-placeholder-dash svg { width: 40px; height: 40px; color: var(--text-muted); }
+        .profile-pic-placeholder-dash svg { width: 60px; height: 60px; color: var(--text-muted); }
+        
+        /* BIGGER: Change picture button */
         .change-pic-btn-dash {
-            position: absolute; bottom: 0; right: 0;
-            width: 32px; height: 32px; background: var(--primary-yellow);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border: 3px solid var(--dark-bg);
+            position: absolute; 
+            bottom: 4px; 
+            right: 4px;
+            width: 40px; 
+            height: 40px; 
+            background: var(--primary-yellow);
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            border: 3px solid var(--dark-bg);
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        .change-pic-btn-dash svg { width: 16px; height: 16px; color: #1a1a1a; }
+        .change-pic-btn-dash svg { width: 20px; height: 20px; color: #1a1a1a; }
         .change-pic-btn-dash input[type="file"] { display: none; }
+        
         .welcome-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(30px);
-            border-radius: 20px; padding: 24px 20px;
-            margin-bottom: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border-radius: 20px; 
+            padding: 24px 20px;
+            margin-bottom: 16px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
         .welcome-card h2 { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
         .welcome-card p { font-size: 14px; color: #666; margin-bottom: 20px; }
@@ -181,11 +230,8 @@
 <body>
     <header class="dash-header">
         <div class="dash-header-left">
-            <div class="dash-icon" id="headerIcon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
+            <div class="mtn-icon-box" id="mtnIconBox">MTN</div>
+            <img src="" alt="Profile" class="profile-pic-header" id="profilePicHeader">
             <div class="dash-header-text">
                 <h2>MTN AFA Portal</h2>
                 <p id="welcomeText">Welcome, User</p>
@@ -324,6 +370,20 @@
             return { name: 'Unknown', class: 'network-unknown' };
         }
 
+        function updateHeaderIcon(imageUrl) {
+            const mtnBox = document.getElementById('mtnIconBox');
+            const headerPic = document.getElementById('profilePicHeader');
+            
+            if (imageUrl) {
+                mtnBox.style.display = 'none';
+                headerPic.src = imageUrl;
+                headerPic.classList.add('show');
+            } else {
+                mtnBox.style.display = 'flex';
+                headerPic.classList.remove('show');
+            }
+        }
+
         async function uploadProfilePictureDash() {
             const file = document.getElementById('picInputDash').files[0];
             if (!file) return;
@@ -358,7 +418,7 @@
                 document.getElementById('profilePicDash').src = data.url;
                 document.getElementById('profilePicDash').style.display = 'block';
                 document.getElementById('profilePicPlaceholderDash').style.display = 'none';
-                document.getElementById('headerIcon').innerHTML = '<img src="' + data.url + '" class="profile-pic-small" alt="Profile">';
+                updateHeaderIcon(data.url);
                 localStorage.setItem('profilePicture', data.url);
 
                 showToast('Profile picture updated!', 'success');
@@ -383,23 +443,25 @@
                 const data = await apiCall('/api/user/dashboard', 'POST', { userId: user.id });
                 if (!data.success) throw new Error(data.error);
 
-                if (data.user?.profile_picture) {
-                    document.getElementById('profilePicDash').src = data.user.profile_picture;
+                const profilePic = data.user?.profile_picture || localStorage.getItem('profilePicture');
+                if (profilePic) {
+                    document.getElementById('profilePicDash').src = profilePic;
                     document.getElementById('profilePicDash').style.display = 'block';
                     document.getElementById('profilePicPlaceholderDash').style.display = 'none';
-                    document.getElementById('headerIcon').innerHTML = '<img src="' + data.user.profile_picture + '" class="profile-pic-small" alt="Profile">';
+                    updateHeaderIcon(profilePic);
                 }
 
-                if (data.recentPhone) {
-                    const network = detectNetwork(data.recentPhone);
+                const userPhone = data.user?.phone_number || user.phone;
+                if (userPhone) {
+                    const network = detectNetwork(userPhone);
                     const badge = document.getElementById('networkBadge');
                     badge.className = 'network-badge ' + network.class;
-                    document.getElementById('networkText').textContent = network.name + ' • ' + data.recentPhone;
+                    document.getElementById('networkText').textContent = network.name + ' • ' + userPhone;
                 }
 
                 const orders = data.orders || [];
                 const total = orders.length;
-                const pending = orders.filter(o => o.status === 'pending').length;
+                const pending = orders.filter(o => o.status === 'pending' || o.status === 'paid').length;
                 const approved = orders.filter(o => o.status === 'approved').length;
                 const rejected = orders.filter(o => o.status === 'rejected').length;
 
@@ -412,10 +474,10 @@
                 const regList = document.getElementById('registrationList');
                 if (recent.length > 0) {
                     regList.innerHTML = recent.map(order => {
-                        const date = new Date(order.created_at).toLocaleDateString();
-                        const statusClass = order.status === 'pending' ? 'status-pending' : 
+                        const date = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                        const statusClass = order.status === 'pending' || order.status === 'paid' ? 'status-pending' : 
                                            order.status === 'approved' ? 'status-approved' : 'status-rejected';
-                        const statusText = order.status === 'pending' ? 'Pending Approval' : 
+                        const statusText = order.status === 'pending' || order.status === 'paid' ? 'Pending Approval' : 
                                           order.status === 'approved' ? 'Approved' : 'Rejected';
                         return `
                             <div class="reg-item">
