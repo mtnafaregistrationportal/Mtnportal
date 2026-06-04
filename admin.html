@@ -276,9 +276,20 @@
     <script src="config.js"></script>
     <script>
         let currentAdmin = null;
+        let adminToken = null;
         let allUsers = [];
         let allRegistrations = [];
         let allPayments = [];
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('adminToken');
+            if (savedToken) {
+                adminToken = savedToken;
+                showDashboard();
+                loadAllData();
+            }
+        });
 
         async function adminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
@@ -297,12 +308,20 @@
             errorEl.classList.remove('show');
 
             try {
-                const data = await apiCall('/api/admin/login', 'POST', { email, password });
+                const response = await fetch('https://mtn-afa-api.onrender.com/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
                 
                 if (!data.success) throw new Error(data.error);
 
+                // Save token
+                adminToken = data.token;
+                localStorage.setItem('adminToken', adminToken);
                 currentAdmin = data.admin;
-                setSession(data.session);
                 
                 showDashboard();
                 loadAllData();
@@ -310,7 +329,7 @@
             } catch (error) {
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
-                errorEl.textContent = error.message;
+                errorEl.textContent = error.message || 'Invalid credentials';
                 errorEl.classList.add('show');
             }
         }
@@ -320,9 +339,27 @@
             document.getElementById('dashboardScreen').classList.add('show');
         }
 
-        async function adminLogout() {
-            clearSession();
+        function adminLogout() {
+            localStorage.removeItem('adminToken');
+            adminToken = null;
+            currentAdmin = null;
             window.location.reload();
+        }
+
+        // NEW: Helper to make authenticated admin API calls
+        async function adminApiCall(endpoint, method, body) {
+            const options = {
+                method: method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                credentials: 'include'
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, options);
+            return response.json();
         }
 
         async function loadAllData() {
@@ -333,7 +370,7 @@
 
         async function loadUsers() {
             try {
-                const data = await apiCall('/api/admin/users', 'POST');
+                const data = await adminApiCall('/api/admin/users', 'POST');
                 if (!data.success) throw new Error(data.error);
                 
                 allUsers = data.users || [];
@@ -342,12 +379,15 @@
                 updateStats();
             } catch (error) {
                 console.error('Error loading users:', error);
+                if (error.message.includes('token') || error.message.includes('denied')) {
+                    adminLogout();
+                }
             }
         }
 
         async function loadRegistrations() {
             try {
-                const data = await apiCall('/api/admin/orders', 'POST');
+                const data = await adminApiCall('/api/admin/orders', 'POST');
                 if (!data.success) throw new Error(data.error);
                 
                 allRegistrations = data.orders || [];
@@ -361,7 +401,7 @@
 
         async function loadPayments() {
             try {
-                const data = await apiCall('/api/admin/payments', 'POST');
+                const data = await adminApiCall('/api/admin/payments', 'POST');
                 if (!data.success) throw new Error(data.error);
                 
                 allPayments = data.payments || [];
@@ -568,7 +608,7 @@
             const note = document.getElementById('note-' + regId)?.value || '';
             
             try {
-                const data = await apiCall('/api/admin/approve-order', 'POST', {
+                const data = await adminApiCall('/api/admin/approve-order', 'POST', {
                     orderId: regId,
                     adminNote: note,
                     adminId: currentAdmin.id
@@ -596,7 +636,7 @@
             }
 
             try {
-                const data = await apiCall('/api/admin/reject-order', 'POST', {
+                const data = await adminApiCall('/api/admin/reject-order', 'POST', {
                     orderId: regId,
                     adminNote: note,
                     adminId: currentAdmin.id
@@ -618,7 +658,7 @@
             
             showLoading(true);
             try {
-                const data = await apiCall('/api/admin/suspend-user', 'POST', { userId });
+                const data = await adminApiCall('/api/admin/suspend-user', 'POST', { userId });
                 if (!data.success) throw new Error(data.error);
                 
                 showLoading(false);
@@ -633,7 +673,7 @@
         async function enableUser(userId) {
             showLoading(true);
             try {
-                const data = await apiCall('/api/admin/enable-user', 'POST', { userId });
+                const data = await adminApiCall('/api/admin/enable-user', 'POST', { userId });
                 if (!data.success) throw new Error(data.error);
                 
                 showLoading(false);
@@ -651,7 +691,7 @@
             
             showLoading(true);
             try {
-                const data = await apiCall('/api/admin/delete-user', 'POST', { userId });
+                const data = await adminApiCall('/api/admin/delete-user', 'POST', { userId });
                 if (!data.success) throw new Error(data.error);
                 
                 showLoading(false);
