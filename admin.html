@@ -281,15 +281,48 @@
         let allRegistrations = [];
         let allPayments = [];
 
-        // Check if already logged in
+        // Check if already logged in on page load
         document.addEventListener('DOMContentLoaded', () => {
             const savedToken = localStorage.getItem('adminToken');
             if (savedToken) {
                 adminToken = savedToken;
-                showDashboard();
-                loadAllData();
+                // Verify token by making a test API call
+                verifyTokenAndShowDashboard();
             }
         });
+
+        // NEW: Verify token is valid before showing dashboard
+        async function verifyTokenAndShowDashboard() {
+            try {
+                const data = await adminApiCall('/api/admin/users', 'POST');
+                if (data.success) {
+                    // Token is valid
+                    currentAdmin = { id: 'admin_001', email: 'mtnportal34@gmail.com', role: 'admin' };
+                    showDashboard();
+                    loadAllData();
+                } else {
+                    // Token invalid, clear it and show login
+                    throw new Error('Invalid token');
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                localStorage.removeItem('adminToken');
+                adminToken = null;
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboardScreen').classList.remove('show');
+            document.getElementById('adminEmail').value = '';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').classList.add('show');
+        }
 
         async function adminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
@@ -334,16 +367,16 @@
             }
         }
 
-        function showDashboard() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboardScreen').classList.add('show');
-        }
-
         function adminLogout() {
             localStorage.removeItem('adminToken');
             adminToken = null;
             currentAdmin = null;
-            window.location.reload();
+            // Clear all data
+            allUsers = [];
+            allRegistrations = [];
+            allPayments = [];
+            // Show login screen without reloading
+            showLoginScreen();
         }
 
         // NEW: Helper to make authenticated admin API calls
@@ -379,7 +412,7 @@
                 updateStats();
             } catch (error) {
                 console.error('Error loading users:', error);
-                if (error.message.includes('token') || error.message.includes('denied')) {
+                if (error.message.includes('token') || error.message.includes('denied') || error.message.includes('unauthorized')) {
                     adminLogout();
                 }
             }
