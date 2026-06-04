@@ -89,6 +89,7 @@
         .btn-header { padding: 8px 16px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-white); border-radius: 10px; font-size: 13px; cursor: pointer; text-decoration: none; }
         .btn-header:hover { background: var(--primary-yellow); color: #1a1a1a; border-color: var(--primary-yellow); }
         .btn-logout { padding: 8px 16px; background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.4); color: #e74c3c; border-radius: 10px; font-size: 13px; cursor: pointer; }
+        .admin-greeting { color: var(--primary-yellow); font-size: 14px; font-weight: 600; margin-right: 12px; }
 
         .admin-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
 
@@ -117,6 +118,7 @@
             border-radius: 16px;
             padding: 16px 20px;
             margin-bottom: 12px;
+            position: relative;
         }
         .user-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
         .user-info { display: flex; align-items: center; gap: 12px; }
@@ -155,6 +157,31 @@
         }
         .payment-amount { font-size: 18px; font-weight: 700; color: var(--primary-yellow); }
         .payment-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* NEW: Attended dot indicator */
+        .attended-dot {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .attended-dot.unattended {
+            background: white;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+            animation: pulse 2s infinite;
+        }
+        .attended-dot.attended {
+            background: var(--primary-yellow);
+            box-shadow: 0 0 8px rgba(255,215,0,0.6);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
 
         .img-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .img-modal.show { display: flex; }
@@ -201,7 +228,7 @@
                 <h1>Admin Dashboard</h1>
             </div>
             <div class="header-actions">
-                <a href="index.html" class="btn-header">🏠 Home</a>
+                <span class="admin-greeting">Daniel, let's go 😂</span>
                 <button class="btn-logout" onclick="adminLogout()">Logout</button>
             </div>
         </header>
@@ -234,7 +261,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div class="stat-value" id="statPending">0</div>
-                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-label">Pending/Approved</div>
                 </div>
             </div>
 
@@ -281,27 +308,22 @@
         let allRegistrations = [];
         let allPayments = [];
 
-        // Check if already logged in on page load
         document.addEventListener('DOMContentLoaded', () => {
             const savedToken = localStorage.getItem('adminToken');
             if (savedToken) {
                 adminToken = savedToken;
-                // Verify token by making a test API call
                 verifyTokenAndShowDashboard();
             }
         });
 
-        // NEW: Verify token is valid before showing dashboard
         async function verifyTokenAndShowDashboard() {
             try {
                 const data = await adminApiCall('/api/admin/users', 'POST');
                 if (data.success) {
-                    // Token is valid
                     currentAdmin = { id: 'admin_001', email: 'mtnportal34@gmail.com', role: 'admin' };
                     showDashboard();
                     loadAllData();
                 } else {
-                    // Token invalid, clear it and show login
                     throw new Error('Invalid token');
                 }
             } catch (error) {
@@ -351,7 +373,6 @@
                 
                 if (!data.success) throw new Error(data.error);
 
-                // Save token
                 adminToken = data.token;
                 localStorage.setItem('adminToken', adminToken);
                 currentAdmin = data.admin;
@@ -371,15 +392,12 @@
             localStorage.removeItem('adminToken');
             adminToken = null;
             currentAdmin = null;
-            // Clear all data
             allUsers = [];
             allRegistrations = [];
             allPayments = [];
-            // Show login screen without reloading
             showLoginScreen();
         }
 
-        // NEW: Helper to make authenticated admin API calls
         async function adminApiCall(endpoint, method, body) {
             const options = {
                 method: method || 'GET',
@@ -409,10 +427,9 @@
                 allUsers = data.users || [];
                 document.getElementById('statTotalUsers').textContent = allUsers.length;
                 renderUsers();
-                updateStats();
             } catch (error) {
                 console.error('Error loading users:', error);
-                if (error.message.includes('token') || error.message.includes('denied') || error.message.includes('unauthorized')) {
+                if (error.message.includes('token') || error.message.includes('denied')) {
                     adminLogout();
                 }
             }
@@ -438,22 +455,22 @@
                 if (!data.success) throw new Error(data.error);
                 
                 allPayments = data.payments || [];
+                
+                // Calculate total revenue from successful payments
                 let revenue = 0;
                 allPayments.forEach(p => {
-                    if (p.status === 'success') revenue += (p.amount || 0);
+                    revenue += (p.amount || 0);
                 });
                 document.getElementById('statRevenue').textContent = revenue.toFixed(2);
                 renderPayments();
-                updateStats();
             } catch (error) {
                 console.error('Error loading payments:', error);
             }
         }
 
         function updateStats() {
-            const pending = allRegistrations.filter(r => 
-                (r.status === 'pending' || r.status === 'paid' || !r.status)
-            ).length;
+            // Pending = registrations that are NOT approved (pending, paid, rejected)
+            const pending = allRegistrations.filter(r => r.status !== 'approved').length;
             document.getElementById('statPending').textContent = pending;
         }
 
@@ -478,6 +495,10 @@
             container.innerHTML = users.map(u => {
                 const initials = (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 const isSuspended = u.status === 'suspended';
+                // Registration count from orders or total_registrations field
+                const regCount = u.total_registrations || 0;
+                // Wallet = amount spent on registrations (GHS 13 per registration)
+                const walletAmount = (regCount * 13).toFixed(2);
                 
                 return `
                     <div class="user-card">
@@ -497,20 +518,20 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <span class="detail-item-label">Wallet</span>
-                                <span class="detail-item-value">GH₵ ${(u.wallet_balance || 0).toFixed(2)}</span>
+                                <span class="detail-item-value">GH₵ ${walletAmount}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-item-label">Registrations</span>
-                                <span class="detail-item-value">${u.total_registrations || 0}</span>
+                                <span class="detail-item-value">${regCount}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-item-label">Joined</span>
-                                <span class="detail-item-value">${u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</span>
+                                <span class="detail-item-value">${u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                             </div>
                         </div>
                         <div class="action-buttons" style="margin-top:12px;">
                             ${isSuspended 
-                                ? `<button class="btn-approve" onclick="enableUser('${u.id}')">✓ Enable</button>`
+                                ? `<button class="btn-approve" onclick="enableUser('${u.id}')">✓ Resume</button>`
                                 : `<button class="btn-suspend" onclick="suspendUser('${u.id}')">⏸ Suspend</button>`
                             }
                             <button class="btn-delete" onclick="deleteUser('${u.id}')">🗑 Delete</button>
@@ -528,9 +549,18 @@
                 const f = filter.toLowerCase();
                 regs = regs.filter(r => 
                     (r.applicant_name || '').toLowerCase().includes(f) ||
-                    (r.applicant_phone || '').includes(f)
+                    (r.applicant_phone || '').includes(f) ||
+                    (r.id_number || '').includes(f)
                 );
             }
+
+            // Sort: unattended first, then by date (newest first)
+            regs.sort((a, b) => {
+                if (a.admin_attended !== b.admin_attended) {
+                    return a.admin_attended ? 1 : -1; // Unattended first
+                }
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
 
             if (regs.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No registrations found</p>';
@@ -545,9 +575,13 @@
                                   status === 'paid' ? 'Paid - Pending' : 'Pending';
 
                 const showActions = status !== 'approved' && status !== 'rejected';
+                const isAttended = r.admin_attended;
                 
                 return `
-                    <div class="user-card">
+                    <div class="user-card" style="position:relative;">
+                        <div class="attended-dot ${isAttended ? 'attended' : 'unattended'}" 
+                             onclick="markAttended('${r.id}', this)" 
+                             title="${isAttended ? 'Attended' : 'Click to mark as attended'}"></div>
                         <div class="user-card-header">
                             <div class="user-info">
                                 <div class="user-avatar-placeholder">${(r.applicant_name || 'U')[0]}</div>
@@ -560,6 +594,24 @@
                         </div>
                         <div class="detail-grid">
                             <div class="detail-item">
+                                <span class="detail-item-label">Ghana Card ID</span>
+                                <span class="detail-item-value">${r.id_number || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Location</span>
+                                <span class="detail-item-value">${r.location || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Date of Birth</span>
+                                <span class="detail-item-value">${r.dob || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Occupation</span>
+                                <span class="detail-item-value">${r.occupation || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="detail-grid" style="margin-top:8px;">
+                            <div class="detail-item">
                                 <span class="detail-item-label">Amount</span>
                                 <span class="detail-item-value">GH₵ ${(r.amount || 15).toFixed(2)}</span>
                             </div>
@@ -569,7 +621,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-item-label">Date</span>
-                                <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</span>
+                                <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                             </div>
                         </div>
                         ${showActions ? `
@@ -591,8 +643,9 @@
             if (filter) {
                 const f = filter.toLowerCase();
                 payments = payments.filter(p => 
-                    (p.email || '').toLowerCase().includes(f) ||
-                    (p.reference || '').includes(f)
+                    (p.name || '').toLowerCase().includes(f) ||
+                    (p.phone || '').includes(f) ||
+                    (p.id_number || '').includes(f)
                 );
             }
 
@@ -604,13 +657,14 @@
             container.innerHTML = payments.map(p => `
                 <div class="payment-row">
                     <div>
-                        <div class="payment-amount">GH₵ ${(p.amount || 0).toFixed(2)}</div>
-                        <div class="payment-meta">${p.type || 'unknown'} • ${p.reference || 'N/A'} • ${p.email || 'N/A'}</div>
-                        <div class="payment-meta">${p.created_at ? new Date(p.created_at).toLocaleString() : 'N/A'}</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                            <span class="status-badge badge-approved" style="font-size:10px;">✓ PAID</span>
+                            <span class="payment-amount" style="font-size:16px;">GH₵ ${(p.amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="payment-meta"><strong>${p.name || 'Unknown'}</strong> • ${p.phone || 'No phone'}</div>
+                        <div class="payment-meta">Ghana Card: ${p.id_number || 'N/A'}</div>
+                        <div class="payment-meta">${p.reference || 'N/A'} • ${p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                     </div>
-                    <span class="status-badge ${p.status === 'success' ? 'badge-approved' : 'badge-pending'}">
-                        ${p.status || 'pending'}
-                    </span>
                 </div>
             `).join('');
         }
@@ -636,6 +690,23 @@
             else if (activeTab.includes('payment')) renderPayments(filter);
         }
 
+        // NEW: Mark registration as attended
+        async function markAttended(regId, dotElement) {
+            if (dotElement.classList.contains('attended')) return; // Already attended
+            
+            try {
+                const data = await adminApiCall('/api/admin/mark-attended', 'POST', { orderId: regId });
+                if (data.success) {
+                    dotElement.classList.remove('unattended');
+                    dotElement.classList.add('attended');
+                    dotElement.title = 'Attended';
+                    showToast('Marked as attended', 'success');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
         async function approveRegistration(regId) {
             showLoading(true);
             const note = document.getElementById('note-' + regId)?.value || '';
@@ -652,6 +723,7 @@
                 showLoading(false);
                 showToast('Registration approved!', 'success');
                 await loadRegistrations();
+                await loadUsers(); // Refresh user wallet counts
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
@@ -710,7 +782,7 @@
                 if (!data.success) throw new Error(data.error);
                 
                 showLoading(false);
-                showToast('User enabled', 'success');
+                showToast('User resumed', 'success');
                 await loadUsers();
             } catch (error) {
                 showLoading(false);
