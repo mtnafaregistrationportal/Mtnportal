@@ -93,15 +93,6 @@
         .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .detail-label { color: var(--text-muted); }
         .detail-value { font-weight: 600; }
-        .uploads-preview { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .upload-thumb {
-            width: 60px; height: 60px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid var(--glass-border);
-            cursor: pointer;
-        }
-        .upload-thumb:hover { transform: scale(1.1); border-color: var(--primary-yellow); }
         .admin-note {
             background: rgba(255, 193, 7, 0.1);
             border: 1px solid rgba(255, 193, 7, 0.3);
@@ -138,28 +129,6 @@
         }
         .contact-support-btn svg { width: 22px; height: 22px; color: white; }
         .contact-support-text { color: white; font-size: 14px; font-weight: 600; }
-        .img-modal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .img-modal.show { display: flex; }
-        .img-modal img { max-width: 100%; max-height: 80vh; border-radius: 12px; }
-        .img-modal-close {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-        }
         @media (min-width: 768px) { .orders-content { max-width: 720px; padding: 40px 24px; } }
     </style>
 </head>
@@ -205,17 +174,13 @@
         </div>
     </div>
 
-    <a href="https://wa.me/233557810669" target="_blank" class="contact-support-btn">
+    <!-- UPDATED: WhatsApp number changed to 0503107100 -->
+    <a href="https://wa.me/233503107100" target="_blank" class="contact-support-btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5.02L2 22l5.11-1.34A9.93 9.93 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.53 0-2.97-.43-4.2-1.17l-.3-.18-3.03.79.81-2.95-.2-.31A8.02 8.02 0 014 12c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8zm4.54-6.15c-.25-.12-1.47-.73-1.7-.81-.23-.08-.4-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.31-.02-.48-.02-.17 0-.43.06-.66.31-.22.25-.85.83-.85 2.03 0 1.2.87 2.36.99 2.52.12.17 1.71 2.61 4.15 3.66.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.1.46-.07 1.47-.6 1.68-1.18.2-.58.2-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
         </svg>
         <span class="contact-support-text">Contact Support</span>
     </a>
-
-    <div class="img-modal" id="imgModal" onclick="closeImgModal()">
-        <button class="img-modal-close" onclick="closeImgModal()">×</button>
-        <img src="" alt="Preview" id="modalImg">
-    </div>
 
     <script src="config.js"></script>
     <script>
@@ -265,39 +230,27 @@
                 var order = orders[i];
                 var status = order.status || 'pending';
 
+                // Count: pending/processing/paid = pending, approved = approved
                 if (status === 'pending' || status === 'processing' || status === 'paid') pendingCount++;
                 if (status === 'approved') approvedCount++;
 
                 var statusClass = 'status-' + status;
-                var statusText = status === 'approved' ? 'Approved ✅' :
+                var statusText = status === 'approved' ? 'Completed ✅' :
                     status === 'rejected' ? 'Rejected ❌' :
-                    status === 'processing' ? 'Processing' :
-                    status === 'paid' ? 'Paid - Awaiting Approval' : 'Pending Approval';
+                    status === 'processing' ? 'Processing ⏳' :
+                    status === 'paid' ? 'Paid - Pending Approval' : 'Pending Approval';
 
-                var date = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB') : 'Just now';
-
-                var thumbs = [];
-                if (order.selfie_url) thumbs.push({ url: order.selfie_url, label: 'Selfie' });
-                if (order.front_url) thumbs.push({ url: order.front_url, label: 'ID Front' });
-                if (order.back_url) thumbs.push({ url: order.back_url, label: 'ID Back' });
-
-                var uploadsHtml = '';
-                if (thumbs.length > 0) {
-                    var thumbsHtml = '';
-                    for (var j = 0; j < thumbs.length; j++) {
-                        var t = thumbs[j];
-                        thumbsHtml += '<img src="' + t.url + '" class="upload-thumb" onclick="event.stopPropagation();openImgModal(\'' + t.url + '\')" alt="' + t.label + '">';
-                    }
-                    uploadsHtml = '<div class="uploads-preview">' + thumbsHtml + '</div>';
-                }
+                var date = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Just now';
 
                 var adminNote = '';
                 if (status === 'rejected' && order.admin_note) {
                     adminNote = '<div class="admin-note rejected">Admin: ' + order.admin_note + '</div>';
                 } else if (status === 'approved') {
-                    adminNote = '<div class="admin-note approved">Order completed successfully! Your registration has been approved.</div>';
-                } else if (status === 'paid' || status === 'pending' || status === 'processing') {
-                    adminNote = '<div class="admin-note">Payment received. Awaiting admin approval...</div>';
+                    adminNote = '<div class="admin-note approved">✅ Order completed! Your registration has been approved.</div>';
+                } else if (status === 'processing') {
+                    adminNote = '<div class="admin-note">⏳ Your registration is being processed...</div>';
+                } else if (status === 'paid' || status === 'pending') {
+                    adminNote = '<div class="admin-note">💳 Payment received. Awaiting admin approval...</div>';
                 }
 
                 var orderId = order.id ? order.id.toString().substr(-8).toUpperCase() : 'N/A';
@@ -319,7 +272,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Amount</span>
-                                <span class="detail-value">GH₵ ${(order.amount || 15).toFixed(2)}</span>
+                                <span class="detail-value">GH₵ ${(order.amount || 13).toFixed(2)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Payment Ref</span>
@@ -330,7 +283,6 @@
                                 <span class="detail-value">${date}</span>
                             </div>
                         </div>
-                        ${uploadsHtml}
                         ${adminNote}
                     </div>
                 `;
@@ -344,15 +296,6 @@
             document.getElementById('totalOrders').textContent = totalCount;
             document.getElementById('pendingOrders').textContent = pendingCount;
             document.getElementById('approvedOrders').textContent = approvedCount;
-        }
-
-        function openImgModal(url) {
-            document.getElementById('modalImg').src = url;
-            document.getElementById('imgModal').classList.add('show');
-        }
-
-        function closeImgModal() {
-            document.getElementById('imgModal').classList.remove('show');
         }
 
         initOrders();
