@@ -1,6 +1,7 @@
 // ============================================
 // API CONFIGURATION
 // ============================================
+// FIXED: Updated to Render deployment URL
 const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
 
 async function apiCall(endpoint, method, body) {
