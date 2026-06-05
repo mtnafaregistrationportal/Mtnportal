@@ -458,43 +458,24 @@
 
         async function loadPayments() {
             try {
-                const paidData = await adminApiCall('/api/admin/payments', 'POST');
-                if (!paidData.success) throw new Error(paidData.error);
+                const data = await adminApiCall('/api/admin/payments', 'POST');
+                if (!data.success) throw new Error(data.error);
                 
-                const ordersData = await adminApiCall('/api/admin/orders', 'POST');
-                if (!ordersData.success) throw new Error(ordersData.error);
+                allPayments = data.payments || [];
                 
-                const paidOrders = paidData.payments || [];
-                const allOrders = ordersData.orders || [];
-                
-                const pendingOrders = allOrders.filter(o => o.status === 'pending' && !o.payment_reference);
-                
-                allPayments = [
-                    ...paidOrders.map(p => ({ ...p, paymentStatus: 'paid' })),
-                    ...pendingOrders.map(o => ({
-                        id: o.id,
-                        amount: o.amount || 13,
-                        status: 'failed',
-                        reference: 'N/A',
-                        email: o.applicant_email,
-                        name: o.applicant_name,
-                        phone: o.applicant_phone,
-                        id_number: o.id_number,
-                        created_at: o.created_at,
-                        type: 'afa_registration',
-                        paymentStatus: 'failed'
-                    }))
-                ];
-                
+                // Calculate revenue from PAID payments only
                 let revenue = 0;
-                paidOrders.forEach(p => {
-                    revenue += parseFloat(p.amount || 0);
+                allPayments.forEach(p => {
+                    if (p.paymentStatus === 'paid') {
+                        revenue += parseFloat(p.amount || 0);
+                    }
                 });
                 
                 document.getElementById('statRevenue').textContent = revenue.toFixed(2);
                 renderPayments();
             } catch (error) {
                 console.error('Error loading payments:', error);
+                showToast('Error loading payments: ' + error.message, 'error');
             }
         }
 
@@ -685,6 +666,7 @@
                 );
             }
 
+            // Sort: paid first, then failed, then by date
             payments.sort((a, b) => {
                 if (a.paymentStatus !== b.paymentStatus) {
                     return a.paymentStatus === 'paid' ? -1 : 1;
@@ -810,6 +792,27 @@
             }
         }
 
+        async function deletePayment(paymentId) {
+            if (!confirm('Are you sure you want to delete this payment record?')) return;
+            
+            showLoading(true);
+            try {
+                const data = await adminApiCall('/api/admin/delete-order', 'POST', {
+                    orderId: paymentId
+                });
+                
+                if (!data.success) throw new Error(data.error);
+                
+                showLoading(false);
+                showToast('Payment deleted', 'success');
+                await loadPayments();
+                await loadRegistrations(); // Refresh registrations too since they're linked
+            } catch (error) {
+                showLoading(false);
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
         async function deleteRegistration(regId) {
             if (!confirm('Are you sure you want to delete this registration?')) return;
             if (!confirm('This action cannot be undone. Continue?')) return;
@@ -826,27 +829,6 @@
                 showToast('Registration deleted', 'success');
                 await loadRegistrations();
                 await loadPayments();
-            } catch (error) {
-                showLoading(false);
-                showToast('Error: ' + error.message, 'error');
-            }
-        }
-
-        async function deletePayment(paymentId) {
-            if (!confirm('Are you sure you want to delete this payment record?')) return;
-            
-            showLoading(true);
-            try {
-                const data = await adminApiCall('/api/admin/delete-order', 'POST', {
-                    orderId: paymentId
-                });
-                
-                if (!data.success) throw new Error(data.error);
-                
-                showLoading(false);
-                showToast('Payment deleted', 'success');
-                await loadPayments();
-                await loadRegistrations();
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
