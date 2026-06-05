@@ -36,7 +36,6 @@
         }
         .dash-header-left { display: flex; align-items: center; gap: 12px; }
         
-        /* MTN Yellow Box */
         .mtn-icon-box {
             width: 44px;
             height: 44px;
@@ -221,6 +220,178 @@
         .network-airteltigo { background: rgba(0, 150, 136, 0.2); color: #009688; }
         .network-telecel { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
         .network-unknown { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+        
+        /* DIAGNOSTIC: Error display */
+        .api-error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .api-error.show { display: block; }
+        .api-error code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        @media (min-width: 768px) { .dash-content { max-width: 520px; padding: 40px 24px; } }
+    </style>
+</head>
+<body>
+    <header class="dash-header">
+        <div class="dash-header-left">
+            <div class="mtn-icon-box" id="mtnIconBox">MTN</div>
+            <img src="" alt="Profile" class="profile-pic-header" id="profilePicHeader">
+            <div class="dash-header-text">
+                <h2>MTN AFA Portal</h2>
+                <p id="welcomeText">Welcome, User</p>
+            </div>
+        </div>
+        <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </button>
+    </header>
+
+    <div class="side-menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <a href="register.html" class="menu-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            New Registration
+        </a>
+        <a href="orders.html" class="menu-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+            Orders
+        </a>
+        <a href="settings.html" class="menu-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" view            height: 140px; 
+            border-radius: 50%;
+            object-fit: cover; 
+            border: 3px solid var(--primary-yellow); 
+            display: block;
+        }
+        
+        .profile-pic-placeholder-dash {
+            width: 140px; 
+            height: 140px; 
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1); 
+            border: 3px solid var(--primary-yellow);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto;
+        }
+        .profile-pic-placeholder-dash svg { width: 60px; height: 60px; color: var(--text-muted); }
+        
+        .change-pic-btn-dash {
+            position: absolute; 
+            bottom: 4px; 
+            right: 4px;
+            width: 40px; 
+            height: 40px; 
+            background: var(--primary-yellow);
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            border: 3px solid var(--dark-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .change-pic-btn-dash svg { width: 20px; height: 20px; color: #1a1a1a; }
+        .change-pic-btn-dash input[type="file"] { display: none; }
+        
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 20px; 
+            padding: 24px 20px;
+            margin-bottom: 16px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .welcome-card h2 { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+        .welcome-card p { font-size: 14px; color: #666; margin-bottom: 20px; }
+        .btn-row { display: flex; gap: 12px; }
+        .btn-black { flex: 1; padding: 14px; background: #1a1a1a; color: white; font-size: 14px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: center; display: inline-block; }
+        .btn-yellow-full { flex: 1; padding: 14px; background: var(--primary-yellow); color: #1a1a1a; font-size: 14px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: center; display: inline-block; }
+        .info-card { background: var(--glass-bg); backdrop-filter: blur(20px) saturate(180%); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; margin-bottom: 12px; }
+        .info-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .info-value { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+        .btn-yellow-block { width: 100%; padding: 14px; background: var(--primary-yellow); color: #1a1a1a; font-size: 14px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: center; display: block; }
+        .stats-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .stat-card { flex: 1; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; text-align: center; }
+        .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 4px; text-transform: uppercase; }
+        .stat-value { font-size: 24px; font-weight: 800; color: #ffffff; }
+        .reg-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .reg-item:last-child { border-bottom: none; }
+        .reg-left { display: flex; flex-direction: column; gap: 2px; }
+        .reg-name { font-size: 14px; font-weight: 600; }
+        .reg-phone { font-size: 12px; color: var(--text-muted); }
+        .reg-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+        .status-pending { background: rgba(255,215,0,0.2); color: var(--primary-yellow); }
+        .status-approved { background: rgba(76,175,80,0.2); color: #4CAF50; }
+        .status-rejected { background: rgba(231,76,60,0.2); color: #e74c3c; }
+        .reg-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .toast {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%); background: #1a1a1a;
+            color: white; padding: 14px 24px; border-radius: 12px;
+            font-size: 14px; font-weight: 500; z-index: 2000;
+            display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .toast.show { display: block; animation: slideUp 0.3s ease; }
+        .toast-error { background: #e74c3c; }
+        @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10, 22, 40, 0.98); backdrop-filter: blur(30px);
+            border-top: 1px solid var(--glass-border);
+            display: flex; justify-content: space-around;
+            align-items: center; padding: 8px 0 12px; z-index: 50;
+        }
+        .bottom-nav-item {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 4px; text-decoration: none;
+            color: var(--text-muted); font-size: 11px;
+            font-weight: 500; padding: 4px 12px;
+        }
+        .bottom-nav-item.active, .bottom-nav-item:hover { color: var(--primary-yellow); }
+        .bottom-nav-item svg { width: 22px; height: 22px; }
+        .network-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 12px; padding: 6px 14px;
+            border-radius: 50px; font-size: 12px; font-weight: 600;
+        }
+        .network-mtn { background: rgba(255, 215, 0, 0.2); color: var(--primary-yellow); }
+        .network-airteltigo { background: rgba(0, 150, 136, 0.2); color: #009688; }
+        .network-telecel { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
+        .network-unknown { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+        
+        /* DIAGNOSTIC: Error display */
+        .api-error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .api-error.show { display: block; }
+        .api-error code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
         @media (min-width: 768px) { .dash-content { max-width: 520px; padding: 40px 24px; } }
     </style>
 </head>
@@ -256,6 +427,12 @@
     </div>
 
     <div class="dash-content">
+        <!-- DIAGNOSTIC: API Error Display -->
+        <div class="api-error" id="apiError">
+            <strong>API Error:</strong> <span id="apiErrorText"></span><br>
+            <small>URL: <code id="apiErrorUrl"></code></small>
+        </div>
+
         <div class="profile-upload-section">
             <div class="profile-upload-container">
                 <div class="profile-pic-placeholder-dash" id="profilePicPlaceholderDash">
@@ -342,28 +519,18 @@
 
     <script src="config.js"></script>
     <script>
-        // ============================================
-        // HELPER: Get auth token from multiple sources
-        // ============================================
         function getAuthToken() {
-            // Try session object first (from config.js)
             const session = getSession();
             if (session && session.access_token) {
                 return session.access_token;
             }
-            // Fallback to localStorage
             return localStorage.getItem('access_token') || localStorage.getItem('sb_token') || null;
         }
 
-        // ============================================
-        // HELPER: Get user from multiple sources
-        // ============================================
         function getCurrentUser() {
-            // Try config.js getUser first
             const user = getUser();
             if (user && user.id) return user;
             
-            // Fallback to localStorage
             return {
                 id: localStorage.getItem('userId'),
                 name: localStorage.getItem('userName'),
@@ -372,9 +539,6 @@
             };
         }
 
-        // ============================================
-        // HELPER: Check if user is authenticated
-        // ============================================
         function isAuthenticated() {
             const token = getAuthToken();
             const userId = getCurrentUser().id;
@@ -421,11 +585,7 @@
             }
         }
 
-        // ============================================
-        // FIXED: Load profile picture from multiple sources
-        // ============================================
         function loadProfilePicture() {
-            // Try multiple sources in order of priority
             const sources = [
                 localStorage.getItem('profilePicture'),
                 localStorage.getItem('userProfilePicture'),
@@ -471,7 +631,6 @@
 
                 const fileExt = file.name.split('.').pop();
                 
-                // FIXED: Use apiCall with proper auth token
                 const data = await apiCall('/api/user/upload-avatar', 'POST', {
                     userId: user.id,
                     fileBase64: base64,
@@ -486,7 +645,6 @@
                 document.getElementById('profilePicPlaceholderDash').style.display = 'none';
                 updateHeaderIcon(picUrl);
                 
-                // Save to multiple keys for redundancy
                 localStorage.setItem('profilePicture', picUrl);
                 localStorage.setItem('userProfilePicture', picUrl);
 
@@ -496,11 +654,7 @@
             }
         }
 
-        // ============================================
-        // FIXED: Load dashboard with better error handling
-        // ============================================
         async function loadDashboard() {
-            // Check authentication
             if (!isAuthenticated()) {
                 console.log('User not authenticated, redirecting to signin');
                 window.location.href = 'signin.html';
@@ -513,18 +667,15 @@
             document.getElementById('greeting').textContent = 'Hello, ' + (user.name || 'User');
             document.getElementById('welcomeText').textContent = 'Welcome, ' + (user.name || 'User');
 
-            // Load cached profile picture immediately
             loadProfilePicture();
 
             try {
-                // FIXED: Ensure apiCall uses the correct token
                 const data = await apiCall('/api/user/dashboard', 'POST', { userId: user.id });
                 
                 if (!data.success) {
                     throw new Error(data.error || 'Failed to load dashboard data');
                 }
 
-                // Update profile picture from server if available
                 const serverProfilePic = data.user?.profile_picture;
                 if (serverProfilePic) {
                     document.getElementById('profilePicDash').src = serverProfilePic;
@@ -535,7 +686,6 @@
                     localStorage.setItem('userProfilePicture', serverProfilePic);
                 }
 
-                // Update network badge
                 const userPhone = data.user?.phone_number || user.phone || data.recentPhone;
                 if (userPhone) {
                     const network = detectNetwork(userPhone);
@@ -544,7 +694,6 @@
                     document.getElementById('networkText').textContent = network.name + ' • ' + userPhone;
                 }
 
-                // Update stats
                 const orders = data.orders || [];
                 const total = orders.length;
                 const pending = orders.filter(o => o.status === 'pending' || o.status === 'paid' || o.status === 'processing').length;
@@ -556,7 +705,6 @@
                 document.getElementById('approvedCount').textContent = approved;
                 document.getElementById('rejectedCount').textContent = rejected;
 
-                // Update recent registrations list
                 const recent = orders.slice(0, 3);
                 const regList = document.getElementById('registrationList');
                 if (recent.length > 0) {
@@ -583,18 +731,26 @@
                     regList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No registrations yet. <a href="register.html" style="color: var(--primary-yellow);">Make your first registration</a></p>';
                 }
 
-                // Cache orders for offline viewing
                 localStorage.setItem('cachedOrders', JSON.stringify(orders));
 
             } catch (error) {
                 console.error('Dashboard error:', error);
                 
-                // Try to show cached data if available
+                // DIAGNOSTIC: Show exact error on page
+                const errorDiv = document.getElementById('apiError');
+                const errorText = document.getElementById('apiErrorText');
+                const errorUrl = document.getElementById('apiErrorUrl');
+                
+                errorText.textContent = error.message || 'Unknown error';
+                errorUrl.textContent = API_BASE_URL + '/api/user/dashboard';
+                errorDiv.classList.add('show');
+                
+                // Try to show cached data
                 const cachedOrders = localStorage.getItem('cachedOrders');
                 if (cachedOrders) {
                     try {
                         const orders = JSON.parse(cachedOrders);
-                        showToast('Showing cached data (offline mode)', 'error');
+                        showToast('Showing cached data (server unavailable)', 'error');
                         
                         const total = orders.length;
                         const pending = orders.filter(o => o.status === 'pending' || o.status === 'paid' || o.status === 'processing').length;
@@ -610,9 +766,9 @@
                         const regList = document.getElementById('registrationList');
                         regList.innerHTML = recent.map(order => {
                             const date = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-                            const statusClass = order.status === 'pending' || order.status === 'paid' || order.status === 'processing' ? 'status-pending' : 
+                            const statusClass = order.status === 'pending' || order.status === 'paid' || o.status === 'processing' ? 'status-pending' : 
                                                order.status === 'approved' ? 'status-approved' : 'status-rejected';
-                            const statusText = order.status === 'pending' || order.status === 'paid' || order.status === 'processing' ? 'Pending Approval' : 
+                            const statusText = order.status === 'pending' || order.status === 'paid' || o.status === 'processing' ? 'Pending Approval' : 
                                               order.status === 'approved' ? 'Approved' : 'Rejected';
                             return `
                                 <div class="reg-item">
@@ -634,9 +790,8 @@
                     }
                 }
                 
-                showToast('Error loading dashboard: ' + error.message, 'error');
+                showToast('Error: ' + error.message, 'error');
                 
-                // If it's an auth error, redirect to login
                 if (error.message && (error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     setTimeout(() => {
                         window.location.href = 'signin.html';
