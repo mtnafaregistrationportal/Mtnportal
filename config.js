@@ -1,8 +1,8 @@
 // ============================================
 // API CONFIGURATION
 // ============================================
-// FIXED: Updated to Render deployment URL
-const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
+// FIXED: Updated to actual Render deployment URL
+const API_BASE_URL = 'https://mtn-afa-api-3.onrender.com';
 
 async function apiCall(endpoint, method, body) {
   const session = getSession();
