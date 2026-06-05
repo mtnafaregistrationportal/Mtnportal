@@ -88,14 +88,40 @@
         }
         .form-input:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
         .form-input::placeholder { color: #94a3b8; }
-        input[type="date"].form-input { color: #94a3b8; }
+        
+        /* FIXED: Date input styling to fit page */
+        input[type="date"].form-input {
+            color: #94a3b8;
+            appearance: none;
+            -webkit-appearance: none;
+            min-height: 44px;
+        }
         input[type="date"].form-input.has-value { color: #0f172a; }
+        
+        /* Hint text styling */
         .input-hint {
             font-size: 12px;
             color: #64748b;
             margin-top: 4px;
             font-style: italic;
         }
+        .input-hint.warning {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        /* FIXED: Shake animation for invalid phone */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s ease-in-out;
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+        }
+        
         .summary-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
         .summary-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
         .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -169,6 +195,7 @@
                 <div class="form-group">
                     <label class="form-label">Phone Number <span class="required">*</span></label>
                     <input type="tel" class="form-input" id="phone" placeholder="0240000000" maxlength="10" required>
+                    <p class="input-hint" id="phoneHint">Must be exactly 10 digits (e.g. 0240000000)</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email Address <span class="required">*</span></label>
@@ -190,7 +217,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Date of Birth <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="dobInput" placeholder="Select date of birth" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'" required>
+                    <input type="date" class="form-input" id="dobInput" placeholder="Select date of birth" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Occupation <span class="required">*</span></label>
@@ -217,7 +244,7 @@
             else this.classList.remove('has-value');
         });
 
-        // FIXED: Ghana Card ID auto-formatting like GCB Bank
+        // FIXED: Ghana Card ID auto-formatting
         const idNumberInput = document.getElementById('idNumber');
         
         idNumberInput.addEventListener('focus', function() {
@@ -229,27 +256,20 @@
         idNumberInput.addEventListener('input', function(e) {
             let val = this.value.toUpperCase();
             
-            // Ensure it starts with GHA-
             if (!val.startsWith('GHA-')) {
                 val = 'GHA-' + val.replace(/^GHA-?/, '');
             }
             
-            // Remove all non-digits after GHA-
             let prefix = 'GHA-';
             let numbers = val.substring(4).replace(/\D/g, '');
-            
-            // Limit to 9 digits
             numbers = numbers.substring(0, 9);
             
-            // Build formatted value
             let formatted = prefix + numbers;
             
-            // Auto-add dash after 9 digits
             if (numbers.length === 9) {
                 formatted = formatted + '-';
             }
             
-            // Allow last digit (checksum)
             let remainder = val.substring(prefix.length + numbers.length + (numbers.length === 9 ? 1 : 0));
             if (remainder && numbers.length === 9) {
                 let lastDigit = remainder.replace(/\D/g, '').substring(0, 1);
@@ -260,12 +280,48 @@
         });
         
         idNumberInput.addEventListener('blur', function() {
-            // Validate format on blur
             const regex = /^GHA-\d{9}-\d$/;
             if (this.value && !regex.test(this.value)) {
                 this.style.borderColor = '#dc2626';
             } else {
                 this.style.borderColor = '#e2e8f0';
+            }
+        });
+
+        // FIXED: Phone validation with shake and hint
+        const phoneInput = document.getElementById('phone');
+        const phoneHint = document.getElementById('phoneHint');
+        
+        phoneInput.addEventListener('input', function() {
+            // Remove non-digits
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Update hint based on length
+            if (this.value.length > 0 && this.value.length !== 10) {
+                phoneHint.textContent = `⚠️ ${this.value.length}/10 digits entered. Must be exactly 10 digits!`;
+                phoneHint.classList.add('warning');
+            } else if (this.value.length === 10) {
+                phoneHint.textContent = '✓ 10 digits - looks good!';
+                phoneHint.classList.remove('warning');
+                phoneHint.style.color = '#16a34a';
+            } else {
+                phoneHint.textContent = 'Must be exactly 10 digits (e.g. 0240000000)';
+                phoneHint.classList.remove('warning');
+                phoneHint.style.color = '#64748b';
+            }
+        });
+        
+        phoneInput.addEventListener('blur', function() {
+            if (this.value.length !== 10 && this.value.length > 0) {
+                // Shake the input
+                this.classList.add('shake');
+                phoneHint.textContent = '❌ Phone number must be exactly 10 digits! Please check carefully.';
+                phoneHint.classList.add('warning');
+                
+                // Remove shake class after animation
+                setTimeout(() => {
+                    this.classList.remove('shake');
+                }, 500);
             }
         });
 
@@ -286,10 +342,8 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Processing...';
 
             try {
-                // FIXED: Get user from multiple sources
                 let user = getUser();
                 if (!user || !user.id) {
-                    // Fallback to localStorage
                     user = {
                         id: localStorage.getItem('userId'),
                         name: localStorage.getItem('userName'),
@@ -314,12 +368,15 @@
                     userId: user.id
                 };
 
-                // FIXED: Phone validation (must be exactly 10 digits)
+                // FIXED: Phone validation with shake
                 if (!/^\d{10}$/.test(formData.phone)) {
+                    phoneInput.classList.add('shake');
+                    phoneHint.textContent = '❌ Phone number must be exactly 10 digits! Please check carefully.';
+                    phoneHint.classList.add('warning');
+                    setTimeout(() => phoneInput.classList.remove('shake'), 500);
                     throw new Error('Phone number must be exactly 10 digits (e.g. 0240000000)');
                 }
 
-                // FIXED: Ghana Card validation
                 if (!/^GHA-\d{9}-\d$/.test(formData.idNumber)) {
                     throw new Error('Ghana Card ID must be in format: GHA-000000000-0');
                 }
@@ -332,7 +389,6 @@
                 const data = await apiCall('/api/register', 'POST', formData);
                 if (!data.success) throw new Error(data.error);
 
-                // Redirect to Paystack payment page
                 window.location.href = data.authorization_url;
             } catch (error) {
                 showError(error.message || 'Something went wrong. Please try again.');
