@@ -16,7 +16,6 @@
         }
         .container { max-width: 600px; margin: 0 auto; padding: 16px; }
         
-        /* NEW: Centered header with MTN logo */
         .page-header {
             display: flex;
             align-items: center;
@@ -35,7 +34,6 @@
         }
         .back-btn svg { width: 20px; height: 20px; }
         
-        /* Centered logo section */
         .logo-section {
             text-align: center;
             margin-bottom: 20px;
@@ -135,7 +133,6 @@
 </head>
 <body>
     <main class="container">
-        <!-- Back button at top left -->
         <div class="page-header">
             <a href="dashboard.html" class="back-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -145,7 +142,6 @@
             </a>
         </div>
 
-        <!-- Centered MTN logo and title -->
         <div class="logo-section">
             <div class="mtn-icon-box">MTN</div>
             <h1 class="page-title">Register AFA</h1>
@@ -172,7 +168,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Phone Number <span class="required">*</span></label>
-                    <input type="tel" class="form-input" id="phone" placeholder="0240000000" required>
+                    <input type="tel" class="form-input" id="phone" placeholder="0240000000" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email Address <span class="required">*</span></label>
@@ -184,8 +180,9 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Ghana Card ID Number <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="idNumber" placeholder="e.g. GHA-000000000-0" required>
-                    <p class="input-hint">Put in your correct ID number</p>
+                    <input type="text" class="form-input" id="idNumber" placeholder="GHA-000000000-0" required
+                           inputmode="numeric" autocomplete="off">
+                    <p class="input-hint">Format: GHA-000000000-0</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Location <span class="required">*</span></label>
@@ -220,6 +217,58 @@
             else this.classList.remove('has-value');
         });
 
+        // FIXED: Ghana Card ID auto-formatting like GCB Bank
+        const idNumberInput = document.getElementById('idNumber');
+        
+        idNumberInput.addEventListener('focus', function() {
+            if (this.value === '') {
+                this.value = 'GHA-';
+            }
+        });
+        
+        idNumberInput.addEventListener('input', function(e) {
+            let val = this.value.toUpperCase();
+            
+            // Ensure it starts with GHA-
+            if (!val.startsWith('GHA-')) {
+                val = 'GHA-' + val.replace(/^GHA-?/, '');
+            }
+            
+            // Remove all non-digits after GHA-
+            let prefix = 'GHA-';
+            let numbers = val.substring(4).replace(/\D/g, '');
+            
+            // Limit to 9 digits
+            numbers = numbers.substring(0, 9);
+            
+            // Build formatted value
+            let formatted = prefix + numbers;
+            
+            // Auto-add dash after 9 digits
+            if (numbers.length === 9) {
+                formatted = formatted + '-';
+            }
+            
+            // Allow last digit (checksum)
+            let remainder = val.substring(prefix.length + numbers.length + (numbers.length === 9 ? 1 : 0));
+            if (remainder && numbers.length === 9) {
+                let lastDigit = remainder.replace(/\D/g, '').substring(0, 1);
+                formatted = formatted + lastDigit;
+            }
+            
+            this.value = formatted;
+        });
+        
+        idNumberInput.addEventListener('blur', function() {
+            // Validate format on blur
+            const regex = /^GHA-\d{9}-\d$/;
+            if (this.value && !regex.test(this.value)) {
+                this.style.borderColor = '#dc2626';
+            } else {
+                this.style.borderColor = '#e2e8f0';
+            }
+        });
+
         function showError(message) {
             const errorDiv = document.getElementById('errorMsg');
             errorDiv.textContent = message;
@@ -237,8 +286,21 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Processing...';
 
             try {
-                const user = getUser();
-                if (!user) { window.location.href = 'signin.html'; return; }
+                // FIXED: Get user from multiple sources
+                let user = getUser();
+                if (!user || !user.id) {
+                    // Fallback to localStorage
+                    user = {
+                        id: localStorage.getItem('userId'),
+                        name: localStorage.getItem('userName'),
+                        email: localStorage.getItem('userEmail')
+                    };
+                }
+                
+                if (!user || !user.id) { 
+                    window.location.href = 'signin.html'; 
+                    return; 
+                }
 
                 const formData = {
                     fullName: document.getElementById('fullName').value.trim(),
@@ -251,6 +313,16 @@
                     occupation: document.getElementById('occupation').value.trim(),
                     userId: user.id
                 };
+
+                // FIXED: Phone validation (must be exactly 10 digits)
+                if (!/^\d{10}$/.test(formData.phone)) {
+                    throw new Error('Phone number must be exactly 10 digits (e.g. 0240000000)');
+                }
+
+                // FIXED: Ghana Card validation
+                if (!/^GHA-\d{9}-\d$/.test(formData.idNumber)) {
+                    throw new Error('Ghana Card ID must be in format: GHA-000000000-0');
+                }
 
                 if (!formData.fullName || !formData.phone || !formData.email || !formData.idNumber || 
                     !formData.location || !formData.dob || !formData.occupation) {
