@@ -26,12 +26,18 @@
         .auth-header-left { display: flex; align-items: center; gap: 12px; }
         .auth-icon {
             width: 40px; height: 40px;
-            background: rgba(255,255,255,0.1);
+            background: #FFD700;
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: none;
         }
-        .auth-icon svg { width: 20px; height: 20px; color: #FFD700; }
+        .auth-icon span {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+            font-family: 'Inter', sans-serif;
+        }
         .auth-header-text h2 { font-size: 16px; font-weight: 700; }
         .btn-yellow {
             background: #FFD700; color: #1a1a1a;
@@ -89,9 +95,7 @@
         <header class="auth-header">
             <div class="auth-header-left">
                 <div class="auth-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <span>MTN</span>
                 </div>
                 <div class="auth-header-text">
                     <h2>MTN AFA Portal</h2>
@@ -199,37 +203,49 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                const data = await apiCall('/api/auth/signup', 'POST', {
+                // Step 1: Sign up
+                const signupData = await apiCall('/api/auth/signup', 'POST', {
                     email, password, fullName: name, phone, username
                 });
                 
-                if (!data.success) throw new Error(data.error);
+                if (!signupData.success) throw new Error(signupData.error);
                 
-                // FIX: Store the session and user properly so dashboard can verify
-                if (data.user && data.user.id) {
-                    // Store user info
+                let session = signupData.session;
+                let user = signupData.user;
+                
+                // Step 2: If no session (email confirmation may be ON), auto-sign in
+                if (!session) {
+                    btn.textContent = 'Signing you in...';
+                    const loginData = await apiCall('/api/auth/signin', 'POST', { email, password });
+                    
+                    if (!loginData.success) throw new Error(loginData.error);
+                    
+                    session = loginData.session;
+                    user = loginData.user;
+                }
+                
+                // Step 3: Store everything properly
+                if (user && user.id) {
                     const userObj = {
-                        id: data.user.id,
+                        id: user.id,
                         name: name,
                         email: email,
                         phone: phone
                     };
                     setUser(userObj);
                     
-                    // Store session if available (Supabase returns session when email confirm is OFF)
-                    if (data.session) {
-                        setSession(data.session);
+                    if (session) {
+                        setSession(session);
                     }
                     
-                    // Store additional localStorage items for compatibility
+                    // Store individual keys for dashboard compatibility
                     localStorage.setItem('userName', name);
                     localStorage.setItem('userEmail', email);
-                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('userId', user.id);
                     localStorage.setItem('userPhone', phone);
                 }
                 
-                // Always redirect to dashboard after successful signup
-                // dashboard.html will check session and redirect to signin if needed
+                // Step 4: Redirect to dashboard
                 window.location.href = 'dashboard.html';
                 
             } catch (error) {
