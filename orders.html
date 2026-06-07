@@ -219,42 +219,94 @@
         <span class="contact-support-text">Contact Support</span>
     </a>
 
+    <script src="config.js"></script>
     <script>
         // ============================================
-        // CONFIGURATION - Built-in (no external config.js needed)
+        // CONFIGURATION
         // ============================================
         const API_BASE = 'https://mtn-afa-api.onrender.com';
-        
+
         // ============================================
-        // AUTH HELPERS
+        // UNIFIED AUTH HELPERS - Works with BOTH config.js and standalone
         // ============================================
-        function getUser() {
-            const userStr = localStorage.getItem('afa_user');
-            if (!userStr) return null;
-            try { return JSON.parse(userStr); } catch (e) { return null; }
+        function getUserUnified() {
+            // Try config.js getUser() first
+            if (typeof getUser === 'function') {
+                const user = getUser();
+                if (user && user.id) return user;
+            }
+            
+            // Fallback: try config.js getCurrentUser() if it exists
+            if (typeof getCurrentUser === 'function') {
+                const user = getCurrentUser();
+                if (user && user.id) return user;
+            }
+            
+            // Fallback: try afa_user key (orders.html standalone)
+            const afaUser = localStorage.getItem('afa_user');
+            if (afaUser) {
+                try { return JSON.parse(afaUser); } catch (e) {}
+            }
+            
+            // Fallback: try dashboard keys
+            return {
+                id: localStorage.getItem('userId'),
+                name: localStorage.getItem('userName'),
+                email: localStorage.getItem('userEmail'),
+                phone: localStorage.getItem('userPhone'),
+                profilePicture: localStorage.getItem('profilePicture') || localStorage.getItem('userProfilePicture')
+            };
         }
-        
-        function getSession() {
-            const sessionStr = localStorage.getItem('afa_session');
-            if (!sessionStr) return null;
-            try { return JSON.parse(sessionStr); } catch (e) { return null; }
+
+        function getSessionUnified() {
+            // Try config.js getSession() first
+            if (typeof getSession === 'function') {
+                const session = getSession();
+                if (session) return session;
+            }
+            
+            // Fallback: try afa_session key (orders.html standalone)
+            const afaSession = localStorage.getItem('afa_session');
+            if (afaSession) {
+                try { return JSON.parse(afaSession); } catch (e) {}
+            }
+            
+            // Fallback: try individual token keys
+            return {
+                access_token: localStorage.getItem('access_token') || localStorage.getItem('sb_token') || localStorage.getItem('token')
+            };
         }
-        
-        function getToken() {
-            const session = getSession();
-            return session ? session.access_token : null;
+
+        function getTokenUnified() {
+            const session = getSessionUnified();
+            return session ? (session.access_token || session.token) : null;
         }
-        
+
+        function isAuthenticatedUnified() {
+            const user = getUserUnified();
+            const token = getTokenUnified();
+            return !!(user && user.id && token);
+        }
+
         // ============================================
-        // API CALL HELPER - Built-in (no external dependency)
+        // API CALL HELPER - Uses config.js apiCall if available, otherwise built-in
         // ============================================
-        async function apiCall(endpoint, method, body) {
-            const token = getToken();
+        async function apiCallUnified(endpoint, method, body) {
+            const token = getTokenUnified();
             const headers = {
                 'Content-Type': 'application/json'
             };
             if (token) {
                 headers['Authorization'] = 'Bearer ' + token;
+            }
+            
+            // Try config.js apiCall first (it might have extra logic)
+            if (typeof apiCall === 'function') {
+                try {
+                    return await apiCall(endpoint, method, body);
+                } catch (e) {
+                    // Fall through to built-in
+                }
             }
             
             const response = await fetch(API_BASE + endpoint, {
@@ -265,9 +317,9 @@
             
             return await response.json();
         }
-        
+
         // ============================================
-        // PAYMENT VERIFICATION (Calls backend - NO secret key exposed)
+        // PAYMENT VERIFICATION
         // ============================================
         async function verifyPaymentWithBackend(reference) {
             try {
@@ -279,12 +331,11 @@
                 return { verified: false, error: true };
             }
         }
-        
+
         // ============================================
         // ORDER STATUS DETERMINATION
         // ============================================
         async function getOrderDisplayStatus(order) {
-            // Already approved by admin
             if (order.status === 'approved') {
                 return {
                     badge: 'Completed',
@@ -294,7 +345,6 @@
                 };
             }
             
-            // Rejected by admin
             if (order.status === 'rejected') {
                 return {
                     badge: 'Rejected',
@@ -304,7 +354,6 @@
                 };
             }
             
-            // Already marked as failed in database
             if (order.status === 'failed') {
                 return {
                     badge: 'Payment Failed',
@@ -314,9 +363,7 @@
                 };
             }
             
-            // For pending or paid status - verify with Paystack via backend
             if (order.status === 'pending' || order.status === 'paid') {
-                // If no payment reference, it hasn't even reached Paystack
                 if (!order.payment_reference) {
                     return {
                         badge: 'Pending',
@@ -327,11 +374,9 @@
                     };
                 }
                 
-                // Verify with backend (safe - no secret key exposed)
                 const verifyData = await verifyPaymentWithBackend(order.payment_reference);
                 
                 if (verifyData.verified) {
-                    // Payment confirmed by Paystack
                     return {
                         badge: 'Pending Approval',
                         badgeClass: 'status-paid',
@@ -339,7 +384,6 @@
                         noteText: '💳 Payment received. Awaiting AFA approval...'
                     };
                 } else {
-                    // Payment NOT confirmed by Paystack
                     return {
                         badge: 'Payment Failed',
                         badgeClass: 'status-failed',
@@ -349,7 +393,6 @@
                 }
             }
             
-            // Fallback
             return {
                 badge: 'Unknown',
                 badgeClass: 'status-pending',
@@ -357,28 +400,29 @@
                 noteText: '⏳ Status unknown. Please refresh the page.'
             };
         }
-        
+
         // ============================================
         // STATS TRACKING
         // ============================================
         let totalCount = 0;
         let pendingCount = 0;
         let approvedCount = 0;
-        
+
         // ============================================
         // MAIN INIT
         // ============================================
         async function initOrders() {
-            const user = getUser();
-            const session = getSession();
-            
-            if (!user || !session) {
+            // Check auth using unified helper
+            if (!isAuthenticatedUnified()) {
+                console.log('User not authenticated, redirecting to signin');
                 window.location.href = 'signin.html';
                 return;
             }
+
+            const user = getUserUnified();
             
             try {
-                const data = await apiCall('/api/user/orders', 'POST', { userId: user.id });
+                const data = await apiCallUnified('/api/user/orders', 'POST', { userId: user.id });
                 if (!data.success) throw new Error(data.error);
                 
                 await renderOrders(data.orders || []);
@@ -394,7 +438,7 @@
                 `;
             }
         }
-        
+
         // ============================================
         // RENDER ORDERS
         // ============================================
@@ -416,16 +460,13 @@
                 return;
             }
             
-            // Build HTML for each order (async inside loop)
             let html = '';
             for (let i = 0; i < orders.length; i++) {
                 const order = orders[i];
                 const displayStatus = await getOrderDisplayStatus(order);
                 
-                // Count stats
                 const status = order.status || 'pending';
                 if (status === 'pending' || status === 'processing' || status === 'paid') {
-                    // Only count as pending if payment was actually verified
                     if (displayStatus.badgeClass === 'status-paid' || displayStatus.badgeClass === 'status-pending') {
                         pendingCount++;
                     }
@@ -438,7 +479,6 @@
                 
                 const orderId = order.id ? order.id.toString().substr(-8).toUpperCase() : 'N/A';
                 
-                // Build admin note HTML
                 let adminNoteHtml = '';
                 if (displayStatus.verifying) {
                     adminNoteHtml = `
@@ -488,13 +528,13 @@
             container.innerHTML = html;
             updateStats();
         }
-        
+
         function updateStats() {
             document.getElementById('totalOrders').textContent = totalCount;
             document.getElementById('pendingOrders').textContent = pendingCount;
             document.getElementById('approvedOrders').textContent = approvedCount;
         }
-        
+
         // ============================================
         // START ON PAGE LOAD
         // ============================================
