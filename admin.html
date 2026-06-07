@@ -143,6 +143,7 @@
         .badge-suspended { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
         .badge-paid { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
         .badge-failed { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+        .badge-unpaid { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
 
         .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
         .detail-item { display: flex; flex-direction: column; }
@@ -207,6 +208,72 @@
         .toast.show { transform: translateX(0); }
         .toast-success { background: #4CAF50; color: white; }
         .toast-error { background: #e74c3c; color: white; }
+
+        .admin-note-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-white);
+            font-size: 13px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+        .admin-note-input::placeholder { color: var(--text-muted); }
+
+        .payment-status-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .payment-status-banner.paid {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        .payment-status-banner.unpaid {
+            background: rgba(255, 152, 0, 0.15);
+            color: #FF9800;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+        .payment-status-banner.failed {
+            background: rgba(244, 67, 54, 0.15);
+            color: #F44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-pill {
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-pill:hover {
+            background: rgba(255,255,255,0.12);
+            color: var(--text-white);
+        }
+        .filter-pill.active {
+            background: var(--primary-yellow);
+            color: #1a1a1a;
+            border-color: var(--primary-yellow);
+        }
 
         @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } .detail-grid { grid-template-columns: repeat(4, 1fr); } }
     </style>
@@ -290,6 +357,12 @@
                 <div id="usersList"></div>
             </div>
             <div class="data-section" id="section-registrations">
+                <div class="filter-pills" id="regFilterPills">
+                    <div class="filter-pill active" onclick="filterRegistrations('all')">All</div>
+                    <div class="filter-pill" onclick="filterRegistrations('paid')">✅ Paid Only</div>
+                    <div class="filter-pill" onclick="filterRegistrations('unpaid')">❌ Unpaid Only</div>
+                    <div class="filter-pill" onclick="filterRegistrations('failed')">⚠️ Failed Payment</div>
+                </div>
                 <div id="registrationsList"></div>
             </div>
             <div class="data-section" id="section-payments">
@@ -317,6 +390,7 @@
         let allUsers = [];
         let allRegistrations = [];
         let allPayments = [];
+        let currentRegFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedToken = localStorage.getItem('adminToken');
@@ -463,7 +537,6 @@
                 
                 allPayments = data.payments || [];
                 
-                // Calculate revenue from PAID payments only
                 let revenue = 0;
                 allPayments.forEach(p => {
                     if (p.paymentStatus === 'paid') {
@@ -482,6 +555,19 @@
         function updateStats() {
             const pending = allRegistrations.filter(r => r.status === 'pending' || r.status === 'paid').length;
             document.getElementById('statPending').textContent = pending;
+        }
+
+        // ====== HELPER: Get payment status for a registration ======
+        function getRegistrationPaymentStatus(regId, applicantPhone) {
+            const payment = allPayments.find(p => 
+                p.orderId === regId || 
+                p.phone === applicantPhone ||
+                p.id_number === regId
+            );
+            if (!payment) return { status: 'unpaid', label: 'UNPAID', class: 'unpaid' };
+            if (payment.paymentStatus === 'paid') return { status: 'paid', label: '✅ PAID', class: 'paid' };
+            if (payment.paymentStatus === 'failed') return { status: 'failed', label: '⚠️ FAILED', class: 'failed' };
+            return { status: 'unpaid', label: 'UNPAID', class: 'unpaid' };
         }
 
         function renderUsers(filter) {
@@ -558,6 +644,15 @@
             const container = document.getElementById('registrationsList');
             let regs = allRegistrations;
             
+            // Apply payment filter
+            if (currentRegFilter !== 'all') {
+                regs = regs.filter(r => {
+                    const payStatus = getRegistrationPaymentStatus(r.id, r.applicant_phone);
+                    return payStatus.status === currentRegFilter;
+                });
+            }
+            
+            // Apply search filter
             if (filter) {
                 const f = filter.toLowerCase();
                 regs = regs.filter(r => 
@@ -567,6 +662,7 @@
                 );
             }
 
+            // Sort: unattended first, then by date
             regs.sort((a, b) => {
                 if (a.admin_attended !== b.admin_attended) {
                     return a.admin_attended ? 1 : -1;
@@ -589,11 +685,20 @@
                 const showActions = status !== 'approved' && status !== 'rejected';
                 const isAttended = r.admin_attended;
                 
+                // ====== GET PAYMENT STATUS ======
+                const payInfo = getRegistrationPaymentStatus(r.id, r.applicant_phone);
+                
                 return `
                     <div class="user-card" style="position:relative;">
                         <div class="attended-dot ${isAttended ? 'attended' : 'unattended'}" 
                              onclick="markAttended('${r.id}', this)" 
                              title="${isAttended ? 'Attended' : 'Click to mark as attended'}"></div>
+                        
+                        <!-- PAYMENT STATUS BANNER -->
+                        <div class="payment-status-banner ${payInfo.class}">
+                            ${payInfo.label}
+                        </div>
+                        
                         <div class="user-card-header">
                             <div class="user-info">
                                 <div class="user-avatar-placeholder">${(r.applicant_name || 'U')[0]}</div>
@@ -634,6 +739,12 @@
                             <div class="detail-item">
                                 <span class="detail-item-label">Date</span>
                                 <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">Payment Status</span>
+                                <span class="detail-item-value" style="color: ${payInfo.status === 'paid' ? '#4CAF50' : payInfo.status === 'failed' ? '#F44336' : '#FF9800'}; font-weight:700;">
+                                    ${payInfo.label}
+                                </span>
                             </div>
                         </div>
                         ${showActions ? `
@@ -716,6 +827,13 @@
             if (tabName === 'payments') renderPayments();
         }
 
+        function filterRegistrations(filterType) {
+            currentRegFilter = filterType;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            renderRegistrations(document.getElementById('searchInput').value.trim());
+        }
+
         function handleSearch() {
             const filter = document.getElementById('searchInput').value.trim();
             const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
@@ -744,6 +862,17 @@
         async function approveRegistration(regId) {
             showLoading(true);
             const note = document.getElementById('note-' + regId)?.value || '';
+            
+            // Check if paid before approving
+            const reg = allRegistrations.find(r => r.id === regId);
+            const payInfo = getRegistrationPaymentStatus(regId, reg?.applicant_phone);
+            
+            if (payInfo.status !== 'paid') {
+                if (!confirm('⚠️ This registration has NOT been paid. Are you sure you want to approve?')) {
+                    showLoading(false);
+                    return;
+                }
+            }
             
             try {
                 const data = await adminApiCall('/api/admin/approve-order', 'POST', {
@@ -806,7 +935,7 @@
                 showLoading(false);
                 showToast('Payment deleted', 'success');
                 await loadPayments();
-                await loadRegistrations(); // Refresh registrations too since they're linked
+                await loadRegistrations();
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
