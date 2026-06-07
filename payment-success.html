@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Successful - MTN AFA Portal</title>
+    <title>Payment Status - MTN AFA Portal</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -36,6 +36,17 @@
             margin: 0 auto 20px;
         }
         .success-icon svg { width: 40px; height: 40px; color: white; }
+        .failed-icon {
+            width: 80px;
+            height: 80px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .failed-icon svg { width: 40px; height: 40px; color: white; }
         .success-card h2 { color: #1a1a1a; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
         .success-card p { color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
         .reference-box {
@@ -101,7 +112,6 @@
         <p class="loading" id="loadingText">Verifying payment...</p>
     </div>
 
-    <script src="config.js"></script>
     <script>
         const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
         const BASE_PATH = '/Mtnportal';
@@ -121,10 +131,12 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE_URL}/api/payment/verify?reference=${reference}`);
+                // Use the NEW safe endpoint (no secret key exposed)
+                const response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${reference}`);
                 const data = await response.json();
                 
-                if (data.status && data.data.status === 'success') {
+                if (data.verified) {
+                    // Payment actually confirmed by Paystack
                     card.innerHTML = `
                         <div class="success-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -132,7 +144,7 @@
                             </svg>
                         </div>
                         <h2>Payment Successful!</h2>
-                        <p>Your AFA registration has been submitted and is pending review.</p>
+                        <p>💳 Payment received. Awaiting AFA approval...<<br><br>Your payment of <strong>GH₵ ${data.amount || '13.00'}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
                         <div class="reference-box">
                             Reference: <strong>${reference}</strong>
                         </div>
@@ -145,8 +157,15 @@
                     }, 5000);
                     
                 } else {
+                    // Payment NOT confirmed by Paystack
                     card.innerHTML = `
-                        <div class="error-msg">Payment verification failed or pending.</div>
+                        <div class="failed-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <h2 style="color: #e74c3c;">Payment Not Completed</h2>
+                        <p>⚠️ Transaction failed. Your registration will be processed. Please make sure your payment is confirmed so that registration will be completed.<br><br>${data.gateway_response ? '<strong>Reason:</strong> ' + data.gateway_response + '<br><br>' : ''}If you believe this is an error, please contact support.</p>
                         <div class="reference-box">
                             Reference: <strong>${reference}</strong>
                         </div>
