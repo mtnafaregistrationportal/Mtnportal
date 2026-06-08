@@ -72,6 +72,16 @@
         .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
         .error-msg { color: #e74c3c; font-size: 12px; margin-top: 6px; display: none; }
         .error-msg.show { display: block; }
+        .field-error-msg {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .field-error-msg.show { display: block; }
         .duplicate-msg {
             background: rgba(255, 152, 0, 0.15);
             border: 1px solid rgba(255, 152, 0, 0.3);
@@ -158,6 +168,7 @@
                     <a href="signin.html">Sign in instead</a> or <a href="signin.html" onclick="showForgotFromCreate()">reset password</a>
                 </div>
 
+                <div class="field-error-msg" id="fieldErrorMsg"></div>
                 <div class="success-msg" id="successMsg"></div>
 
                 <div class="form-group">
@@ -224,9 +235,15 @@
             return /^\d{10}$/.test(phone);
         }
 
-        function showError(id, show) {
+        function showFieldError(id, show) {
             const el = document.getElementById(id);
-            const inputEl = document.getElementById(el.id.replace('Error', ''));
+            const inputId = el.id.replace('Error', '');
+            const inputEl = document.getElementById(
+                inputId === 'name' ? 'fullName' : 
+                inputId === 'phone' ? 'phoneNumber' : 
+                inputId === 'email' ? 'email' : 
+                inputId === 'password' ? 'createPassword' : inputId
+            );
             if (show) {
                 el.classList.add('show');
                 if (inputEl) inputEl.classList.add('error');
@@ -238,7 +255,9 @@
 
         function hideAllMessages() {
             document.getElementById('duplicateMsg').classList.remove('show');
+            document.getElementById('fieldErrorMsg').classList.remove('show');
             document.getElementById('successMsg').classList.remove('show');
+            
             document.getElementById('nameError').classList.remove('show');
             document.getElementById('phoneError').classList.remove('show');
             document.getElementById('emailError').classList.remove('show');
@@ -255,8 +274,14 @@
             el.classList.add('show');
         }
 
-        function showSuccess(msg) {
-            const el = document.getElementById('successMsg');
+        function showSuccess(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function showFieldErrorMsg(msg) {
+            const el = document.getElementById('fieldErrorMsg');
             el.textContent = msg;
             el.classList.add('show');
         }
@@ -295,6 +320,10 @@
             }
         });
 
+        // ============================================
+        // FIXED: handleCreateAccount using apiCall()
+        // Matches sign-in page pattern exactly
+        // ============================================
         async function handleCreateAccount() {
             const name = document.getElementById('fullName').value.trim();
             const username = document.getElementById('username').value.trim();
@@ -303,119 +332,101 @@
             const password = document.getElementById('createPassword').value;
             const btn = document.getElementById('createBtn');
 
-            hideAllMessages();
-
+            // Client-side validation
             let hasError = false;
-            
-            if (!name) { 
-                showError('nameError', true); 
-                hasError = true; 
-            }
-            
-            if (!validatePhone(phone)) { 
-                showError('phoneError', true); 
-                hasError = true; 
-            }
-            
-            if (!validateEmail(email)) { 
-                showError('emailError', true); 
-                hasError = true; 
-            }
-            
-            if (password.length < 6) { 
-                showError('passwordError', true); 
-                hasError = true; 
-            }
+            if (!name) { showFieldError('nameError', true); hasError = true; }
+            if (!validatePhone(phone)) { showFieldError('phoneError', true); hasError = true; }
+            if (!validateEmail(email)) { showFieldError('emailError', true); hasError = true; }
+            if (password.length < 6) { showFieldError('passwordError', true); hasError = true; }
 
             if (hasError) return;
 
+            hideAllMessages();
             btn.disabled = true;
             btn.textContent = 'Creating Account...';
 
             try {
-                // Step 1: Sign up
+                // ========== STEP 1: SIGN UP via apiCall() ==========
                 const signupData = await apiCall('/api/auth/signup', 'POST', {
                     email, password, fullName: name, phone, username
                 });
-                
-                // Check for duplicate errors from backend
+
+                // Handle backend errors (duplicates, validation, etc.)
                 if (!signupData.success) {
-                    const errorMsg = signupData.error || '';
+                    const errorMsg = (signupData.error || signupData.message || '').toLowerCase();
                     
-                    if (errorMsg.toLowerCase().includes('email is already') || errorMsg.toLowerCase().includes('already registered')) {
+                    if (errorMsg.includes('email') && errorMsg.includes('already')) {
                         showDuplicate('This email is already registered. Please sign in or use a different email.');
-                        btn.disabled = false;
-                        btn.textContent = 'Create Account';
-                        return;
-                    }
-                    
-                    if (errorMsg.toLowerCase().includes('phone') && errorMsg.toLowerCase().includes('already')) {
+                    } else if (errorMsg.includes('phone') && errorMsg.includes('already')) {
                         showDuplicate('This phone number is already registered. Please use a different number.');
-                        btn.disabled = false;
-                        btn.textContent = 'Create Account';
-                        return;
+                    } else {
+                        showFieldErrorMsg(signupData.error || signupData.message || 'Account creation failed.');
                     }
                     
-                    throw new Error(signupData.error);
+                    btn.disabled = false;
+                    btn.textContent = 'Create Account';
+                    return;
                 }
-                
-                let session = signupData.session;
-                let user = signupData.user;
-                
-                // Step 2: If no session (email confirmation may be ON), auto-sign in
-                if (!session) {
+
+                // ========== STEP 2: GET SESSION & USER ==========
+                let session = signupData.session || null;
+                let user = signupData.user || null;
+
+                // If no session from signup, auto-login (same pattern as before)
+                if (!session || !user) {
                     btn.textContent = 'Signing you in...';
+                    
                     const loginData = await apiCall('/api/auth/signin', 'POST', { email, password });
                     
-                    if (!loginData.success) throw new Error(loginData.error);
-                    
-                    session = loginData.session;
-                    user = loginData.user;
-                }
-                
-                // Step 3: Store everything properly
-                if (user && user.id) {
-                    const userObj = {
-                        id: user.id,
-                        name: name,
-                        email: email,
-                        phone: phone
-                    };
-                    setUser(userObj);
-                    
-                    if (session) {
-                        setSession(session);
+                    if (!loginData.success) {
+                        throw new Error(loginData.error || loginData.message || 'Auto-login failed after signup.');
                     }
-                    
-                    // Store individual keys for dashboard compatibility
-                    localStorage.setItem('userName', name);
-                    localStorage.setItem('userEmail', email);
-                    localStorage.setItem('userId', user.id);
-                    localStorage.setItem('userPhone', phone);
+
+                    session = loginData.session || null;
+                    user = loginData.user || null;
+                }
+
+                // ========== STEP 3: VALIDATE USER DATA ==========
+                if (!user || !user.id) {
+                    throw new Error('User data missing from server response. Please try logging in manually.');
+                }
+
+                // ========== STEP 4: STORE USER DATA ==========
+                // Use config.js functions (same pattern as sign-in)
+                if (typeof setUser === 'function') {
+                    setUser(user);
                 }
                 
-                showSuccess('Account created successfully! Redirecting...');
+                if (session && typeof setSession === 'function') {
+                    setSession(session);
+                }
+
+                // Also store individual keys for dashboard compatibility
+                localStorage.setItem('userName', name);
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userId', user.id);
+                localStorage.setItem('userPhone', phone);
+
+                // ========== STEP 5: REDIRECT ==========
+                showSuccess('successMsg', 'Account created successfully! Redirecting...');
                 
-                // Step 4: Redirect to dashboard
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
-                }, 1000);
-                
+                }, 1500);
+
             } catch (error) {
-                const errorMsg = error.message || '';
-                
-                // Check for duplicate errors in catch block too
-                if (errorMsg.toLowerCase().includes('email is already') || errorMsg.toLowerCase().includes('already registered')) {
-                    showDuplicate('This email is already registered. Please sign in or use a different email.');
-                } else if (errorMsg.toLowerCase().includes('phone') && errorMsg.toLowerCase().includes('already')) {
-                    showDuplicate('This phone number is already registered. Please use a different number.');
-                } else {
-                    // Show generic error as alert for now (can be styled better)
-                    alert('Error: ' + errorMsg);
-                }
-                
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
+                
+                const errorMsg = (error.message || '').toLowerCase();
+                
+                if (errorMsg.includes('email') && errorMsg.includes('already')) {
+                    showDuplicate('This email is already registered. Please sign in or use a different email.');
+                } else if (errorMsg.includes('phone') && errorMsg.includes('already')) {
+                    showDuplicate('This phone number is already registered. Please use a different number.');
+                } else {
+                    showFieldErrorMsg('Error: ' + (error.message || 'Something went wrong. Please try again.'));
+                }
             }
         }
     </script>
