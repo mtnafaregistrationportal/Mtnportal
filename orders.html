@@ -592,6 +592,25 @@
         }
 
         // ============================================
+        // PAGE VISIBILITY REFRESH (added)
+        // ============================================
+        let isRefreshingOrders = false;
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                if (isRefreshingOrders) return;
+                isRefreshingOrders = true;
+                console.log('Page visible again, refreshing orders...');
+                try {
+                    await initOrders();
+                } catch (err) {
+                    console.error('Failed to refresh orders on visibility change:', err);
+                } finally {
+                    isRefreshingOrders = false;
+                }
+            }
+        });
+
+        // ============================================
         // RENDER ORDERS
         // ============================================
         async function renderOrders(orders) {
