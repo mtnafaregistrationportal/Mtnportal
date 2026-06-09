@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MTN AFA Portal</title>
+    <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,7 +37,6 @@
         }
         .dash-header-left { display: flex; align-items: center; gap: 12px; }
         
-        /* MTN Yellow Box */
         .mtn-icon-box {
             width: 44px;
             height: 44px;
@@ -341,16 +341,12 @@
     <div class="toast" id="toast"></div>
 
     <script src="config.js"></script>
+    <script src="glass.js"></script>
     <script>
-        // ============================================
-        // FIXED: Get auth token with refresh support
-        // ============================================
         async function getAuthToken() {
-            // Use the new getValidToken from config.js which handles refresh
             if (typeof getValidToken === 'function') {
                 return await getValidToken();
             }
-            // Fallback for old config.js
             const session = getSession();
             if (session && session.access_token) {
                 return session.access_token;
@@ -358,11 +354,7 @@
             return localStorage.getItem('access_token') || localStorage.getItem('sb_token') || null;
         }
 
-        // ============================================
-        // FIXED: Get user - prioritize localStorage name
-        // ============================================
         function getCurrentUser() {
-            // Fallback to localStorage first (most reliable after signup)
             const localUser = {
                 id: localStorage.getItem('userId'),
                 name: localStorage.getItem('userName'),
@@ -370,10 +362,8 @@
                 phone: localStorage.getItem('userPhone')
             };
             
-            // Try config.js getUser as backup / for additional data
             const user = getUser();
             if (user && user.id) {
-                // Merge: localStorage name takes priority, config.js fills in the rest
                 return {
                     ...user,
                     id: localUser.id || user.id,
@@ -386,9 +376,6 @@
             return localUser;
         }
 
-        // ============================================
-        // FIXED: Check if user is authenticated (async)
-        // ============================================
         async function isAuthenticated() {
             const token = await getAuthToken();
             const userId = getCurrentUser().id;
@@ -435,9 +422,6 @@
             }
         }
 
-        // ============================================
-        // FIXED: Load profile picture from multiple sources
-        // ============================================
         function loadProfilePicture() {
             const sources = [
                 localStorage.getItem('profilePicture'),
@@ -507,11 +491,7 @@
             }
         }
 
-        // ============================================
-        // FIXED: Load dashboard with token refresh
-        // ============================================
         async function loadDashboard() {
-            // Check authentication (async - will refresh token if needed)
             const authValid = await isAuthenticated();
             if (!authValid) {
                 console.log('User not authenticated, redirecting to signin');
@@ -523,19 +503,16 @@
             const user = getCurrentUser();
             const token = await getAuthToken();
 
-            // FIXED: Get display name from multiple sources, prioritizing localStorage
             const displayName = user.name || localStorage.getItem('userName') || 'User';
             document.getElementById('greeting').textContent = 'Hello, ' + displayName;
             document.getElementById('welcomeText').textContent = 'Welcome, ' + displayName;
 
-            // Load cached profile picture immediately
             loadProfilePicture();
 
             try {
                 const data = await apiCall('/api/user/dashboard', 'POST', { userId: user.id });
                 
                 if (!data.success) {
-                    // If auth error from server, redirect to login
                     if (data.error && (data.error.includes('token') || data.error.includes('Access denied') || data.error.includes('Invalid or expired'))) {
                         clearSession();
                         window.location.href = 'signin.html';
@@ -544,7 +521,6 @@
                     throw new Error(data.error || 'Failed to load dashboard data');
                 }
 
-                // Update name from server if available
                 const serverName = data.user?.name;
                 if (serverName) {
                     document.getElementById('greeting').textContent = 'Hello, ' + serverName;
@@ -552,7 +528,6 @@
                     localStorage.setItem('userName', serverName);
                 }
 
-                // Update profile picture from server if available
                 const serverProfilePic = data.user?.profile_picture;
                 if (serverProfilePic) {
                     document.getElementById('profilePicDash').src = serverProfilePic;
@@ -563,7 +538,6 @@
                     localStorage.setItem('userProfilePicture', serverProfilePic);
                 }
 
-                // Update network badge
                 const userPhone = data.user?.phone_number || user.phone || data.recentPhone;
                 if (userPhone) {
                     const network = detectNetwork(userPhone);
@@ -572,7 +546,6 @@
                     document.getElementById('networkText').textContent = network.name + ' • ' + userPhone;
                 }
 
-                // Update stats
                 const orders = data.orders || [];
                 const total = orders.length;
                 const pending = orders.filter(o => o.status === 'pending' || o.status === 'paid' || o.status === 'processing').length;
@@ -584,7 +557,6 @@
                 document.getElementById('approvedCount').textContent = approved;
                 document.getElementById('rejectedCount').textContent = rejected;
 
-                // Update recent registrations list
                 const recent = orders.slice(0, 3);
                 const regList = document.getElementById('registrationList');
                 if (recent.length > 0) {
@@ -611,20 +583,17 @@
                     regList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No registrations yet. <a href="register.html" style="color: var(--primary-yellow);">Make your first registration</a></p>';
                 }
 
-                // Cache orders for offline viewing
                 localStorage.setItem('cachedOrders', JSON.stringify(orders));
 
             } catch (error) {
                 console.error('Dashboard error:', error);
                 
-                // If it's an auth error, redirect to login immediately
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     clearSession();
                     window.location.href = 'signin.html';
                     return;
                 }
                 
-                // Try to show cached data if available
                 const cachedOrders = localStorage.getItem('cachedOrders');
                 if (cachedOrders) {
                     try {
