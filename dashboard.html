@@ -356,20 +356,31 @@
         }
 
         // ============================================
-        // HELPER: Get user from multiple sources
+        // FIXED: Get user - prioritize localStorage name
         // ============================================
         function getCurrentUser() {
-            // Try config.js getUser first
-            const user = getUser();
-            if (user && user.id) return user;
-            
-            // Fallback to localStorage
-            return {
+            // Fallback to localStorage first (most reliable after signup)
+            const localUser = {
                 id: localStorage.getItem('userId'),
                 name: localStorage.getItem('userName'),
                 email: localStorage.getItem('userEmail'),
                 phone: localStorage.getItem('userPhone')
             };
+            
+            // Try config.js getUser as backup / for additional data
+            const user = getUser();
+            if (user && user.id) {
+                // Merge: localStorage name takes priority, config.js fills in the rest
+                return {
+                    ...user,
+                    id: localUser.id || user.id,
+                    name: localUser.name || user.name || user.user_metadata?.full_name || 'User',
+                    email: localUser.email || user.email,
+                    phone: localUser.phone || user.phone
+                };
+            }
+            
+            return localUser;
         }
 
         // ============================================
@@ -472,7 +483,7 @@
                 const fileExt = file.name.split('.').pop();
                 
                 // FIXED: Use apiCall with proper auth token
-                const data = await apiCall('/api/user/upload-avatar', 'POST', {
+                const data = await apiCall('/api/user/dashboard', 'POST', {
                     userId: user.id,
                     fileBase64: base64,
                     fileExt: fileExt
@@ -497,7 +508,7 @@
         }
 
         // ============================================
-        // FIXED: Load dashboard with better error handling
+        // FIXED: Load dashboard with better name handling
         // ============================================
         async function loadDashboard() {
             // Check authentication
@@ -510,8 +521,10 @@
             const user = getCurrentUser();
             const token = getAuthToken();
 
-            document.getElementById('greeting').textContent = 'Hello, ' + (user.name || 'User');
-            document.getElementById('welcomeText').textContent = 'Welcome, ' + (user.name || 'User');
+            // FIXED: Get display name from multiple sources, prioritizing localStorage
+            const displayName = user.name || localStorage.getItem('userName') || 'User';
+            document.getElementById('greeting').textContent = 'Hello, ' + displayName;
+            document.getElementById('welcomeText').textContent = 'Welcome, ' + displayName;
 
             // Load cached profile picture immediately
             loadProfilePicture();
@@ -522,6 +535,15 @@
                 
                 if (!data.success) {
                     throw new Error(data.error || 'Failed to load dashboard data');
+                }
+
+                // Update name from server if available (in case localStorage was cleared)
+                const serverName = data.user?.name;
+                if (serverName) {
+                    document.getElementById('greeting').textContent = 'Hello, ' + serverName;
+                    document.getElementById('welcomeText').textContent = 'Welcome, ' + serverName;
+                    // Update localStorage with server name
+                    localStorage.setItem('userName', serverName);
                 }
 
                 // Update profile picture from server if available
