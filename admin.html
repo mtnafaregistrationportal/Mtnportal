@@ -101,7 +101,7 @@
         .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
-        .tab { padding: 10px 18px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; font-size: 13px; font-weight: 500; color: var(--text-light); cursor: pointer; white-space: nowrap; }
+        .tab { padding: 10px 18px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; font-size: 13px; font-weight: 500; color: var(--text-white); cursor: pointer; white-space: nowrap; }
         .tab.active { background: var(--primary-yellow); color: #1a1a1a; border-color: var(--primary-yellow); }
 
         .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
@@ -143,7 +143,6 @@
         .badge-suspended { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
         .badge-paid { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
         .badge-failed { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-        .badge-unpaid { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
 
         .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
         .detail-item { display: flex; flex-direction: column; }
@@ -237,15 +236,15 @@
             color: #4CAF50;
             border: 1px solid rgba(76, 175, 80, 0.3);
         }
-        .payment-status-banner.unpaid {
-            background: rgba(255, 152, 0, 0.15);
-            color: #FF9800;
-            border: 1px solid rgba(255, 152, 0, 0.3);
-        }
         .payment-status-banner.failed {
             background: rgba(244, 67, 54, 0.15);
             color: #F44336;
             border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        .payment-status-banner.pending {
+            background: rgba(255, 152, 0, 0.15);
+            color: #FF9800;
+            border: 1px solid rgba(255, 152, 0, 0.3);
         }
 
         .filter-pills {
@@ -273,6 +272,32 @@
             background: var(--primary-yellow);
             color: #1a1a1a;
             border-color: var(--primary-yellow);
+        }
+
+        .reg-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .reg-status-badge.approved {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        .reg-status-badge.rejected {
+            background: rgba(244, 67, 54, 0.15);
+            color: #F44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        .reg-status-badge.pending {
+            background: rgba(255, 152, 0, 0.15);
+            color: #FF9800;
+            border: 1px solid rgba(255, 152, 0, 0.3);
         }
 
         @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } .detail-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -359,9 +384,11 @@
             <div class="data-section" id="section-registrations">
                 <div class="filter-pills" id="regFilterPills">
                     <div class="filter-pill active" onclick="filterRegistrations('all')">All</div>
-                    <div class="filter-pill" onclick="filterRegistrations('paid')">✅ Paid Only</div>
-                    <div class="filter-pill" onclick="filterRegistrations('unpaid')">❌ Unpaid Only</div>
-                    <div class="filter-pill" onclick="filterRegistrations('failed')">⚠️ Failed Payment</div>
+                    <div class="filter-pill" onclick="filterRegistrations('paid')">✅ Paid</div>
+                    <div class="filter-pill" onclick="filterRegistrations('failed')">❌ Failed</div>
+                    <div class="filter-pill" onclick="filterRegistrations('pending')">⏳ Pending</div>
+                    <div class="filter-pill" onclick="filterRegistrations('approved')">✅ Approved</div>
+                    <div class="filter-pill" onclick="filterRegistrations('rejected')">❌ Rejected</div>
                 </div>
                 <div id="registrationsList"></div>
             </div>
@@ -537,14 +564,10 @@
                 
                 allPayments = data.payments || [];
                 
-                let revenue = 0;
-                allPayments.forEach(p => {
-                    if (p.paymentStatus === 'paid') {
-                        revenue += parseFloat(p.amount || 0);
-                    }
-                });
+                // Revenue comes from server ONLY - never calculate on frontend
+                const revenue = data.totalRevenue || '0.00';
+                document.getElementById('statRevenue').textContent = revenue;
                 
-                document.getElementById('statRevenue').textContent = revenue.toFixed(2);
                 renderPayments();
             } catch (error) {
                 console.error('Error loading payments:', error);
@@ -553,21 +576,35 @@
         }
 
         function updateStats() {
-            const pending = allRegistrations.filter(r => r.status === 'pending' || r.status === 'paid').length;
+            // Pending = registrations that are NOT approved and NOT rejected (regardless of payment)
+            const pending = allRegistrations.filter(r => r.status !== 'approved' && r.status !== 'rejected').length;
             document.getElementById('statPending').textContent = pending;
         }
 
-        // ====== HELPER: Get payment status for a registration ======
-        function getRegistrationPaymentStatus(regId, applicantPhone) {
-            const payment = allPayments.find(p => 
-                p.orderId === regId || 
-                p.phone === applicantPhone ||
-                p.id_number === regId
-            );
-            if (!payment) return { status: 'unpaid', label: 'UNPAID', class: 'unpaid' };
-            if (payment.paymentStatus === 'paid') return { status: 'paid', label: '✅ PAID', class: 'paid' };
-            if (payment.paymentStatus === 'failed') return { status: 'failed', label: '⚠️ FAILED', class: 'failed' };
-            return { status: 'unpaid', label: 'UNPAID', class: 'unpaid' };
+        // ====== HELPER: Get payment status for a registration from DATABASE ONLY ======
+        function getRegistrationPaymentStatus(order) {
+            // Payment status is determined ONLY by the order's status field from database
+            // Never guess or default to anything
+            
+            if (order.status === 'paid') {
+                return { status: 'paid', label: '✅ PAID', class: 'paid' };
+            }
+            if (order.status === 'failed') {
+                return { status: 'failed', label: '❌ FAILED TRANSACTION', class: 'failed' };
+            }
+            // pending or any other status = waiting for payment
+            return { status: 'pending', label: '⏳ PENDING', class: 'pending' };
+        }
+
+        // ====== HELPER: Get registration approval status ======
+        function getRegistrationApprovalStatus(order) {
+            if (order.status === 'approved') {
+                return { status: 'approved', label: '✅ APPROVED', class: 'approved' };
+            }
+            if (order.status === 'rejected') {
+                return { status: 'rejected', label: '❌ REJECTED', class: 'rejected' };
+            }
+            return { status: 'pending', label: '⏳ PENDING APPROVAL', class: 'pending' };
         }
 
         function renderUsers(filter) {
@@ -593,7 +630,7 @@
                 const initials = (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 const isSuspended = u.status === 'suspended';
                 const regCount = u.total_registrations || 0;
-                const walletAmount = (regCount * 13).toFixed(2);
+                const walletAmount = (u.amount_spent || 0).toFixed(2);
                 
                 return `
                     <div class="user-card">
@@ -616,7 +653,7 @@
                         </div>
                         <div class="detail-grid">
                             <div class="detail-item">
-                                <span class="detail-item-label">Wallet</span>
+                                <span class="detail-item-label">Amount Spent</span>
                                 <span class="detail-item-value">GH₵ ${walletAmount}</span>
                             </div>
                             <div class="detail-item">
@@ -626,6 +663,10 @@
                             <div class="detail-item">
                                 <span class="detail-item-label">Joined</span>
                                 <span class="detail-item-value">${u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-item-label">User ID</span>
+                                <span class="detail-item-value" style="font-size:11px;">${u.id ? u.id.substring(0, 12) + '...' : 'N/A'}</span>
                             </div>
                         </div>
                         <div class="action-buttons" style="margin-top:12px;">
@@ -644,11 +685,18 @@
             const container = document.getElementById('registrationsList');
             let regs = allRegistrations;
             
-            // Apply payment filter
+            // Apply payment/approval filter
             if (currentRegFilter !== 'all') {
                 regs = regs.filter(r => {
-                    const payStatus = getRegistrationPaymentStatus(r.id, r.applicant_phone);
-                    return payStatus.status === currentRegFilter;
+                    const payStatus = getRegistrationPaymentStatus(r).status;
+                    const approvalStatus = getRegistrationApprovalStatus(r).status;
+                    
+                    if (currentRegFilter === 'paid') return payStatus === 'paid';
+                    if (currentRegFilter === 'failed') return payStatus === 'failed';
+                    if (currentRegFilter === 'pending') return payStatus === 'pending';
+                    if (currentRegFilter === 'approved') return approvalStatus === 'approved';
+                    if (currentRegFilter === 'rejected') return approvalStatus === 'rejected';
+                    return true;
                 });
             }
             
@@ -662,7 +710,7 @@
                 );
             }
 
-            // Sort: unattended first, then by date
+            // Sort: unattended first, then by date (newest first)
             regs.sort((a, b) => {
                 if (a.admin_attended !== b.admin_attended) {
                     return a.admin_attended ? 1 : -1;
@@ -676,17 +724,12 @@
             }
 
             container.innerHTML = regs.map(r => {
-                const status = r.status || 'pending';
-                const statusClass = 'badge-' + status;
-                const statusText = status === 'approved' ? 'Approved' : 
-                                  status === 'rejected' ? 'Rejected' : 
-                                  status === 'paid' ? 'Paid - Pending' : 'Pending';
-
-                const showActions = status !== 'approved' && status !== 'rejected';
+                const payInfo = getRegistrationPaymentStatus(r);
+                const approvalInfo = getRegistrationApprovalStatus(r);
                 const isAttended = r.admin_attended;
                 
-                // ====== GET PAYMENT STATUS ======
-                const payInfo = getRegistrationPaymentStatus(r.id, r.applicant_phone);
+                // Show actions only if NOT approved and NOT rejected
+                const showActions = r.status !== 'approved' && r.status !== 'rejected';
                 
                 return `
                     <div class="user-card" style="position:relative;">
@@ -699,6 +742,11 @@
                             ${payInfo.label}
                         </div>
                         
+                        <!-- REGISTRATION APPROVAL STATUS -->
+                        <div class="reg-status-badge ${approvalInfo.class}">
+                            ${approvalInfo.label}
+                        </div>
+                        
                         <div class="user-card-header">
                             <div class="user-info">
                                 <div class="user-avatar-placeholder">${(r.applicant_name || 'U')[0]}</div>
@@ -707,7 +755,6 @@
                                     <div class="user-email">${r.applicant_phone || 'No phone'}</div>
                                 </div>
                             </div>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
                         </div>
                         <div class="detail-grid">
                             <div class="detail-item">
@@ -730,7 +777,7 @@
                         <div class="detail-grid" style="margin-top:8px;">
                             <div class="detail-item">
                                 <span class="detail-item-label">Amount</span>
-                                <span class="detail-item-value">GH₵ ${(r.amount || 15).toFixed(2)}</span>
+                                <span class="detail-item-value">GH₵ ${(r.amount || 13).toFixed(2)}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-item-label">Payment Ref</span>
@@ -741,10 +788,8 @@
                                 <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-item-label">Payment Status</span>
-                                <span class="detail-item-value" style="color: ${payInfo.status === 'paid' ? '#4CAF50' : payInfo.status === 'failed' ? '#F44336' : '#FF9800'}; font-weight:700;">
-                                    ${payInfo.label}
-                                </span>
+                                <span class="detail-item-label">Order ID</span>
+                                <span class="detail-item-value" style="font-size:11px;">${r.id ? r.id.substring(0, 12) + '...' : 'N/A'}</span>
                             </div>
                         </div>
                         ${showActions ? `
@@ -756,7 +801,7 @@
                         ` : r.admin_note ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">Note: ${r.admin_note}</div>` : ''}
                         
                         <div class="action-buttons" style="margin-top:8px;">
-                            <button class="btn-delete" onclick="deleteRegistration('${r.id}')">🗑 Delete Registration</button>
+                            <button class="btn-delete" onclick="deleteRegistration('${r.id}')">🗑 Hide from Admin</button>
                         </div>
                     </div>
                 `;
@@ -863,17 +908,6 @@
             showLoading(true);
             const note = document.getElementById('note-' + regId)?.value || '';
             
-            // Check if paid before approving
-            const reg = allRegistrations.find(r => r.id === regId);
-            const payInfo = getRegistrationPaymentStatus(regId, reg?.applicant_phone);
-            
-            if (payInfo.status !== 'paid') {
-                if (!confirm('⚠️ This registration has NOT been paid. Are you sure you want to approve?')) {
-                    showLoading(false);
-                    return;
-                }
-            }
-            
             try {
                 const data = await adminApiCall('/api/admin/approve-order', 'POST', {
                     orderId: regId,
@@ -922,11 +956,11 @@
         }
 
         async function deletePayment(paymentId) {
-            if (!confirm('Are you sure you want to delete this payment record?')) return;
+            if (!confirm('Are you sure you want to delete this payment record? This will NOT affect the user order history.')) return;
             
             showLoading(true);
             try {
-                const data = await adminApiCall('/api/admin/delete-order', 'POST', {
+                const data = await adminApiCall('/api/admin/delete-payment', 'POST', {
                     orderId: paymentId
                 });
                 
@@ -935,7 +969,6 @@
                 showLoading(false);
                 showToast('Payment deleted', 'success');
                 await loadPayments();
-                await loadRegistrations();
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
@@ -943,8 +976,7 @@
         }
 
         async function deleteRegistration(regId) {
-            if (!confirm('Are you sure you want to delete this registration?')) return;
-            if (!confirm('This action cannot be undone. Continue?')) return;
+            if (!confirm('This will hide the registration from the admin dashboard only. The user will still see it in their order history. Continue?')) return;
             
             showLoading(true);
             try {
@@ -955,9 +987,8 @@
                 if (!data.success) throw new Error(data.error);
                 
                 showLoading(false);
-                showToast('Registration deleted', 'success');
+                showToast('Registration hidden from admin view', 'success');
                 await loadRegistrations();
-                await loadPayments();
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
@@ -997,7 +1028,7 @@
         }
 
         async function deleteUser(userId) {
-            if (!confirm('WARNING: This will permanently delete the user. Continue?')) return;
+            if (!confirm('WARNING: This will permanently delete the user and all their data. Continue?')) return;
             if (!confirm('Are you absolutely sure? This cannot be undone.')) return;
             
             showLoading(true);
