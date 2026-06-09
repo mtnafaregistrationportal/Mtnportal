@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MTN AFA Portal - Register AFA</title>
+    <link rel="stylesheet" href="glass.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -89,7 +91,6 @@
         .form-input:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
         .form-input::placeholder { color: #94a3b8; }
         
-        /* FIXED: Date input styling to fit page */
         input[type="date"].form-input {
             color: #94a3b8;
             appearance: none;
@@ -98,7 +99,6 @@
         }
         input[type="date"].form-input.has-value { color: #0f172a; }
         
-        /* Hint text styling */
         .input-hint {
             font-size: 12px;
             color: #64748b;
@@ -110,7 +110,6 @@
             font-weight: 600;
         }
         
-        /* FIXED: Shake animation for invalid phone */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -237,6 +236,7 @@
     </main>
 
     <script src="config.js"></script>
+    <script src="glass.js"></script>
     <script>
         const dobInput = document.getElementById('dobInput');
         dobInput.addEventListener('change', function() {
@@ -244,7 +244,6 @@
             else this.classList.remove('has-value');
         });
 
-        // FIXED: Ghana Card ID auto-formatting
         const idNumberInput = document.getElementById('idNumber');
         
         idNumberInput.addEventListener('focus', function() {
@@ -288,15 +287,12 @@
             }
         });
 
-        // FIXED: Phone validation with shake and hint
         const phoneInput = document.getElementById('phone');
         const phoneHint = document.getElementById('phoneHint');
         
         phoneInput.addEventListener('input', function() {
-            // Remove non-digits
             this.value = this.value.replace(/\D/g, '');
             
-            // Update hint based on length
             if (this.value.length > 0 && this.value.length !== 10) {
                 phoneHint.textContent = `⚠️ ${this.value.length}/10 digits entered. Must be exactly 10 digits!`;
                 phoneHint.classList.add('warning');
@@ -313,15 +309,10 @@
         
         phoneInput.addEventListener('blur', function() {
             if (this.value.length !== 10 && this.value.length > 0) {
-                // Shake the input
                 this.classList.add('shake');
                 phoneHint.textContent = '❌ Phone number must be exactly 10 digits! Please check carefully.';
                 phoneHint.classList.add('warning');
-                
-                // Remove shake class after animation
-                setTimeout(() => {
-                    this.classList.remove('shake');
-                }, 500);
+                setTimeout(() => this.classList.remove('shake'), 500);
             }
         });
 
@@ -369,7 +360,6 @@
                     amount: 13.40
                 };
 
-                // FIXED: Phone validation with shake
                 if (!/^\d{10}$/.test(formData.phone)) {
                     phoneInput.classList.add('shake');
                     phoneHint.textContent = '❌ Phone number must be exactly 10 digits! Please check carefully.';
