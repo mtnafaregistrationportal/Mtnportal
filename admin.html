@@ -549,6 +549,9 @@
                 if (!data.success) throw new Error(data.error);
                 
                 allRegistrations = data.orders || [];
+                console.log('=== LOAD REGISTRATIONS ===');
+                console.log('Total registrations from API:', allRegistrations.length);
+                console.log('First registration (if any):', allRegistrations[0]);
                 document.getElementById('statTotalReg').textContent = allRegistrations.length;
                 renderRegistrations();
                 updateStats();
@@ -685,6 +688,11 @@
             const container = document.getElementById('registrationsList');
             let regs = allRegistrations;
             
+            console.log('=== RENDER REGISTRATIONS ===');
+            console.log('Total registrations loaded:', allRegistrations.length);
+            console.log('Current filter:', currentRegFilter);
+            console.log('Search filter:', filter || 'none');
+            
             // Apply payment/approval filter
             if (currentRegFilter !== 'all') {
                 regs = regs.filter(r => {
@@ -717,6 +725,8 @@
                 }
                 return new Date(b.created_at) - new Date(a.created_at);
             });
+
+            console.log('Registrations after filtering:', regs.length);
 
             if (regs.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">No registrations found</p>';
