@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account - MTN AFA Portal</title>
+    <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -214,6 +215,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="glass.js"></script>
     <script>
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -290,7 +292,6 @@
             localStorage.setItem('resetEmail', document.getElementById('email').value);
         }
 
-        // Phone input validation
         const phoneInput = document.getElementById('phoneNumber');
         const phoneHint = document.getElementById('phoneHint');
         
@@ -320,10 +321,6 @@
             }
         });
 
-        // ============================================
-        // FIXED: handleCreateAccount using apiCall()
-        // Matches sign-in page pattern exactly
-        // ============================================
         async function handleCreateAccount() {
             const name = document.getElementById('fullName').value.trim();
             const username = document.getElementById('username').value.trim();
@@ -332,7 +329,6 @@
             const password = document.getElementById('createPassword').value;
             const btn = document.getElementById('createBtn');
 
-            // Client-side validation
             let hasError = false;
             if (!name) { showFieldError('nameError', true); hasError = true; }
             if (!validatePhone(phone)) { showFieldError('phoneError', true); hasError = true; }
@@ -346,12 +342,10 @@
             btn.textContent = 'Creating Account...';
 
             try {
-                // ========== STEP 1: SIGN UP via apiCall() ==========
                 const signupData = await apiCall('/api/auth/signup', 'POST', {
                     email, password, fullName: name, phone, username
                 });
 
-                // Handle backend errors (duplicates, validation, etc.)
                 if (!signupData.success) {
                     const errorMsg = (signupData.error || signupData.message || '').toLowerCase();
                     
@@ -368,11 +362,9 @@
                     return;
                 }
 
-                // ========== STEP 2: GET SESSION & USER ==========
                 let session = signupData.session || null;
                 let user = signupData.user || null;
 
-                // If no session from signup, auto-login (same pattern as before)
                 if (!session || !user) {
                     btn.textContent = 'Signing you in...';
                     
@@ -386,13 +378,10 @@
                     user = loginData.user || null;
                 }
 
-                // ========== STEP 3: VALIDATE USER DATA ==========
                 if (!user || !user.id) {
                     throw new Error('User data missing from server response. Please try logging in manually.');
                 }
 
-                // ========== STEP 4: STORE USER DATA ==========
-                // Use config.js functions (same pattern as sign-in)
                 if (typeof setUser === 'function') {
                     setUser(user);
                 }
@@ -401,13 +390,11 @@
                     setSession(session);
                 }
 
-                // Also store individual keys for dashboard compatibility
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userId', user.id);
                 localStorage.setItem('userPhone', phone);
 
-                // ========== STEP 5: REDIRECT ==========
                 showSuccess('successMsg', 'Account created successfully! Redirecting...');
                 
                 setTimeout(() => {
