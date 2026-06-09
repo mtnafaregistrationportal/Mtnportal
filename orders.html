@@ -463,7 +463,7 @@
                     badge: 'Payment Failed',
                     badgeClass: 'status-failed',
                     noteClass: 'failed',
-                    noteText: '⚠️ Transaction failed. Your payment was not completed or verified by Paystack.'
+                    noteText: '⚠️ Transaction failed. Your payment was not completed or verified by AFA.'
                 };
             }
             
@@ -663,7 +663,7 @@
                 
                 if (order.admin_note && order.admin_note.trim()) {
                     adminNoteHtml += `<div class="admin-note" style="margin-top:8px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-muted);">
-                        <strong>Admin Note:</strong> ${order.admin_note}
+                         <strong>MTN AFA NOTE:</strong> ${order.admin_note}
                     </div>`;
                 }
                 
