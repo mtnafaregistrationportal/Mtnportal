@@ -553,34 +553,54 @@
             console.log('Pending count:', pending);
         }
 
-        // ====== HELPER: Get payment status for a registration from DATABASE ONLY ======
-        function getRegistrationPaymentStatus(order) {
-            // For approved orders - don't show payment banner at all (completed)
+        // ====== HELPER: Get SINGLE status badge for a registration ======
+        // Returns ONE badge: either payment status OR approval status, never both
+        function getRegistrationStatusBadge(order) {
+            // If approved - show COMPLETED only
             if (order.status === 'approved') {
-                return null; // No payment banner for completed orders
+                return {
+                    html: `<div class="reg-status-badge approved">✅ COMPLETED</div>`,
+                    isApproved: true,
+                    isRejected: false,
+                    showActions: false
+                };
             }
+            // If rejected - show REJECTED only
             if (order.status === 'rejected') {
-                return null; // No payment banner for rejected orders
+                return {
+                    html: `<div class="reg-status-badge rejected">❌ REJECTED</div>`,
+                    isApproved: false,
+                    isRejected: true,
+                    showActions: false
+                };
             }
+            // For pending/paid/failed - show payment status banner
             if (order.status === 'paid') {
-                return { status: 'paid', label: '✅ PAID', class: 'paid' };
+                return {
+                    html: `<div class="payment-status-banner paid">✅ PAID</div>
+                           <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
+                    isApproved: false,
+                    isRejected: false,
+                    showActions: true
+                };
             }
             if (order.status === 'failed') {
-                return { status: 'failed', label: '❌ FAILED TRANSACTION', class: 'failed' };
+                return {
+                    html: `<div class="payment-status-banner failed">❌ FAILED TRANSACTION</div>
+                           <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
+                    isApproved: false,
+                    isRejected: false,
+                    showActions: true
+                };
             }
-            // pending or any other status = waiting for payment
-            return { status: 'pending', label: '⏳ PENDING', class: 'pending' };
-        }
-
-        // ====== HELPER: Get registration approval status ======
-        function getRegistrationApprovalStatus(order) {
-            if (order.status === 'approved') {
-                return { status: 'approved', label: '✅ COMPLETED', class: 'approved' };
-            }
-            if (order.status === 'rejected') {
-                return { status: 'rejected', label: '❌ REJECTED', class: 'rejected' };
-            }
-            return { status: 'pending', label: '⏳ PENDING APPROVAL', class: 'pending' };
+            // Default pending
+            return {
+                html: `<div class="payment-status-banner pending">⏳ PENDING</div>
+                       <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
+                isApproved: false,
+                isRejected: false,
+                showActions: true
+            };
         }
 
         function renderUsers(filter) {
@@ -707,8 +727,7 @@
             for (let i = 0; i < regs.length; i++) {
                 try {
                     const r = regs[i];
-                    const payInfo = getRegistrationPaymentStatus(r);
-                    const approvalInfo = getRegistrationApprovalStatus(r);
+                    const statusInfo = getRegistrationStatusBadge(r);
                     
                     // Attended dot logic:
                     // - Approved: yellow (attended)
@@ -720,9 +739,6 @@
                     } else if (r.status !== 'rejected') {
                         dotClass = r.admin_attended ? 'attended' : 'unattended';
                     }
-                    
-                    // Show actions only if NOT approved and NOT rejected
-                    const showActions = r.status !== 'approved' && r.status !== 'rejected';
                     
                     // Amount: 0.00 for failed, 13.00 for paid/approved/pending
                     const displayAmount = r.status === 'failed' ? 0.00 : (r.amount || 13.00);
@@ -742,25 +758,13 @@
                     const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
                     const amount = displayAmount.toFixed(2);
                     
-                    // Build payment banner HTML only if payInfo exists
-                    const paymentBannerHtml = payInfo ? `
-                        <div class="payment-status-banner ${payInfo.class}">
-                            ${payInfo.label}
-                        </div>
-                    ` : '';
-                    
                     html += `
                         <div class="user-card" style="position:relative;">
                             <div class="attended-dot ${dotClass}" 
                                  onclick="markAttended('${idStr}', this)" 
                                  title="${r.status === 'approved' ? 'Completed' : (r.status === 'rejected' ? 'Rejected' : (r.admin_attended ? 'Attended' : 'Click to mark as attended'))}"></div>
                             
-                            ${paymentBannerHtml}
-                            
-                            <!-- REGISTRATION APPROVAL STATUS -->
-                            <div class="reg-status-badge ${approvalInfo.class}">
-                                ${approvalInfo.label}
-                            </div>
+                            ${statusInfo.html}
                             
                             <div class="user-card-header">
                                 <div class="user-info">
@@ -807,7 +811,7 @@
                                     <span class="detail-item-value" style="font-size:11px;">${orderIdShort}</span>
                                 </div>
                             </div>
-                            ${showActions ? `
+                            ${statusInfo.showActions ? `
                                 <input type="text" class="admin-note-input" id="note-${idStr}" placeholder="Add note (optional)">
                                 <div class="action-buttons">
                                     <button class="btn-approve" onclick="approveRegistration('${idStr}')">✓ Approve</button>
