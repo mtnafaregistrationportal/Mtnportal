@@ -343,15 +343,18 @@
     <script src="config.js"></script>
     <script>
         // ============================================
-        // HELPER: Get auth token from multiple sources
+        // FIXED: Get auth token with refresh support
         // ============================================
-        function getAuthToken() {
-            // Try session object first (from config.js)
+        async function getAuthToken() {
+            // Use the new getValidToken from config.js which handles refresh
+            if (typeof getValidToken === 'function') {
+                return await getValidToken();
+            }
+            // Fallback for old config.js
             const session = getSession();
             if (session && session.access_token) {
                 return session.access_token;
             }
-            // Fallback to localStorage
             return localStorage.getItem('access_token') || localStorage.getItem('sb_token') || null;
         }
 
@@ -384,10 +387,10 @@
         }
 
         // ============================================
-        // HELPER: Check if user is authenticated
+        // FIXED: Check if user is authenticated (async)
         // ============================================
-        function isAuthenticated() {
-            const token = getAuthToken();
+        async function isAuthenticated() {
+            const token = await getAuthToken();
             const userId = getCurrentUser().id;
             return !!(token && userId);
         }
@@ -436,7 +439,6 @@
         // FIXED: Load profile picture from multiple sources
         // ============================================
         function loadProfilePicture() {
-            // Try multiple sources in order of priority
             const sources = [
                 localStorage.getItem('profilePicture'),
                 localStorage.getItem('userProfilePicture'),
@@ -482,8 +484,7 @@
 
                 const fileExt = file.name.split('.').pop();
                 
-                // FIXED: Use apiCall with proper auth token
-                const data = await apiCall('/api/user/dashboard', 'POST', {
+                const data = await apiCall('/api/user/upload-avatar', 'POST', {
                     userId: user.id,
                     fileBase64: base64,
                     fileExt: fileExt
@@ -497,7 +498,6 @@
                 document.getElementById('profilePicPlaceholderDash').style.display = 'none';
                 updateHeaderIcon(picUrl);
                 
-                // Save to multiple keys for redundancy
                 localStorage.setItem('profilePicture', picUrl);
                 localStorage.setItem('userProfilePicture', picUrl);
 
@@ -508,18 +508,20 @@
         }
 
         // ============================================
-        // FIXED: Load dashboard with better name handling
+        // FIXED: Load dashboard with token refresh
         // ============================================
         async function loadDashboard() {
-            // Check authentication
-            if (!isAuthenticated()) {
+            // Check authentication (async - will refresh token if needed)
+            const authValid = await isAuthenticated();
+            if (!authValid) {
                 console.log('User not authenticated, redirecting to signin');
+                clearSession();
                 window.location.href = 'signin.html';
                 return;
             }
 
             const user = getCurrentUser();
-            const token = getAuthToken();
+            const token = await getAuthToken();
 
             // FIXED: Get display name from multiple sources, prioritizing localStorage
             const displayName = user.name || localStorage.getItem('userName') || 'User';
@@ -530,19 +532,23 @@
             loadProfilePicture();
 
             try {
-                // FIXED: Ensure apiCall uses the correct token
                 const data = await apiCall('/api/user/dashboard', 'POST', { userId: user.id });
                 
                 if (!data.success) {
+                    // If auth error from server, redirect to login
+                    if (data.error && (data.error.includes('token') || data.error.includes('Access denied') || data.error.includes('Invalid or expired'))) {
+                        clearSession();
+                        window.location.href = 'signin.html';
+                        return;
+                    }
                     throw new Error(data.error || 'Failed to load dashboard data');
                 }
 
-                // Update name from server if available (in case localStorage was cleared)
+                // Update name from server if available
                 const serverName = data.user?.name;
                 if (serverName) {
                     document.getElementById('greeting').textContent = 'Hello, ' + serverName;
                     document.getElementById('welcomeText').textContent = 'Welcome, ' + serverName;
-                    // Update localStorage with server name
                     localStorage.setItem('userName', serverName);
                 }
 
@@ -611,6 +617,13 @@
             } catch (error) {
                 console.error('Dashboard error:', error);
                 
+                // If it's an auth error, redirect to login immediately
+                if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
+                    clearSession();
+                    window.location.href = 'signin.html';
+                    return;
+                }
+                
                 // Try to show cached data if available
                 const cachedOrders = localStorage.getItem('cachedOrders');
                 if (cachedOrders) {
@@ -657,13 +670,6 @@
                 }
                 
                 showToast('Error loading dashboard: ' + error.message, 'error');
-                
-                // If it's an auth error, redirect to login
-                if (error.message && (error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
-                    setTimeout(() => {
-                        window.location.href = 'signin.html';
-                    }, 2000);
-                }
             }
         }
 
