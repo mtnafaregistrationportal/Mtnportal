@@ -169,6 +169,50 @@
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
         }
+        .btn-delete-order {
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #F44336;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-delete-order:hover {
+            background: rgba(244, 67, 54, 0.25);
+        }
+        .btn-delete-order:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast-success { background: #4CAF50; color: white; }
+        .toast-error { background: #e74c3c; color: white; }
         @media (min-width: 768px) { .orders-content { max-width: 720px; padding: 40px 24px; } }
     </style>
 </head>
@@ -219,6 +263,8 @@
         <span class="contact-support-text">Contact Support</span>
     </a>
 
+    <div class="toast" id="toast"></div>
+
     <script src="config.js"></script>
     <script>
         // ============================================
@@ -230,25 +276,18 @@
         // UNIFIED AUTH HELPERS - Works with BOTH config.js and standalone
         // ============================================
         function getUserUnified() {
-            // Try config.js getUser() first
             if (typeof getUser === 'function') {
                 const user = getUser();
                 if (user && user.id) return user;
             }
-            
-            // Fallback: try config.js getCurrentUser() if it exists
             if (typeof getCurrentUser === 'function') {
                 const user = getCurrentUser();
                 if (user && user.id) return user;
             }
-            
-            // Fallback: try afa_user key (orders.html standalone)
             const afaUser = localStorage.getItem('afa_user');
             if (afaUser) {
                 try { return JSON.parse(afaUser); } catch (e) {}
             }
-            
-            // Fallback: try dashboard keys
             return {
                 id: localStorage.getItem('userId'),
                 name: localStorage.getItem('userName'),
@@ -259,19 +298,14 @@
         }
 
         function getSessionUnified() {
-            // Try config.js getSession() first
             if (typeof getSession === 'function') {
                 const session = getSession();
                 if (session) return session;
             }
-            
-            // Fallback: try afa_session key (orders.html standalone)
             const afaSession = localStorage.getItem('afa_session');
             if (afaSession) {
                 try { return JSON.parse(afaSession); } catch (e) {}
             }
-            
-            // Fallback: try individual token keys
             return {
                 access_token: localStorage.getItem('access_token') || localStorage.getItem('sb_token') || localStorage.getItem('token')
             };
@@ -289,7 +323,7 @@
         }
 
         // ============================================
-        // API CALL HELPER - Uses config.js apiCall if available, otherwise built-in
+        // API CALL HELPER
         // ============================================
         async function apiCallUnified(endpoint, method, body) {
             const token = getTokenUnified();
@@ -300,13 +334,10 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
             
-            // Try config.js apiCall first (it might have extra logic)
             if (typeof apiCall === 'function') {
                 try {
                     return await apiCall(endpoint, method, body);
-                } catch (e) {
-                    // Fall through to built-in
-                }
+                } catch (e) {}
             }
             
             const response = await fetch(API_BASE + endpoint, {
@@ -316,6 +347,54 @@
             });
             
             return await response.json();
+        }
+
+        // ============================================
+        // TOAST NOTIFICATION
+        // ============================================
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + (type || 'success');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // ============================================
+        // USER DELETE OWN ORDER
+        // ============================================
+        async function deleteUserOrder(orderId) {
+            if (!confirm('Are you sure you want to remove this order from your history? This will hide it from your view but your payment record remains on file.')) {
+                return;
+            }
+            
+            const user = getUserUnified();
+            const btn = document.getElementById('delete-btn-' + orderId);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = 'Deleting...';
+            }
+            
+            try {
+                const data = await apiCallUnified('/api/user/delete-order', 'POST', {
+                    userId: user.id,
+                    orderId: orderId
+                });
+                
+                if (data.success) {
+                    showToast('Order removed from your history', 'success');
+                    // Refresh the orders list
+                    await initOrders();
+                } else {
+                    throw new Error(data.error || 'Failed to delete order');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🗑 Remove from History';
+                }
+            }
         }
 
         // ============================================
@@ -335,7 +414,10 @@
         // ============================================
         // ORDER STATUS DETERMINATION
         // ============================================
+        // Payment status is PERMANENT once verified by Paystack.
+        // Admin approval ONLY affects registration_status, never payment_status.
         async function getOrderDisplayStatus(order) {
+            // 1. APPROVED - registration completed by admin
             if (order.status === 'approved') {
                 return {
                     badge: 'Completed',
@@ -345,6 +427,7 @@
                 };
             }
             
+            // 2. REJECTED - registration rejected by admin
             if (order.status === 'rejected') {
                 return {
                     badge: 'Rejected',
@@ -354,16 +437,28 @@
                 };
             }
             
+            // 3. FAILED - payment failed (verified by Paystack or timed out)
             if (order.status === 'failed') {
                 return {
                     badge: 'Payment Failed',
                     badgeClass: 'status-failed',
                     noteClass: 'failed',
-                    noteText: '⚠️ Transaction failed. Your payment must be successfully completed and confirmed by AFA before processing.'
+                    noteText: '⚠️ Transaction failed. Your payment was not completed or verified by Paystack.'
                 };
             }
             
-            if (order.status === 'pending' || order.status === 'paid') {
+            // 4. PAID - payment verified by Paystack, awaiting admin approval
+            if (order.status === 'paid') {
+                return {
+                    badge: 'Pending Approval',
+                    badgeClass: 'status-paid',
+                    noteClass: 'paid',
+                    noteText: '💳 Payment received and verified. Awaiting AFA approval...'
+                };
+            }
+            
+            // 5. PENDING - waiting for payment
+            if (order.status === 'pending') {
                 if (!order.payment_reference) {
                     return {
                         badge: 'Pending',
@@ -374,9 +469,12 @@
                     };
                 }
                 
+                // Has reference but still pending - verify with backend
                 const verifyData = await verifyPaymentWithBackend(order.payment_reference);
                 
                 if (verifyData.verified) {
+                    // Payment was actually paid - backend should have updated DB
+                    // But if frontend still sees pending, show as paid
                     return {
                         badge: 'Pending Approval',
                         badgeClass: 'status-paid',
@@ -385,14 +483,16 @@
                     };
                 } else {
                     return {
-                        badge: 'Payment Failed',
-                        badgeClass: 'status-failed',
-                        noteClass: 'failed',
-                        noteText: '⚠️ Transaction failed. Your payment must be successfully completed and confirmed by AFA before processing.'
+                        badge: 'Pending',
+                        badgeClass: 'status-pending',
+                        noteClass: 'pending',
+                        noteText: '⏳ Waiting for payment completion...',
+                        verifying: true
                     };
                 }
             }
             
+            // Fallback
             return {
                 badge: 'Unknown',
                 badgeClass: 'status-pending',
@@ -412,7 +512,6 @@
         // MAIN INIT
         // ============================================
         async function initOrders() {
-            // Check auth using unified helper
             if (!isAuthenticatedUnified()) {
                 console.log('User not authenticated, redirecting to signin');
                 window.location.href = 'signin.html';
@@ -466,10 +565,9 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                if (status === 'pending' || status === 'processing' || status === 'paid') {
-                    if (displayStatus.badgeClass === 'status-paid' || displayStatus.badgeClass === 'status-pending') {
-                        pendingCount++;
-                    }
+                // Pending = any status that is NOT approved (paid, pending, failed, rejected all count as "pending" from user view until approved)
+                if (status !== 'approved') {
+                    pendingCount++;
                 }
                 if (status === 'approved') approvedCount++;
                 
@@ -492,8 +590,15 @@
                     adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${displayStatus.noteText}</div>`;
                 }
                 
+                // Admin note from backend if exists
+                if (order.admin_note && order.admin_note.trim()) {
+                    adminNoteHtml += `<div class="admin-note" style="margin-top:8px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-muted);">
+                        <strong>Admin Note:</strong> ${order.admin_note}
+                    </div>`;
+                }
+                
                 html += `
-                    <div class="order-card">
+                    <div class="order-card" id="order-card-${order.id}">
                         <div class="order-header">
                             <span class="order-id">#${orderId}</span>
                             <span class="order-status ${displayStatus.badgeClass}">${displayStatus.badge}</span>
@@ -521,6 +626,9 @@
                             </div>
                         </div>
                         ${adminNoteHtml}
+                        <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
+                            🗑 Remove from History
+                        </button>
                     </div>
                 `;
             }
