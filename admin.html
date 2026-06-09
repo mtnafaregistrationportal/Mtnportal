@@ -638,15 +638,15 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-item-label">User ID</span>
-                                <span class="detail-item-value" style="font-size:11px;">${u.id ? u.id.substring(0, 12) + '...' : 'N/A'}</span>
+                                <span class="detail-item-value" style="font-size:11px;">${u.id ? String(u.id).substring(0, 12) + '...' : 'N/A'}</span>
                             </div>
                         </div>
                         <div class="action-buttons" style="margin-top:12px;">
                             ${isSuspended 
-                                ? `<button class="btn-approve" onclick="enableUser('${u.id}')">✓ Resume</button>`
-                                : `<button class="btn-suspend" onclick="suspendUser('${u.id}')">⏸ Suspend</button>`
+                                ? `<button class="btn-approve" onclick="enableUser('${String(u.id)}')">✓ Resume</button>`
+                                : `<button class="btn-suspend" onclick="suspendUser('${String(u.id)}')">⏸ Suspend</button>`
                             }
-                            <button class="btn-delete" onclick="deleteUser('${u.id}')">🗑 Delete</button>
+                            <button class="btn-delete" onclick="deleteUser('${String(u.id)}')">🗑 Delete</button>
                         </div>
                     </div>
                 `;
@@ -719,14 +719,16 @@
                     const safeRef = (r.payment_reference || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     const safeNote = (r.admin_note || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     
-                    const orderIdShort = r.id ? r.id.substring(0, 12) + '...' : 'N/A';
+                    // FIX: Convert r.id to string before using substring
+                    const idStr = String(r.id || '');
+                    const orderIdShort = idStr ? idStr.substring(0, 12) + '...' : 'N/A';
                     const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
                     const amount = (r.amount || 13).toFixed(2);
                     
                     html += `
                         <div class="user-card" style="position:relative;">
                             <div class="attended-dot ${isAttended ? 'attended' : 'unattended'}" 
-                                 onclick="markAttended('${r.id}', this)" 
+                                 onclick="markAttended('${idStr}', this)" 
                                  title="${isAttended ? 'Attended' : 'Click to mark as attended'}"></div>
                             
                             <!-- PAYMENT STATUS BANNER -->
@@ -785,15 +787,15 @@
                                 </div>
                             </div>
                             ${showActions ? `
-                                <input type="text" class="admin-note-input" id="note-${r.id}" placeholder="Add note (optional)">
+                                <input type="text" class="admin-note-input" id="note-${idStr}" placeholder="Add note (optional)">
                                 <div class="action-buttons">
-                                    <button class="btn-approve" onclick="approveRegistration('${r.id}')">✓ Approve</button>
-                                    <button class="btn-reject" onclick="rejectRegistration('${r.id}')">✕ Reject</button>
+                                    <button class="btn-approve" onclick="approveRegistration('${idStr}')">✓ Approve</button>
+                                    <button class="btn-reject" onclick="rejectRegistration('${idStr}')">✕ Reject</button>
                                 </div>
                             ` : safeNote ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">Note: ${safeNote}</div>` : ''}
                             
                             <div class="action-buttons" style="margin-top:8px;">
-                                <button class="btn-delete" onclick="deleteRegistration('${r.id}')">🗑 Hide from Admin</button>
+                                <button class="btn-delete" onclick="deleteRegistration('${idStr}')">🗑 Hide from Admin</button>
                             </div>
                         </div>
                     `;
@@ -852,7 +854,7 @@
                                 <div class="payment-meta">Ghana Card: ${p.id_number || 'N/A'}</div>
                                 <div class="payment-meta">Ref: ${p.reference || 'N/A'} • ${p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                             </div>
-                            <button class="btn-delete" onclick="deletePayment('${p.id}')" style="flex-shrink: 0;">🗑 Delete</button>
+                            <button class="btn-delete" onclick="deletePayment('${String(p.id)}')" style="flex-shrink: 0;">🗑 Delete</button>
                         </div>
                     </div>
                 `;
