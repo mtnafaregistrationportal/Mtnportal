@@ -516,8 +516,7 @@
                 console.log('=== LOAD REGISTRATIONS ===');
                 console.log('Total registrations from API:', allRegistrations.length);
                 if (allRegistrations.length > 0) {
-                    console.log('First reg status:', allRegistrations[0].status);
-                    console.log('First reg deleted_by_admin:', allRegistrations[0].deleted_by_admin);
+                    console.log('First reg:', JSON.stringify(allRegistrations[0], null, 2));
                 }
                 document.getElementById('statTotalReg').textContent = allRegistrations.length;
                 renderRegistrations();
@@ -700,8 +699,10 @@
                 return;
             }
 
-            try {
-                container.innerHTML = regs.map(r => {
+            let html = '';
+            for (let i = 0; i < regs.length; i++) {
+                try {
+                    const r = regs[i];
                     const payInfo = getRegistrationPaymentStatus(r);
                     const approvalInfo = getRegistrationApprovalStatus(r);
                     const isAttended = r.admin_attended;
@@ -709,7 +710,20 @@
                     // Show actions only if NOT approved and NOT rejected
                     const showActions = r.status !== 'approved' && r.status !== 'rejected';
                     
-                    return `
+                    const safeName = (r.applicant_name || 'Unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safePhone = (r.applicant_phone || 'No phone').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeId = (r.id_number || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeLocation = (r.location || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeDob = (r.dob || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeOccupation = (r.occupation || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeRef = (r.payment_reference || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeNote = (r.admin_note || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    
+                    const orderIdShort = r.id ? r.id.substring(0, 12) + '...' : 'N/A';
+                    const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+                    const amount = (r.amount || 13).toFixed(2);
+                    
+                    html += `
                         <div class="user-card" style="position:relative;">
                             <div class="attended-dot ${isAttended ? 'attended' : 'unattended'}" 
                                  onclick="markAttended('${r.id}', this)" 
@@ -727,47 +741,47 @@
                             
                             <div class="user-card-header">
                                 <div class="user-info">
-                                    <div class="user-avatar-placeholder">${(r.applicant_name || 'U')[0]}</div>
+                                    <div class="user-avatar-placeholder">${safeName[0] || 'U'}</div>
                                     <div>
-                                        <div class="user-name">${r.applicant_name || 'Unknown'}</div>
-                                        <div class="user-email">${r.applicant_phone || 'No phone'}</div>
+                                        <div class="user-name">${safeName}</div>
+                                        <div class="user-email">${safePhone}</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="detail-grid">
                                 <div class="detail-item">
                                     <span class="detail-item-label">Ghana Card ID</span>
-                                    <span class="detail-item-value">${r.id_number || 'N/A'}</span>
+                                    <span class="detail-item-value">${safeId}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Location</span>
-                                    <span class="detail-item-value">${r.location || 'N/A'}</span>
+                                    <span class="detail-item-value">${safeLocation}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Date of Birth</span>
-                                    <span class="detail-item-value">${r.dob || 'N/A'}</span>
+                                    <span class="detail-item-value">${safeDob}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Occupation</span>
-                                    <span class="detail-item-value">${r.occupation || 'N/A'}</span>
+                                    <span class="detail-item-value">${safeOccupation}</span>
                                 </div>
                             </div>
                             <div class="detail-grid" style="margin-top:8px;">
                                 <div class="detail-item">
                                     <span class="detail-item-label">Amount</span>
-                                    <span class="detail-item-value">GH₵ ${(r.amount || 13).toFixed(2)}</span>
+                                    <span class="detail-item-value">GH₵ ${amount}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Payment Ref</span>
-                                    <span class="detail-item-value" style="font-size:11px;">${r.payment_reference || 'N/A'}</span>
+                                    <span class="detail-item-value" style="font-size:11px;">${safeRef}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Date</span>
-                                    <span class="detail-item-value">${r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                                    <span class="detail-item-value">${dateStr}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-item-label">Order ID</span>
-                                    <span class="detail-item-value" style="font-size:11px;">${r.id ? r.id.substring(0, 12) + '...' : 'N/A'}</span>
+                                    <span class="detail-item-value" style="font-size:11px;">${orderIdShort}</span>
                                 </div>
                             </div>
                             ${showActions ? `
@@ -776,19 +790,21 @@
                                     <button class="btn-approve" onclick="approveRegistration('${r.id}')">✓ Approve</button>
                                     <button class="btn-reject" onclick="rejectRegistration('${r.id}')">✕ Reject</button>
                                 </div>
-                            ` : r.admin_note ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">Note: ${r.admin_note}</div>` : ''}
+                            ` : safeNote ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">Note: ${safeNote}</div>` : ''}
                             
                             <div class="action-buttons" style="margin-top:8px;">
                                 <button class="btn-delete" onclick="deleteRegistration('${r.id}')">🗑 Hide from Admin</button>
                             </div>
                         </div>
                     `;
-                }).join('');
-                console.log('Rendering successful:', regs.length, 'cards');
-            } catch (err) {
-                console.error('ERROR rendering registrations:', err);
-                container.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:40px;">Error rendering registrations. Check console.</p>';
+                } catch (itemError) {
+                    console.error('Error rendering registration item', i, ':', itemError);
+                    html += `<div style="color:#e74c3c;padding:10px;">Error rendering item ${i}: ${itemError.message}</div>`;
+                }
             }
+            
+            container.innerHTML = html;
+            console.log('Rendering successful:', regs.length, 'cards');
         }
 
         function renderPayments(filter) {
