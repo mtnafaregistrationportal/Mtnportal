@@ -268,12 +268,29 @@
     <script src="config.js"></script>
     <script>
         // ============================================
-        // CONFIGURATION
+        // FIXED: Use config.js getValidToken for auto-refresh
         // ============================================
-        const API_BASE = 'https://mtn-afa-api.onrender.com';
+        async function getAuthToken() {
+            // Use config.js getValidToken which handles auto-refresh
+            if (typeof getValidToken === 'function') {
+                return await getValidToken();
+            }
+            // Fallback to old method
+            const session = getSessionUnified();
+            return session ? (session.access_token || session.token) : null;
+        }
 
         // ============================================
-        // UNIFIED AUTH HELPERS - Works with BOTH config.js and standalone
+        // FIXED: Async auth check with token refresh
+        // ============================================
+        async function isAuthenticatedOrders() {
+            const token = await getAuthToken();
+            const user = getUserUnified();
+            return !!(token && user && user.id);
+        }
+
+        // ============================================
+        // UNIFIED USER HELPERS (keep for compatibility)
         // ============================================
         function getUserUnified() {
             if (typeof getUser === 'function') {
@@ -311,43 +328,52 @@
             };
         }
 
-        function getTokenUnified() {
-            const session = getSessionUnified();
-            return session ? (session.access_token || session.token) : null;
-        }
-
-        function isAuthenticatedUnified() {
-            const user = getUserUnified();
-            const token = getTokenUnified();
-            return !!(user && user.id && token);
-        }
-
         // ============================================
-        // API CALL HELPER
+        // FIXED: API CALL with token refresh (uses config.js apiCall if available)
         // ============================================
-        async function apiCallUnified(endpoint, method, body) {
-            const token = getTokenUnified();
+        async function apiCallOrders(endpoint, method, body) {
+            // Try config.js apiCall first (has full token refresh logic)
+            if (typeof apiCall === 'function') {
+                try {
+                    return await apiCall(endpoint, method, body);
+                } catch (e) {
+                    // If config.js apiCall fails, fall through to our own
+                    console.log('config.js apiCall failed, using fallback:', e.message);
+                }
+            }
+
+            // Fallback: our own implementation with token refresh
+            const token = await getAuthToken();
             const headers = {
                 'Content-Type': 'application/json'
             };
             if (token) {
                 headers['Authorization'] = 'Bearer ' + token;
             }
-            
-            if (typeof apiCall === 'function') {
-                try {
-                    return await apiCall(endpoint, method, body);
-                } catch (e) {}
-            }
-            
+
             const response = await fetch(API_BASE + endpoint, {
-                method: method,
+                method: method || 'GET',
                 headers: headers,
-                body: body ? JSON.stringify(body) : null
+                body: body ? JSON.stringify(body) : null,
+                credentials: 'include'
             });
-            
-            return await response.json();
+
+            const data = await response.json();
+
+            // Handle auth errors in response body
+            if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
+                clearSession();
+                window.location.href = 'signin.html';
+                throw new Error(data.error || 'Session expired');
+            }
+
+            return data;
         }
+
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const API_BASE = 'https://mtn-afa-api.onrender.com';
 
         // ============================================
         // TOAST NOTIFICATION
@@ -376,14 +402,13 @@
             }
             
             try {
-                const data = await apiCallUnified('/api/user/delete-order', 'POST', {
+                const data = await apiCallOrders('/api/user/delete-order', 'POST', {
                     userId: user.id,
                     orderId: orderId
                 });
                 
                 if (data.success) {
                     showToast('Order removed from your history', 'success');
-                    // Refresh the orders list
                     await initOrders();
                 } else {
                     throw new Error(data.error || 'Failed to delete order');
@@ -414,10 +439,7 @@
         // ============================================
         // ORDER STATUS DETERMINATION
         // ============================================
-        // Payment status is PERMANENT once verified by Paystack.
-        // Admin approval ONLY affects registration_status, never payment_status.
         async function getOrderDisplayStatus(order) {
-            // 1. APPROVED - registration completed by admin
             if (order.status === 'approved') {
                 return {
                     badge: 'Completed',
@@ -427,7 +449,6 @@
                 };
             }
             
-            // 2. REJECTED - registration rejected by admin
             if (order.status === 'rejected') {
                 return {
                     badge: 'Rejected',
@@ -437,7 +458,6 @@
                 };
             }
             
-            // 3. FAILED - payment failed (verified by Paystack or timed out)
             if (order.status === 'failed') {
                 return {
                     badge: 'Payment Failed',
@@ -447,7 +467,6 @@
                 };
             }
             
-            // 4. PAID - payment verified by Paystack, awaiting admin approval
             if (order.status === 'paid') {
                 return {
                     badge: 'Pending Approval',
@@ -457,7 +476,6 @@
                 };
             }
             
-            // 5. PENDING - waiting for payment
             if (order.status === 'pending') {
                 if (!order.payment_reference) {
                     return {
@@ -469,12 +487,9 @@
                     };
                 }
                 
-                // Has reference but still pending - verify with backend
                 const verifyData = await verifyPaymentWithBackend(order.payment_reference);
                 
                 if (verifyData.verified) {
-                    // Payment was actually paid - backend should have updated DB
-                    // But if frontend still sees pending, show as paid
                     return {
                         badge: 'Pending Approval',
                         badgeClass: 'status-paid',
@@ -492,7 +507,6 @@
                 }
             }
             
-            // Fallback
             return {
                 badge: 'Unknown',
                 badgeClass: 'status-pending',
@@ -509,11 +523,14 @@
         let approvedCount = 0;
 
         // ============================================
-        // MAIN INIT
+        // FIXED: MAIN INIT with async auth + token refresh
         // ============================================
         async function initOrders() {
-            if (!isAuthenticatedUnified()) {
+            // Check authentication (async - will refresh token if needed)
+            const authValid = await isAuthenticatedOrders();
+            if (!authValid) {
                 console.log('User not authenticated, redirecting to signin');
+                if (typeof clearSession === 'function') clearSession();
                 window.location.href = 'signin.html';
                 return;
             }
@@ -521,12 +538,48 @@
             const user = getUserUnified();
             
             try {
-                const data = await apiCallUnified('/api/user/orders', 'POST', { userId: user.id });
-                if (!data.success) throw new Error(data.error);
+                const data = await apiCallOrders('/api/user/orders', 'POST', { userId: user.id });
+                
+                if (!data.success) {
+                    // If auth error from server, redirect to login
+                    if (data.error && (data.error.includes('token') || data.error.includes('Access denied') || data.error.includes('Invalid or expired'))) {
+                        if (typeof clearSession === 'function') clearSession();
+                        window.location.href = 'signin.html';
+                        return;
+                    }
+                    throw new Error(data.error || 'Failed to load orders');
+                }
+                
+                // Cache orders for offline viewing
+                if (data.orders) {
+                    localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
+                }
                 
                 await renderOrders(data.orders || []);
+                
             } catch (error) {
                 console.error('Error fetching orders:', error);
+                
+                // If it's an auth error, redirect to login immediately
+                if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
+                    if (typeof clearSession === 'function') clearSession();
+                    window.location.href = 'signin.html';
+                    return;
+                }
+                
+                // Try to show cached data if available
+                const cachedOrders = localStorage.getItem('cachedOrders');
+                if (cachedOrders) {
+                    try {
+                        const orders = JSON.parse(cachedOrders);
+                        showToast('Showing cached data (offline mode)', 'error');
+                        await renderOrders(orders);
+                        return;
+                    } catch (e) {
+                        console.error('Failed to parse cached orders:', e);
+                    }
+                }
+                
                 document.getElementById('ordersList').innerHTML = `
                     <div class="empty-state">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -565,7 +618,6 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                // Pending = any status that is NOT approved (paid, pending, failed, rejected all count as "pending" from user view until approved)
                 if (status !== 'approved') {
                     pendingCount++;
                 }
@@ -590,7 +642,6 @@
                     adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${displayStatus.noteText}</div>`;
                 }
                 
-                // Admin note from backend if exists
                 if (order.admin_note && order.admin_note.trim()) {
                     adminNoteHtml += `<div class="admin-note" style="margin-top:8px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-muted);">
                         <strong>Admin Note:</strong> ${order.admin_note}
