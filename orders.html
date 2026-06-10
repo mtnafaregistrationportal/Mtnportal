@@ -979,7 +979,7 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                if (status !== 'approved') pendingCount++;
+                if (status === 'pending' || status === 'paid') pendingCount++;
                 if (status === 'approved') approvedCount++;
                 
                 const date = order.created_at 
