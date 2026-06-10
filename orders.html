@@ -6,6 +6,11 @@
     <title>My Orders - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://mtn-afa-api.onrender.com https://iqzjpdynmnucxswbrkho.supabase.co https://api.paystack.co;">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <style>
         /* ============================================
            iOS 26 LIQUID GLASS DESIGN SYSTEM
@@ -695,7 +700,7 @@
                 try {
                     return await apiCall(endpoint, method, body);
                 } catch (e) {
-                    console.log('config.js apiCall failed, using fallback:', e.message);
+                    // config.js apiCall failed, using fallback
                 }
             }
 
@@ -780,7 +785,6 @@
                 const data = await response.json();
                 return data;
             } catch (error) {
-                console.error('Payment verification error:', error);
                 return { verified: false, error: true };
             }
         }
@@ -877,7 +881,6 @@
         async function initOrders() {
             const authValid = await isAuthenticatedOrders();
             if (!authValid) {
-                console.log('User not authenticated, redirecting to signin');
                 if (typeof clearSession === 'function') clearSession();
                 window.location.href = 'signin.html';
                 return;
@@ -902,8 +905,6 @@
                 await renderOrders(data.orders || []);
                 
             } catch (error) {
-                console.error('Error fetching orders:', error);
-                
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     if (typeof clearSession === 'function') clearSession();
                     window.location.href = 'signin.html';
@@ -917,9 +918,7 @@
                         showToast('Showing cached data (offline mode)', 'error');
                         await renderOrders(orders);
                         return;
-                    } catch (e) {
-                        console.error('Failed to parse cached orders:', e);
-                    }
+                    } catch (e) {}
                 }
                 
                 document.getElementById('ordersList').innerHTML = `
@@ -941,12 +940,9 @@
             if (document.visibilityState === 'visible') {
                 if (isRefreshingOrders) return;
                 isRefreshingOrders = true;
-                console.log('Page visible again, refreshing orders...');
                 try {
                     await initOrders();
-                } catch (err) {
-                    console.error('Failed to refresh orders on visibility change:', err);
-                } finally {
+                } catch (err) {} finally {
                     isRefreshingOrders = false;
                 }
             }
@@ -979,7 +975,7 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                if (status === 'pending' || status === 'paid') pendingCount++;
+                if (status !== 'approved') pendingCount++;
                 if (status === 'approved') approvedCount++;
                 
                 const date = order.created_at 
@@ -987,6 +983,12 @@
                     : 'Just now';
                 
                 const orderId = order.id ? order.id.toString().substr(-8).toUpperCase() : 'N/A';
+                
+                // XSS FIX: Escape all user data
+                const safeName = escapeHtml(order.applicant_name || 'N/A');
+                const safePhone = escapeHtml(order.applicant_phone || 'N/A');
+                const safeRef = escapeHtml(order.payment_reference || 'N/A');
+                const safeNoteText = escapeHtml(displayStatus.noteText);
                 
                 let adminNoteHtml = '';
                 if (displayStatus.verifying) {
@@ -998,12 +1000,13 @@
                             </div>
                         </div>`;
                 } else {
-                    adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${displayStatus.noteText}</div>`;
+                    adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${safeNoteText}</div>`;
                 }
                 
                 if (order.admin_note && order.admin_note.trim()) {
+                    const safeAdminNote = escapeHtml(order.admin_note);
                     adminNoteHtml += `<div class="admin-note" style="margin-top:8px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-muted);">
-                         <strong>MTN AFA NOTE:</strong> ${order.admin_note}
+                         <strong>MTN AFA NOTE:</strong> ${safeAdminNote}
                     </div>`;
                 }
                 
@@ -1016,19 +1019,19 @@
                         <div class="order-details">
                             <div class="detail-row">
                                 <span class="detail-label">Applicant</span>
-                                <span class="detail-value">${order.applicant_name || 'N/A'}</span>
+                                <span class="detail-value">${safeName}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Phone</span>
-                                <span class="detail-value">${order.applicant_phone || 'N/A'}</span>
+                                <span class="detail-value">${safePhone}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Amount</span>
-                                <span class="detail-value">GH₵ ${(order.amount || 13).toFixed(2)}</span>
+                                <span class="detail-value">GH₵ ${(order.amount || 13.40).toFixed(2)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Payment Ref</span>
-                                <span class="detail-value" style="font-size: 11px;">${order.payment_reference || 'N/A'}</span>
+                                <span class="detail-value" style="font-size: 11px;">${safeRef}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Date</span>
