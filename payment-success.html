@@ -7,117 +7,349 @@
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text-primary);
             padding: 20px;
+            position: relative;
         }
+        
+        /* Liquid Glass Success Card */
         .success-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 24px;
-            padding: 40px 28px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl);
+            padding: 44px 32px;
             text-align: center;
             max-width: 400px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
         }
+        .success-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .success-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Success Icon */
         .success-icon {
             width: 80px;
             height: 80px;
-            background: #4CAF50;
+            background: linear-gradient(135deg, #34C759, #30D158);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
+            box-shadow: 0 8px 32px rgba(52, 199, 89, 0.3);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
+            transition: all var(--transition-fast);
+        }
+        .success-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(52, 199, 89, 0.4);
         }
         .success-icon svg { width: 40px; height: 40px; color: white; }
+        
+        /* Failed Icon */
         .failed-icon {
             width: 80px;
             height: 80px;
-            background: #e74c3c;
+            background: linear-gradient(135deg, #FF3B30, #FF453A);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
+            box-shadow: 0 8px 32px rgba(255, 59, 48, 0.3);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
+            transition: all var(--transition-fast);
+        }
+        .failed-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(255, 59, 48, 0.4);
         }
         .failed-icon svg { width: 40px; height: 40px; color: white; }
-        .success-card h2 { color: #1a1a1a; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-        .success-card p { color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+        
+        .success-card h2 { 
+            color: var(--text-dark); 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.2s backwards;
+        }
+        .success-card p { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 24px; 
+            line-height: 1.6; 
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.3s backwards;
+        }
+        
+        /* Liquid Glass Reference Box */
         .reference-box {
-            background: #f1f5f9;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
+            background: rgba(0,0,0,0.03);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            margin-bottom: 24px;
             font-size: 13px;
             color: #64748b;
+            border: 1px solid rgba(0,0,0,0.06);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.4s backwards;
+            transition: all var(--transition-fast);
         }
-        .reference-box strong { color: #0f172a; font-size: 14px; }
+        .reference-box:hover {
+            background: rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+        }
+        .reference-box strong { 
+            color: var(--text-dark); 
+            font-size: 14px; 
+            font-weight: 700;
+        }
+        
+        /* Liquid Glass Primary Button */
         .btn-primary {
             width: 100%;
-            padding: 14px;
-            background: #FFD700;
-            color: #1a1a1a;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
             border: none;
-            border-radius: 14px;
+            border-radius: var(--radius-md);
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             text-decoration: none;
             display: block;
             margin-bottom: 12px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            letter-spacing: 0.3px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.5s backwards;
+            position: relative;
+            overflow: hidden;
         }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+        }
+        .btn-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        /* Liquid Glass Secondary Button */
         .btn-secondary {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: transparent;
             color: #64748b;
-            border: 2px solid #e2e8f0;
-            border-radius: 14px;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: var(--radius-md);
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             text-decoration: none;
             display: block;
+            transition: all var(--transition-fast);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.6s backwards;
         }
+        .btn-secondary:hover {
+            background: rgba(0,0,0,0.03);
+            border-color: rgba(0,0,0,0.2);
+            color: var(--text-dark);
+            transform: translateY(-1px);
+        }
+        .btn-secondary:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
         .loading {
             color: #666;
             font-size: 14px;
+            font-weight: 500;
         }
+        
+        /* Liquid Glass Spinner */
         .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(76, 175, 80, 0.3);
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,215,0,0.2);
             border-radius: 50%;
-            border-top-color: #4CAF50;
+            border-top-color: var(--primary-yellow);
             animation: spin 0.8s linear infinite;
             margin: 0 auto 16px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Liquid Glass Error Message */
         .error-msg {
-            color: #e74c3c;
+            color: var(--accent-red);
             font-size: 14px;
             margin-bottom: 16px;
+            font-weight: 600;
+            padding: 12px;
+            background: rgba(255, 59, 48, 0.1);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            backdrop-filter: blur(10px);
         }
+        
+        /* Liquid Glass WhatsApp Button */
         .whatsapp-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #25D366;
+            background: linear-gradient(135deg, #25D366, #128C7E);
             color: white;
-            padding: 12px 20px;
-            border-radius: 50px;
+            padding: 14px 24px;
+            border-radius: var(--radius-full);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             margin-top: 16px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+            letter-spacing: 0.3px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.7s backwards;
+        }
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+        .whatsapp-btn:active {
+            transform: translateY(0) scale(0.98);
         }
         .whatsapp-btn svg { width: 20px; height: 20px; }
     </style>
@@ -149,11 +381,9 @@
             }
             
             try {
-                // FIXED: Use the NEW endpoint that checks database FIRST, then Paystack
                 const response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${reference}`);
                 const data = await response.json();
                 
-                // SUCCESS: Payment is verified (either from database or Paystack)
                 if (data.verified) {
                     card.innerHTML = `
                         <div class="success-icon">
@@ -170,20 +400,18 @@
                         <a href="${BASE_PATH}/dashboard.html" class="btn-secondary">Go to Dashboard</a>
                     `;
                     
-                    // Auto-redirect to orders after 5 seconds
                     setTimeout(() => {
                         window.location.href = `${BASE_PATH}/orders.html`;
                     }, 5000);
                     
                 } else {
-                    // FAILED: Payment not completed
                     card.innerHTML = `
                         <div class="failed-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
-                        <h2 style="color: #e74c3c;">Payment Not Completed</h2>
+                        <h2 style="color: var(--accent-red);">Payment Not Completed</h2>
                         <p>⚠️ Transaction failed. Your registration will be processed. Please make sure your payment is confirmed so that registration will be completed.<br><br>${data.gateway_response ? '<strong>Reason:</strong> ' + data.gateway_response + '<br><br>' : ''}If you believe this is an error, please contact support.</p>
                         <div class="reference-box">
                             Reference: <strong>${reference}</strong>
