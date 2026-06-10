@@ -7,218 +7,577 @@
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
         :root {
-            --primary-yellow: #FFD700;
-            --dark-bg: #0a1628;
-            --dark-bg-gradient: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
             --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
             --text-white: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.6);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark-bg-gradient);
-            min-height: 100vh;
-            color: var(--text-white);
-            overflow-x: hidden;
-            padding-bottom: 100px;
+
+        html {
+            scroll-behavior: smooth;
         }
-        .orders-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: rgba(10, 22, 40, 0.6);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-        }
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--text-white);
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .orders-header-left { display: flex; align-items: center; gap: 12px; }
-        .orders-icon {
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .orders-icon svg { width: 20px; height: 20px; color: var(--primary-yellow); }
-        .orders-content { padding: 20px; max-width: 480px; margin: 0 auto; }
-        .section-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 14px 10px;
-            text-align: center;
-        }
-        .stat-value { font-size: 22px; font-weight: 800; color: var(--primary-yellow); }
-        .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-        .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
-        .order-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
-        }
-        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .order-id { font-size: 12px; color: var(--text-muted); font-family: monospace; }
-        .order-status {
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
-        .status-processing { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
-        .status-approved { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
-        .status-rejected { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-        .status-paid { background: rgba(255, 215, 0, 0.2); color: var(--primary-yellow); }
-        .status-failed { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-        .order-details { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; }
-        .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-        .detail-label { color: var(--text-muted); }
-        .detail-value { font-weight: 600; }
-        .admin-note {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-top: 12px;
-            font-size: 12px;
-            color: #FFC107;
-        }
-        .admin-note.rejected { background: rgba(244, 67, 54, 0.1); border-color: rgba(244, 67, 54, 0.3); color: #F44336; }
-        .admin-note.approved { background: rgba(76, 175, 80, 0.1); border-color: rgba(76, 175, 80, 0.3); color: #4CAF50; }
-        .admin-note.failed { background: rgba(244, 67, 54, 0.1); border-color: rgba(244, 67, 54, 0.3); color: #F44336; }
-        .admin-note.paid { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); color: var(--primary-yellow); }
-        .contact-support-btn {
+
+        body::before {
+            content: '';
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(90deg, #22c55e, #FFD700, #1a1a1a, #22c55e);
-            background-size: 300% 100%;
-            animation: colorShift 4.8s ease infinite;
-            border-radius: 50px;
-            padding: 14px 28px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 200;
-            text-decoration: none;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
         }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        
         @keyframes colorShift {
             0% { background-position: 0% 50%; }
             33% { background-position: 50% 50%; }
             66% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-bottom: 100px;
+            position: relative;
+        }
+        
+        /* Liquid Glass Fixed Header */
+        .orders-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 68px;
+            transition: all var(--transition-smooth);
+        }
+        
+        .orders-header.scrolled {
+            background: rgba(10, 15, 26, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Back Button */
+        .back-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-fast);
+        }
+        .back-btn:hover {
+            background: var(--glass-bg-hover);
+            color: var(--primary-yellow);
+            transform: translateX(-2px);
+        }
+        
+        .orders-header-left { display: flex; align-items: center; gap: 12px; }
+        
+        /* Liquid Glass Orders Icon */
+        .orders-icon {
+            width: 40px; 
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-radius: 12px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+        }
+        .orders-icon:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        .orders-icon svg { width: 20px; height: 20px; color: var(--text-dark); }
+        
+        .orders-header-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        
+        /* Content scrolls behind fixed header */
+        .orders-content { 
+            padding: 88px 20px 40px; 
+            max-width: 480px; 
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-title { 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth);
+        }
+        
+        /* Liquid Glass Stats Row */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 14px; 
+            margin-bottom: 24px; 
+        }
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 10px;
+            text-align: center;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) backwards;
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .stat-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .stat-value { 
+            font-size: 28px; 
+            font-weight: 800; 
+            color: var(--primary-yellow); 
+            letter-spacing: -1px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            transition: all var(--transition-fast);
+        }
+        .stat-card:hover .stat-value {
+            transform: scale(1.1);
+        }
+        .stat-label { 
+            font-size: 11px; 
+            color: var(--text-muted); 
+            margin-top: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            font-weight: 700;
+        }
+        
+        /* Empty State */
+        .empty-state { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: var(--text-muted); 
+            animation: fadeInUp 0.5s var(--transition-smooth);
+        }
+        .empty-state svg { 
+            width: 64px; 
+            height: 64px; 
+            margin-bottom: 16px; 
+            opacity: 0.5; 
+        }
+        
+        /* Liquid Glass Order Card */
+        .order-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 0.4s var(--transition-smooth) backwards;
+        }
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .order-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .order-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 14px; 
+        }
+        .order-id { 
+            font-size: 12px; 
+            color: var(--text-muted); 
+            font-family: monospace; 
+            font-weight: 600;
+        }
+        
+        /* Liquid Glass Status Badges */
+        .order-status {
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-fast);
+        }
+        .status-pending { 
+            background: rgba(255, 152, 0, 0.15); 
+            color: var(--accent-orange); 
+            border: 1px solid rgba(255, 152, 0, 0.25);
+        }
+        .status-processing { 
+            background: rgba(90, 200, 250, 0.15); 
+            color: var(--accent-blue); 
+            border: 1px solid rgba(90, 200, 250, 0.25);
+        }
+        .status-approved { 
+            background: rgba(52, 199, 89, 0.15); 
+            color: var(--accent-green); 
+            border: 1px solid rgba(52, 199, 89, 0.25);
+        }
+        .status-rejected { 
+            background: rgba(255, 59, 48, 0.15); 
+            color: var(--accent-red); 
+            border: 1px solid rgba(255, 59, 48, 0.25);
+        }
+        .status-paid { 
+            background: rgba(255, 215, 0, 0.15); 
+            color: var(--primary-yellow); 
+            border: 1px solid rgba(255, 215, 0, 0.25);
+        }
+        .status-failed { 
+            background: rgba(255, 59, 48, 0.15); 
+            color: var(--accent-red); 
+            border: 1px solid rgba(255, 59, 48, 0.25);
+        }
+        
+        .order-details { 
+            border-top: 1px solid rgba(255,255,255,0.1); 
+            padding-top: 14px; 
+        }
+        .detail-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 8px 0; 
+            font-size: 13px; 
+            transition: all var(--transition-fast);
+        }
+        .detail-row:hover {
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+        .detail-label { 
+            color: var(--text-muted); 
+            font-weight: 500;
+        }
+        .detail-value { 
+            font-weight: 700; 
+            color: var(--text-primary);
+        }
+        
+        /* Liquid Glass Admin Notes */
+        .admin-note {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-top: 14px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-fast);
+        }
+        .admin-note.rejected { 
+            background: rgba(255, 59, 48, 0.12); 
+            border-color: rgba(255, 59, 48, 0.25); 
+            color: var(--accent-red); 
+        }
+        .admin-note.approved { 
+            background: rgba(52, 199, 89, 0.12); 
+            border-color: rgba(52, 199, 89, 0.25); 
+            color: var(--accent-green); 
+        }
+        .admin-note.failed { 
+            background: rgba(255, 59, 48, 0.12); 
+            border-color: rgba(255, 59, 48, 0.25); 
+            color: var(--accent-red); 
+        }
+        .admin-note.paid { 
+            background: rgba(255, 215, 0, 0.12); 
+            border-color: rgba(255, 215, 0, 0.25); 
+            color: var(--primary-yellow); 
+        }
+        
+        /* Liquid Glass Contact Support Button */
+        .contact-support-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #22c55e, #FFD700, #1a1a1a, #22c55e);
+            background-size: 300% 100%;
+            animation: colorShift 4.8s ease infinite;
+            border-radius: var(--radius-full);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            text-decoration: none;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all var(--transition-fast);
+        }
+        .contact-support-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
         .contact-support-btn svg { width: 22px; height: 22px; color: white; }
-        .contact-support-text { color: white; font-size: 14px; font-weight: 600; }
+        .contact-support-text { color: white; font-size: 14px; font-weight: 700; }
+        
+        /* Loading Spinner */
         .loading-spinner {
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 40px;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #FFD700;
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,215,0,0.2);
+            border-top-color: var(--primary-yellow);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        
         .verify-loading {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 12px;
             color: var(--text-muted);
+            font-weight: 500;
         }
         .verify-loading .dot {
             width: 6px;
             height: 6px;
-            background: #FFD700;
+            background: var(--primary-yellow);
             border-radius: 50%;
-            animation: pulse 1.4s infinite;
+            animation: pulse-dot 1.4s infinite;
         }
         .verify-loading .dot:nth-child(2) { animation-delay: 0.2s; }
         .verify-loading .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
+        
+        /* Delete Order Button */
         .btn-delete-order {
-            margin-top: 12px;
+            margin-top: 14px;
             width: 100%;
-            padding: 10px;
-            background: rgba(244, 67, 54, 0.15);
-            border: 1px solid rgba(244, 67, 54, 0.3);
-            color: #F44336;
-            border-radius: 10px;
+            padding: 12px;
+            background: rgba(255, 59, 48, 0.12);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            color: var(--accent-red);
+            border-radius: var(--radius-sm);
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            transition: all 0.2s ease;
+            transition: all var(--transition-fast);
+            backdrop-filter: blur(10px);
+            letter-spacing: 0.3px;
         }
         .btn-delete-order:hover {
-            background: rgba(244, 67, 54, 0.25);
+            background: rgba(255, 59, 48, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 59, 48, 0.2);
+        }
+        .btn-delete-order:active {
+            transform: translateY(0) scale(0.98);
         }
         .btn-delete-order:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
+        
+        /* Liquid Glass Toast */
         .toast {
             position: fixed;
-            bottom: 80px;
+            bottom: 100px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            padding: 14px 24px;
-            border-radius: 12px;
+            transform: translateX(-50%) translateY(100px) scale(0.9);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 1001;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.4s var(--transition-spring);
             white-space: nowrap;
+            backdrop-filter: blur(40px) saturate(180%);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            max-width: 400px;
+            text-align: center;
         }
         .toast.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(0) scale(1);
         }
-        .toast-success { background: #4CAF50; color: white; }
-        .toast-error { background: #e74c3c; color: white; }
-        @media (min-width: 768px) { .orders-content { max-width: 720px; padding: 40px 24px; } }
+        .toast-success { 
+            background: rgba(52, 199, 89, 0.9); 
+            color: white; 
+        }
+        .toast-error { 
+            background: rgba(255, 59, 48, 0.9); 
+            color: white; 
+        }
+        
+        @media (min-width: 768px) { 
+            .orders-content { max-width: 720px; padding: 96px 24px 40px; }
+            .orders-header { padding: 20px 32px; height: 72px; }
+            .orders-content { padding-top: 96px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .orders-header { padding: 24px 48px; height: 76px; }
+            .orders-content { padding: 104px 24px 40px; }
+        }
     </style>
 </head>
 <body>
-    <header class="orders-header">
+    <header class="orders-header" id="ordersHeader">
         <a href="dashboard.html" class="back-btn">← Back</a>
         <div class="orders-header-left">
             <div class="orders-icon">
@@ -226,7 +585,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
             </div>
-            <div class="orders-header-text"><h2 style="font-size:16px;font-weight:700;">My Orders</h2></div>
+            <div class="orders-header-text"><h2>My Orders</h2></div>
         </div>
         <div style="width: 60px;"></div>
     </header>
@@ -252,7 +611,7 @@
         <div id="ordersList">
             <div class="loading-spinner">
                 <div class="spinner"></div>
-                <p style="color: var(--text-muted); font-size: 14px;">Loading your orders...</p>
+                <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Loading your orders...</p>
             </div>
         </div>
     </div>
@@ -273,11 +632,9 @@
         // FIXED: Use config.js getValidToken for auto-refresh
         // ============================================
         async function getAuthToken() {
-            // Use config.js getValidToken which handles auto-refresh
             if (typeof getValidToken === 'function') {
                 return await getValidToken();
             }
-            // Fallback to old method
             const session = getSessionUnified();
             return session ? (session.access_token || session.token) : null;
         }
@@ -331,27 +688,20 @@
         }
 
         // ============================================
-        // FIXED: API CALL with token refresh (uses config.js apiCall if available)
+        // FIXED: API CALL with token refresh
         // ============================================
         async function apiCallOrders(endpoint, method, body) {
-            // Try config.js apiCall first (has full token refresh logic)
             if (typeof apiCall === 'function') {
                 try {
                     return await apiCall(endpoint, method, body);
                 } catch (e) {
-                    // If config.js apiCall fails, fall through to our own
                     console.log('config.js apiCall failed, using fallback:', e.message);
                 }
             }
 
-            // Fallback: our own implementation with token refresh
             const token = await getAuthToken();
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            if (token) {
-                headers['Authorization'] = 'Bearer ' + token;
-            }
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
 
             const response = await fetch(API_BASE + endpoint, {
                 method: method || 'GET',
@@ -362,7 +712,6 @@
 
             const data = await response.json();
 
-            // Handle auth errors in response body
             if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
                 clearSession();
                 window.location.href = 'signin.html';
@@ -392,9 +741,7 @@
         // USER DELETE OWN ORDER
         // ============================================
         async function deleteUserOrder(orderId) {
-            if (!confirm('Are you sure you want to remove this order from your history? This will hide it from your view but your payment record remains on file.')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to remove this order from your history? This will hide it from your view but your payment record remains on file.')) return;
             
             const user = getUserUnified();
             const btn = document.getElementById('delete-btn-' + orderId);
@@ -525,10 +872,9 @@
         let approvedCount = 0;
 
         // ============================================
-        // FIXED: MAIN INIT with async auth + token refresh
+        // FIXED: MAIN INIT with async auth
         // ============================================
         async function initOrders() {
-            // Check authentication (async - will refresh token if needed)
             const authValid = await isAuthenticatedOrders();
             if (!authValid) {
                 console.log('User not authenticated, redirecting to signin');
@@ -543,7 +889,6 @@
                 const data = await apiCallOrders('/api/user/orders', 'POST', { userId: user.id });
                 
                 if (!data.success) {
-                    // If auth error from server, redirect to login
                     if (data.error && (data.error.includes('token') || data.error.includes('Access denied') || data.error.includes('Invalid or expired'))) {
                         if (typeof clearSession === 'function') clearSession();
                         window.location.href = 'signin.html';
@@ -552,24 +897,19 @@
                     throw new Error(data.error || 'Failed to load orders');
                 }
                 
-                // Cache orders for offline viewing
-                if (data.orders) {
-                    localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
-                }
+                if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
                 
                 await renderOrders(data.orders || []);
                 
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 
-                // If it's an auth error, redirect to login immediately
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     if (typeof clearSession === 'function') clearSession();
                     window.location.href = 'signin.html';
                     return;
                 }
                 
-                // Try to show cached data if available
                 const cachedOrders = localStorage.getItem('cachedOrders');
                 if (cachedOrders) {
                     try {
@@ -594,7 +934,7 @@
         }
 
         // ============================================
-        // PAGE VISIBILITY REFRESH (added)
+        // PAGE VISIBILITY REFRESH
         // ============================================
         let isRefreshingOrders = false;
         document.addEventListener('visibilitychange', async () => {
@@ -639,9 +979,7 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                if (status !== 'approved') {
-                    pendingCount++;
-                }
+                if (status !== 'approved') pendingCount++;
                 if (status === 'approved') approvedCount++;
                 
                 const date = order.created_at 
@@ -719,6 +1057,16 @@
         // START ON PAGE LOAD
         // ============================================
         document.addEventListener('DOMContentLoaded', initOrders);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('ordersHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>
