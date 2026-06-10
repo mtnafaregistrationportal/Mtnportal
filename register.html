@@ -707,6 +707,10 @@
                     return; 
                 }
 
+                // ============================================
+                // CRITICAL FIX: Removed amount from formData
+                // Backend now controls the amount (GH₵ 13.00)
+                // ============================================
                 const formData = {
                     fullName: document.getElementById('fullName').value.trim(),
                     phone: document.getElementById('phone').value.trim(),
@@ -716,8 +720,8 @@
                     location: document.getElementById('location').value.trim(),
                     dob: document.getElementById('dobInput').value,
                     occupation: document.getElementById('occupation').value.trim(),
-                    userId: user.id,
-                    amount: 13.40
+                    userId: user.id
+                    // ✅ REMOVED: amount - now controlled by backend only!
                 };
 
                 if (!/^\d{10}$/.test(formData.phone)) {
