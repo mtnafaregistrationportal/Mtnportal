@@ -7,17 +7,122 @@
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background-color: #0f172a;
-            color: #1e293b;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
             min-height: 100vh;
             padding-bottom: 40px;
-            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow-x: hidden;
         }
-        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
         
+        .container { max-width: 600px; margin: 0 auto; padding: 16px; position: relative; z-index: 1; }
+        
+        /* Page Header - kept as original */
         .page-header {
             display: flex;
             align-items: center;
@@ -25,20 +130,35 @@
             margin-bottom: 16px;
             padding-top: 16px;
         }
+        
+        /* Back Button */
         .back-btn {
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #f8fafc;
+            color: var(--text-primary);
             text-decoration: none;
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+        .back-btn:hover {
+            background: var(--glass-bg-hover);
+            color: var(--primary-yellow);
+            transform: translateX(-2px);
         }
         .back-btn svg { width: 20px; height: 20px; }
         
+        /* Logo Section - kept as original */
         .logo-section {
             text-align: center;
             margin-bottom: 20px;
+            animation: fadeInUp 0.5s var(--transition-smooth);
         }
         .mtn-icon-box {
             width: 60px;
@@ -53,106 +173,346 @@
             color: #1a1a1a;
             letter-spacing: -0.5px;
             margin: 0 auto 12px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+        }
+        .mtn-icon-box:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
         }
         .page-title {
-            color: #f8fafc;
+            color: var(--text-primary);
             font-size: 28px;
-            font-weight: 700;
+            font-weight: 800;
             text-align: center;
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
         }
         
+        /* My Orders Button */
         .my-orders-btn {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            border: none; border-radius: 12px; color: #0f172a;
-            font-size: 16px; font-weight: 600; cursor: pointer;
-            margin-bottom: 16px; transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%; 
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border: none; 
+            border-radius: var(--radius-md); 
+            color: var(--text-dark);
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer;
+            margin-bottom: 16px; 
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            letter-spacing: 0.3px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
         }
-        .my-orders-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3); }
+        .my-orders-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4); 
+        }
+        .my-orders-btn:active { 
+            transform: translateY(0) scale(0.98); 
+        }
+        
+        /* Liquid Glass Package Card */
         .package-card {
-            background-color: #1e293b; border-radius: 16px;
-            padding: 16px 20px; margin-bottom: 16px; border: 1px solid #334155;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px; 
+            margin-bottom: 16px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.15s backwards;
         }
-        .package-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; }
+        .package-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .package-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .package-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            transition: all var(--transition-fast);
+        }
+        .package-row:hover {
+            padding-left: 4px;
+            padding-right: 4px;
+        }
         .package-row:last-child { border-bottom: none; }
-        .package-label { color: #94a3b8; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .package-value { color: #f8fafc; font-size: 15px; font-weight: 600; }
-        .form-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .form-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-        .form-subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
-        .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 6px; }
-        .required { color: #dc2626; }
-        .form-input {
-            width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0;
-            border-radius: 10px; font-size: 15px; color: #0f172a;
-            background-color: #ffffff; transition: border-color 0.2s, box-shadow 0.2s;
+        .package-label { 
+            color: var(--text-muted); 
+            font-size: 12px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
         }
-        .form-input:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
-        .form-input::placeholder { color: #94a3b8; }
+        .package-value { 
+            color: var(--text-primary); 
+            font-size: 15px; 
+            font-weight: 700; 
+        }
+        
+        /* Liquid Glass Form Card */
+        .form-card { 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl); 
+            padding: 32px 28px; 
+            margin-bottom: 16px; 
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .form-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .form-title { 
+            font-size: 22px; 
+            font-weight: 800; 
+            color: var(--text-dark); 
+            margin-bottom: 6px; 
+            letter-spacing: -0.5px;
+        }
+        .form-subtitle { 
+            font-size: 13px; 
+            color: #666; 
+            margin-bottom: 24px; 
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-label { 
+            display: block; 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+            margin-bottom: 8px; 
+            letter-spacing: 0.3px;
+        }
+        .required { color: var(--accent-red); }
+        
+        /* Liquid Glass Form Inputs */
+        .form-input {
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            color: var(--text-dark);
+            background: rgba(0,0,0,0.03); 
+            transition: all var(--transition-fast);
+            font-family: inherit;
+            outline: none;
+        }
+        .form-input:focus { 
+            outline: none; 
+            border-color: var(--primary-yellow); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.15); 
+            transform: scale(1.01);
+        }
+        .form-input::placeholder { color: #aaa; }
         
         input[type="date"].form-input {
-            color: #94a3b8;
+            color: #aaa;
             appearance: none;
             -webkit-appearance: none;
             min-height: 44px;
         }
-        input[type="date"].form-input.has-value { color: #0f172a; }
+        input[type="date"].form-input.has-value { color: var(--text-dark); }
         
         .input-hint {
             font-size: 12px;
             color: #64748b;
             margin-top: 4px;
             font-style: italic;
+            transition: all var(--transition-fast);
         }
         .input-hint.warning {
-            color: #dc2626;
+            color: var(--accent-red);
             font-weight: 600;
         }
         
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
         .shake {
             animation: shake 0.5s ease-in-out;
-            border-color: #dc2626 !important;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+            border-color: var(--accent-red) !important;
+            box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.15) !important;
         }
         
-        .summary-card { background-color: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .summary-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
-        .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .summary-label { color: #64748b; font-size: 14px; }
-        .summary-value { color: #0f172a; font-size: 14px; font-weight: 600; }
+        /* Liquid Glass Summary Card */
+        .summary-card { 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl); 
+            padding: 32px 28px; 
+            margin-bottom: 16px; 
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring) 0.1s backwards;
+            position: relative;
+            overflow: hidden;
+        }
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .summary-title { 
+            font-size: 22px; 
+            font-weight: 800; 
+            color: var(--text-dark); 
+            margin-bottom: 20px; 
+            letter-spacing: -0.5px;
+        }
+        .summary-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all var(--transition-fast);
+        }
+        .summary-row:hover {
+            padding-left: 8px;
+            padding-right: 8px;
+            background: rgba(0,0,0,0.02);
+            border-radius: var(--radius-sm);
+            margin: 0 -8px 12px;
+        }
+        .summary-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .summary-row:last-child:hover {
+            margin-bottom: 0;
+        }
+        .summary-label { 
+            color: #666; 
+            font-size: 14px; 
+            font-weight: 500;
+        }
+        .summary-value { 
+            color: var(--text-dark); 
+            font-size: 14px; 
+            font-weight: 700; 
+        }
+        
+        /* Submit Button */
         .submit-btn {
-            width: 100%; padding: 16px;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            border: none; border-radius: 14px; color: #0f172a;
-            font-size: 17px; font-weight: 700; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+            width: 100%; 
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border: none; 
+            border-radius: var(--radius-md); 
+            color: var(--text-dark);
+            font-size: 17px; 
+            font-weight: 700; 
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.35);
+            letter-spacing: 0.3px;
+            animation: pulse-glow 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
         }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(251, 191, 36, 0.4); }
-        .submit-btn:active { transform: translateY(0); }
-        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .submit-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 28px rgba(255, 215, 0, 0.5); 
+        }
+        .submit-btn:active { 
+            transform: translateY(0) scale(0.98); 
+        }
+        .submit-btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+            transform: none;
+            animation: none;
+        }
+        
         .spinner {
-            display: inline-block; width: 18px; height: 18px;
-            border: 2px solid rgba(15, 23, 42, 0.3);
-            border-radius: 50%; border-top-color: #0f172a;
-            animation: spin 0.8s linear infinite; margin-right: 8px;
+            display: inline-block; 
+            width: 18px; 
+            height: 18px;
+            border: 2px solid rgba(26, 26, 26, 0.3);
+            border-radius: 50%; 
+            border-top-color: var(--text-dark);
+            animation: spin 0.8s linear infinite; 
+            margin-right: 8px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Liquid Glass Error Message */
         .error-msg {
-            background-color: #fef2f2; border: 1px solid #fecaca;
-            color: #dc2626; padding: 12px 16px; border-radius: 10px;
-            margin-bottom: 16px; font-size: 14px; display: none;
+            background: rgba(255, 59, 48, 0.12);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            color: var(--accent-red); 
+            padding: 12px 16px; 
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px; 
+            font-size: 14px; 
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
         }
         .error-msg.visible { display: block; }
+        
         @media (max-width: 480px) {
             .container { padding: 12px; }
             .page-title { font-size: 24px; }
+            .form-card { padding: 24px 20px; }
+            .summary-card { padding: 24px 20px; }
         }
     </style>
 </head>
@@ -202,7 +562,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">ID Type <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="idType" value="Ghana Card" readonly style="background-color: #e2e8f0; cursor: not-allowed;">
+                    <input type="text" class="form-input" id="idType" value="Ghana Card" readonly style="background-color: rgba(0,0,0,0.06); cursor: not-allowed;">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Ghana Card ID Number <span class="required">*</span></label>
