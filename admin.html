@@ -1550,11 +1550,15 @@
         // Returns registration status badge + payment badge
         // Approval does NOT affect payment status
         function getRegistrationStatusBadge(order) {
+            const isPaystackVerified = order.paystack_verified === true || order.paystack_verified === 'true';
+            const hasPaidAt = order.paid_at && order.paid_at !== null;
+            const isPaid = isPaystackVerified || hasPaidAt || order.status === 'paid';
+            
             // If approved - show COMPLETED + PAID badge (if paid)
             if (order.status === 'approved') {
-                const paymentBadge = (order.paystack_verified || order.paid_at) 
+                const paymentBadge = isPaid
                     ? `<div class="payment-status-banner paid">✅ PAID</div>` 
-                    : '';
+                    : `<div class="payment-status-banner failed">❌ FAILED</div>`;
                 return {
                     html: `${paymentBadge}
                            <div class="reg-status-badge approved">✅ COMPLETED</div>`,
@@ -1563,11 +1567,11 @@
                     showActions: false
                 };
             }
-            // If rejected - show REJECTED + FAILED badge (if failed payment)
+            // If rejected - show REJECTED + FAILED badge (if not paid)
             if (order.status === 'rejected') {
-                const paymentBadge = (order.paystack_verified || order.paid_at) 
+                const paymentBadge = isPaid
                     ? `<div class="payment-status-banner paid">✅ PAID</div>` 
-                    : `<div class="payment-status-banner failed">❌ FAILED TRANSACTION</div>`;
+                    : `<div class="payment-status-banner failed">❌ FAILED</div>`;
                 return {
                     html: `${paymentBadge}
                            <div class="reg-status-badge rejected">❌ REJECTED</div>`,
@@ -1576,29 +1580,34 @@
                     showActions: false
                 };
             }
-            // For pending/paid/failed - show payment status banner
-            if (order.status === 'paid') {
-                return {
-                    html: `<div class="payment-status-banner paid">✅ PAID</div>
-                           <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
-                    isApproved: false,
-                    isRejected: false,
-                    showActions: true
-                };
-            }
+            // For pending/failed/paid - show payment status only
             if (order.status === 'failed') {
                 return {
-                    html: `<div class="payment-status-banner failed">❌ FAILED TRANSACTION</div>
-                           <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
+                    html: `<div class="payment-status-banner failed">❌ FAILED</div>`,
                     isApproved: false,
                     isRejected: false,
                     showActions: true
                 };
             }
-            // Default pending
+            if (order.status === 'paid') {
+                return {
+                    html: `<div class="payment-status-banner paid">✅ PAID</div>`,
+                    isApproved: false,
+                    isRejected: false,
+                    showActions: true
+                };
+            }
+            // Default pending - show based on payment verification
+            if (isPaid) {
+                return {
+                    html: `<div class="payment-status-banner paid">✅ PAID</div>`,
+                    isApproved: false,
+                    isRejected: false,
+                    showActions: true
+                };
+            }
             return {
-                html: `<div class="payment-status-banner pending">⏳ PENDING</div>
-                       <div class="reg-status-badge pending">⏳ PENDING APPROVAL</div>`,
+                html: `<div class="payment-status-banner failed">❌ FAILED</div>`,
                 isApproved: false,
                 isRejected: false,
                 showActions: true
@@ -1742,7 +1751,8 @@
                         dotClass = r.admin_attended ? 'attended' : 'unattended';
                     }
                     
-                    // Amount: 0.00 for failed, 13.00 for paid/approved/pending
+                    // Amount: 0.00 for failed, actual amount for paid/approved/pending
+                    const isPaid = r.paystack_verified === true || r.paystack_verified === 'true' || r.paid_at || r.status === 'paid';
                     const displayAmount = r.status === 'failed' ? 0.00 : (r.amount || 13.00);
                     
                     const safeName = (r.applicant_name || 'Unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1986,12 +1996,10 @@
         }
 
         async function deletePayment(paymentId) {
-            if (!confirm('Are you sure you want to delete this payment record? This will NOT affect the user order history.')) return;
+            if (!confirm('Are you sure you want to delete this payment record? This will NOT affect the user order history or revenue.')) return;
             
             showLoading(true);
             try {
-                // NOTE: This endpoint may not exist on your backend. 
-                // If it doesn't work, remove this button or add the endpoint.
                 const data = await adminApiCall('/api/admin/delete-payment', 'POST', {
                     orderId: paymentId
                 });
