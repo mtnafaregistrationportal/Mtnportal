@@ -7,68 +7,233 @@
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
-            color: #ffffff;
+            color: var(--text-primary);
             overflow-x: hidden;
+            position: relative;
         }
+        
+        /* Fixed Header - Liquid Glass */
         .landing-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 16px 20px;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 68px;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all var(--transition-smooth);
         }
+        
+        .landing-header.scrolled {
+            background: rgba(10, 15, 26, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
         .logo-center {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        
         .logo-box {
             width: 40px; height: 40px;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 13px;
-            color: #FFD700;
+            font-weight: 900; font-size: 11px;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+            border: none;
         }
-        .brand-name { font-size: 18px; font-weight: 700; }
+        .logo-box:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+        
         .header-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #FFD700;
-            color: #1a1a1a;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
             font-size: 13px;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 50px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
             border: none;
             cursor: pointer;
             text-decoration: none;
-            box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
             white-space: nowrap;
+            transition: all var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
         }
+        .header-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+        }
+        .header-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+        
+        /* Hero Section - scrolls behind header */
         .hero-section {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 16px 20px 32px;
+            padding: 88px 20px 32px;
+            position: relative;
+            z-index: 1;
+            min-height: calc(100vh - 48px);
+            animation: fadeInUp 0.6s var(--transition-smooth);
         }
+        
         .carousel-container {
             width: 100%;
             max-width: 400px;
-            border-radius: 24px;
+            border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            box-shadow: 
+                0 16px 48px var(--glass-shadow-strong),
+                inset 0 1px 0 var(--glass-highlight);
             margin-bottom: 24px;
+            transition: all var(--transition-smooth);
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            position: relative;
         }
+        .carousel-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+            z-index: 2;
+        }
+        .carousel-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 24px 72px var(--glass-shadow-strong),
+                inset 0 1px 0 var(--glass-highlight);
+            background: var(--glass-bg-hover);
+        }
+        
         .carousel-slide {
             display: none;
             width: 100%;
@@ -86,130 +251,164 @@
             width: 100%; height: 100%;
             object-fit: cover; display: block;
         }
+        
         .carousel-dots {
             display: flex;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
         }
         .dot {
             width: 10px; height: 10px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            border: 2px solid rgba(255,255,255,0.5);
+            background: var(--glass-bg);
+            border: 1.5px solid var(--glass-border);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all var(--transition-fast);
+            backdrop-filter: blur(10px);
         }
-        .dot.active {
-            background: #FFD700;
-            border-color: #FFD700;
+        .dot:hover {
+            background: var(--glass-bg-hover);
             transform: scale(1.2);
         }
+        .dot.active {
+            background: var(--primary-yellow);
+            border-color: var(--primary-yellow);
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+        }
+        
         .hero-text {
             text-align: center;
             max-width: 340px;
+            position: relative;
+            z-index: 1;
         }
         .hero-title {
             font-size: 32px;
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 12px;
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
         }
         .hero-subtitle {
             font-size: 15px;
-            color: rgba(255,255,255,0.85);
+            color: var(--text-secondary);
             line-height: 1.5;
             margin-bottom: 20px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.2s backwards;
         }
+        
         .btn-primary {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: #FFD700;
-            color: #1a1a1a;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
             font-size: 15px;
-            font-weight: 600;
-            padding: 12px 28px;
-            border-radius: 50px;
+            font-weight: 700;
+            padding: 14px 32px;
+            border-radius: var(--radius-full);
             border: none;
             cursor: pointer;
             text-decoration: none;
-            box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.35);
             width: 100%;
             max-width: 280px;
+            transition: all var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.3s backwards;
+            animation: pulse-glow 2s ease-in-out infinite;
         }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255, 215, 0, 0.5);
+        }
+        .btn-primary:active {
+            transform: translateY(0) scale(0.97);
+        }
+        
+        /* Regular Footer - NOT fixed, scrolls with content */
         .landing-footer {
             text-align: center;
             padding: 16px 20px;
             font-size: 12px;
-            color: rgba(255,255,255,0.6);
+            color: var(--text-muted);
+            position: relative;
+            z-index: 1;
+            background: transparent;
         }
+        
         @media (min-width: 600px) {
-            .landing-header { padding: 20px 32px; }
-            .logo-box { width: 44px; height: 44px; font-size: 14px; }
+            .landing-header { padding: 20px 32px; height: 72px; }
+            .logo-box { width: 44px; height: 44px; font-size: 12px; }
             .brand-name { font-size: 20px; }
-            .header-btn { font-size: 14px; padding: 10px 22px; }
-            .hero-section { padding: 24px 32px 40px; }
+            .header-btn { font-size: 14px; padding: 10px 24px; }
+            .hero-section { padding: 96px 32px 40px; min-height: calc(100vh - 52px); }
             .hero-title { font-size: 40px; margin-bottom: 14px; }
             .hero-subtitle { font-size: 16px; margin-bottom: 22px; }
-            .btn-primary { font-size: 16px; padding: 14px 32px; width: auto; max-width: none; }
+            .btn-primary { font-size: 16px; padding: 16px 36px; width: auto; max-width: none; }
             .carousel-container { margin-bottom: 28px; }
-            .carousel-dots { margin-bottom: 28px; gap: 10px; }
-            .landing-footer { padding: 20px 32px; }
+            .carousel-dots { margin-bottom: 28px; gap: 12px; }
+            .landing-footer { padding: 20px 32px; font-size: 13px; }
         }
         @media (min-width: 1024px) {
-            .landing-header { padding: 24px 48px; }
-            .hero-section { padding: 32px 48px 48px; }
+            .landing-header { padding: 24px 48px; height: 76px; }
+            .hero-section { padding: 104px 48px 48px; min-height: calc(100vh - 56px); }
             .hero-title { font-size: 48px; margin-bottom: 16px; }
             .hero-subtitle { font-size: 18px; margin-bottom: 28px; }
             .carousel-container { max-width: 460px; margin-bottom: 32px; }
             .carousel-dots { margin-bottom: 32px; }
-            .btn-primary { padding: 16px 36px; font-size: 17px; }
-            .landing-footer { padding: 24px 48px; }
+            .btn-primary { padding: 18px 40px; font-size: 17px; }
+            .landing-footer { padding: 24px 48px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
-    <div style="min-height: 100vh; display: flex; flex-direction: column;">
-        <header class="landing-header">
-            <div class="logo-center">
-                <div class="logo-box">MTN</div>
-                <span class="brand-name">MTN Ghana</span>
-            </div>
-            <a href="create.html" class="header-btn">Sign Up</a>
-        </header>
+    <header class="landing-header" id="landingHeader">
+        <div class="logo-center">
+            <div class="logo-box">MTN</div>
+            <span class="brand-name">MTN Ghana</span>
+        </div>
+        <a href="create.html" class="header-btn">Sign Up</a>
+    </header>
 
-        <section class="hero-section" style="flex: 1;">
-            <div class="carousel-container">
-                <div class="carousel-slide active">
-                    <img src="Mtnp.JPG" alt="MTN AFA">
-                </div>
-                <div class="carousel-slide">
-                    <img src="Mtn.JPG" alt="MTN">
-                </div>
-                <div class="carousel-slide">
-                    <img src="IMG_8059.WEBP" alt="MTN Promo">
-                </div>
+    <section class="hero-section">
+        <div class="carousel-container">
+            <div class="carousel-slide active">
+                <img src="Mtnp.JPG" alt="MTN AFA">
             </div>
-
-            <div class="carousel-dots">
-                <span class="dot active" onclick="goToSlide(0)"></span>
-                <span class="dot" onclick="goToSlide(1)"></span>
-                <span class="dot" onclick="goToSlide(2)"></span>
+            <div class="carousel-slide">
+                <img src="Mtn.JPG" alt="MTN">
             </div>
-
-            <div class="hero-text">
-                <h1 class="hero-title">AFA Association Bundles</h1>
-                <p class="hero-subtitle">Enjoy the association bundle offers at discounted prices</p>
-                <a href="create.html" class="btn-primary">Sign Up &rarr;</a>
+            <div class="carousel-slide">
+                <img src="IMG_8059.WEBP" alt="MTN Promo">
             </div>
-        </section>
+        </div>
 
-        <footer class="landing-footer">
-            &copy; MTN Ghana. All rights reserved.
-        </footer>
-    </div>
+        <div class="carousel-dots">
+            <span class="dot active" onclick="goToSlide(0)"></span>
+            <span class="dot" onclick="goToSlide(1)"></span>
+            <span class="dot" onclick="goToSlide(2)"></span>
+        </div>
+
+        <div class="hero-text">
+            <h1 class="hero-title">AFA Association Bundles</h1>
+            <p class="hero-subtitle">Enjoy the association bundle offers at discounted prices</p>
+            <a href="create.html" class="btn-primary">Sign Up &rarr;</a>
+        </div>
+    </section>
+
+    <footer class="landing-footer">
+        &copy; MTN Ghana. All rights reserved.
+    </footer>
 
     <script src="config.js"></script>
     <script src="glass.js"></script>
@@ -233,6 +432,16 @@
         }
 
         setInterval(nextSlide, 3000);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('landingHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>
