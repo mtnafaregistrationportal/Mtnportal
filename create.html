@@ -7,146 +7,477 @@
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0a1628 0%, #0d2b3a 50%, #0a1f2e 100%);
-            min-height: 100vh;
-            color: #ffffff;
-            overflow-x: hidden;
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .auth-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: rgba(10,22,40,0.6);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+
+        html {
+            scroll-behavior: smooth;
         }
-        .auth-header-left { display: flex; align-items: center; gap: 12px; }
-        .auth-icon {
-            width: 40px; height: 40px;
-            background: #FFD700;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            border: none;
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
         }
-        .auth-icon span {
-            font-size: 13px;
-            font-weight: 800;
-            color: #1a1a1a;
-            letter-spacing: -0.5px;
-            font-family: 'Inter', sans-serif;
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
         }
-        .auth-header-text h2 { font-size: 16px; font-weight: 700; }
-        .btn-yellow {
-            background: #FFD700; color: #1a1a1a;
-            font-size: 14px; font-weight: 600; padding: 10px 20px;
-            border-radius: 50px; border: none; cursor: pointer;
-            text-decoration: none; display: inline-block;
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .auth-content {
-            padding: 24px 20px; max-width: 480px;
-            margin: 0 auto;
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .auth-card {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(30px);
-            border-radius: 24px;
-            padding: 32px 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
         }
-        .auth-card h3 { color: #1a1a1a; font-size: 24px; font-weight: 700; margin-bottom: 6px; text-align: center; }
-        .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; text-align: center; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; color: #1a1a1a; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
-        .input-wrapper { position: relative; }
-        .form-input {
-            width: 100%; padding: 14px 16px; border: 1.5px solid #e0e0e0;
-            border-radius: 14px; font-size: 15px; font-family: inherit;
-            color: #1a1a1a; background: #fafafa; outline: none;
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
-        .form-input:focus { border-color: #FFD700; background: #fff; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
-        .form-input::placeholder { color: #aaa; }
-        .form-input.error { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15); }
-        .error-msg { color: #e74c3c; font-size: 12px; margin-top: 6px; display: none; }
-        .error-msg.show { display: block; }
-        .field-error-msg {
-            background: rgba(231, 76, 60, 0.15);
-            color: #e74c3c;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
         }
-        .field-error-msg.show { display: block; }
-        .duplicate-msg {
-            background: rgba(255, 152, 0, 0.15);
-            border: 1px solid rgba(255, 152, 0, 0.3);
-            color: #FF9800;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
-        }
-        .duplicate-msg.show { display: block; }
-        .duplicate-msg a {
-            color: #1a1a1a;
-            font-weight: 600;
-            text-decoration: underline;
-        }
-        .success-msg {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4CAF50;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
-        }
-        .success-msg.show { display: block; }
-        .password-toggle {
-            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-            background: none; border: 1.5px solid #ddd; border-radius: 8px;
-            padding: 6px 12px; font-size: 13px; color: #666; cursor: pointer;
-        }
-        .btn-submit {
-            width: 100%; padding: 16px; background: #1a1a1a;
-            color: white; font-size: 16px; font-weight: 600;
-            border: none; border-radius: 14px; cursor: pointer; margin-top: 8px;
-        }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
-        .auth-link a { color: #1a1a1a; font-weight: 600; text-decoration: underline; }
-        .phone-hint {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-        .phone-hint.warning {
-            color: #e74c3c;
-            font-weight: 600;
-        }
+        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Liquid Glass Fixed Header */
+        .auth-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 68px;
+            transition: all var(--transition-smooth);
+        }
+        
+        .auth-header.scrolled {
+            background: rgba(10, 15, 26, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
+        .auth-header-left { display: flex; align-items: center; gap: 12px; }
+        
+        /* Liquid Glass Logo Icon */
+        .auth-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+        }
+        .auth-icon:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        .auth-icon span {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .auth-header-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        
+        /* Liquid Glass Yellow Button */
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
+            font-size: 13px; font-weight: 700;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            border: none; cursor: pointer;
+            text-decoration: none; display: inline-block;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+        }
+        .btn-yellow:active {
+            transform: translateY(0) scale(0.97);
+        }
+        
+        /* Content scrolls behind fixed header */
+        .auth-content {
+            padding: 88px 20px 40px;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Liquid Glass Auth Card */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl);
+            padding: 44px 32px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .auth-card h3 { 
+            color: var(--text-dark); 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            text-align: center; 
+            letter-spacing: -0.5px;
+        }
+        .subtitle { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 32px; 
+            text-align: center; 
+            font-weight: 400;
+        }
+        
+        .form-group { 
+            margin-bottom: 22px; 
+            position: relative;
+        }
+        .form-group label { 
+            display: block; 
+            color: var(--text-dark); 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.3px;
+        }
+        
+        /* Input wrapper with proper spacing for toggle button */
+        .input-wrapper { 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Liquid Glass Form Inputs - with right padding for toggle */
+        .form-input {
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            font-family: inherit;
+            color: var(--text-dark); 
+            background: rgba(0,0,0,0.03); 
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+        /* Extra right padding for password input to prevent toggle overlap */
+        .form-input[type="password"],
+        .form-input[type="text"] {
+            padding-right: 80px;
+        }
+        .form-input:focus { 
+            border-color: var(--primary-yellow); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.15); 
+            transform: scale(1.01);
+        }
+        .form-input::placeholder { 
+            color: #aaa; 
+            opacity: 1;
+        }
+        .form-input.error { 
+            border-color: var(--accent-red); 
+            box-shadow: 0 0 0 4px rgba(255,59,48,0.15); 
+            animation: shake 0.4s ease-in-out;
+        }
+        
+        .error-msg { 
+            color: var(--accent-red); 
+            font-size: 12px; 
+            margin-top: 6px; 
+            display: none; 
+            font-weight: 500;
+            padding: 6px 10px;
+            background: rgba(255, 59, 48, 0.08);
+            border-radius: 8px;
+        }
+        .error-msg.show { display: block; }
+        
+        /* Liquid Glass Error Messages */
+        .field-error-msg {
+            background: rgba(255, 59, 48, 0.12);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .field-error-msg.show { display: block; animation: fadeInUp 0.3s var(--transition-smooth); }
+        
+        .duplicate-msg {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            color: var(--accent-orange);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+        .duplicate-msg.show { display: block; animation: fadeInUp 0.3s var(--transition-smooth); }
+        .duplicate-msg a {
+            color: var(--text-dark);
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        
+        .success-msg {
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--accent-green);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .success-msg.show { display: block; animation: fadeInUp 0.3s var(--transition-smooth); }
+        
+        /* Liquid Glass Password Toggle - positioned inside input */
+        .password-toggle {
+            position: absolute; 
+            right: 8px; 
+            top: 50%; 
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.06); 
+            border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: var(--radius-sm);
+            padding: 8px 14px; 
+            font-size: 12px; 
+            color: #666; 
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .password-toggle:hover {
+            background: rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            transform: translateY(-50%) translateY(-1px);
+        }
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        /* Liquid Glass Submit Button */
+        .btn-submit {
+            width: 100%; 
+            padding: 18px; 
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: white; 
+            font-size: 16px; 
+            font-weight: 700;
+            border: none; 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            margin-top: 8px;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .btn-submit:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-submit:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-link { 
+            text-align: center; 
+            margin-top: 24px; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .auth-link a { 
+            color: var(--text-dark); 
+            font-weight: 700; 
+            text-decoration: underline; 
+            transition: all var(--transition-fast);
+        }
+        .auth-link a:hover {
+            color: #000;
+        }
+        
+        .phone-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+            transition: all var(--transition-fast);
+        }
+        .phone-hint.warning {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+        
         .shake {
             animation: shake 0.5s ease-in-out;
         }
+        
+        /* Responsive */
         @media (min-width: 768px) {
-            .auth-content { max-width: 520px; padding: 40px 24px; }
+            .auth-content { max-width: 520px; padding: 96px 24px 40px; }
+            .auth-header { padding: 20px 32px; height: 72px; }
+            .auth-content { padding-top: 96px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .auth-header { padding: 24px 48px; height: 76px; }
+            .auth-content { padding: 104px 24px 40px; }
         }
     </style>
 </head>
 <body>
     <div style="min-height: 100vh; display: flex; flex-direction: column;">
-        <header class="auth-header">
+        <header class="auth-header" id="authHeader">
             <div class="auth-header-left">
                 <div class="auth-icon">
                     <span>MTN</span>
@@ -173,7 +504,7 @@
                 <div class="success-msg" id="successMsg"></div>
 
                 <div class="form-group">
-                    <label>Full Name <span style="color: #e74c3c;">*</span></label>
+                    <label>Full Name <span style="color: var(--accent-red);">*</span></label>
                     <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe">
                     <p class="error-msg" id="nameError">Please enter your full name.</p>
                 </div>
@@ -184,20 +515,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Phone Number <span style="color: #e74c3c;">*</span></label>
+                    <label>Phone Number <span style="color: var(--accent-red);">*</span></label>
                     <input type="tel" id="phoneNumber" class="form-input" placeholder="0240000000" maxlength="10">
                     <p class="phone-hint" id="phoneHint">Must be exactly 10 digits (e.g. 0240000000)</p>
                     <p class="error-msg" id="phoneError">Phone number must be exactly 10 digits.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Email Address <span style="color: #e74c3c;">*</span></label>
+                    <label>Email Address <span style="color: var(--accent-red);">*</span></label>
                     <input type="email" id="email" class="form-input" placeholder="you@example.com">
                     <p class="error-msg" id="emailError">Please enter a valid email address.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Password <span style="color: #e74c3c;">*</span></label>
+                    <label>Password <span style="color: var(--accent-red);">*</span></label>
                     <div class="input-wrapper">
                         <input type="password" id="createPassword" class="form-input" placeholder="Minimum 6 characters">
                         <button type="button" class="password-toggle" onclick="togglePassword('createPassword', this)">Show</button>
@@ -416,6 +747,16 @@
                 }
             }
         }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('authHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>
