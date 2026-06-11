@@ -360,27 +360,21 @@
             }
             
             try {
-                // Try check-status first (checks DB first, then Paystack)
                 let response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}`);
                 let data = await response.json();
                 
-                // If check-status fails, try verify-status
                 if (!data.success || data.error) {
                     response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}`);
                     data = await response.json();
                 }
                 
-                // ============================================
-                // FIXED: Correctly determine if payment was successful
-                // ============================================
                 const isSuccess = data.verified === true || 
                                   data.status === 'paid' || 
                                   data.from_database === true ||
                                   (data.success === true && data.verified !== false);
                 
                 if (isSuccess) {
-                    // SUCCESS STATE
-                    const amount = data.amount || '13.00';
+                    const amount = data.amount || '13.40';
                     
                     card.innerHTML = `
                         <div class="success-icon">
@@ -397,13 +391,11 @@
                         <a href="${BASE_PATH}/dashboard.html" class="btn-secondary">Go to Dashboard</a>
                     `;
                     
-                    // Auto-redirect to orders after 5 seconds
                     setTimeout(() => {
                         window.location.href = `${BASE_PATH}/orders.html`;
                     }, 5000);
                     
                 } else {
-                    // FAILED STATE
                     card.innerHTML = `
                         <div class="failed-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
