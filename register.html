@@ -360,7 +360,7 @@
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
             -webkit-backdrop-filter: blur(60px) saturate(200%);
-            border-radius: var(--radius-xl-xl); 
+            border-radius: var(--radius-xl); 
             padding: 32px 28px; 
             margin-bottom: 16px; 
             box-shadow: 
@@ -583,6 +583,7 @@
         </form>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
@@ -703,7 +704,14 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Processing...';
 
             try {
-                let user = getUser();
+                let user = null;
+                
+                // Try to get user from config.js getUser()
+                if (typeof getUser === 'function') {
+                    user = getUser();
+                }
+                
+                // Fallback to localStorage
                 if (!user || !user.id) {
                     user = {
                         id: localStorage.getItem('userId'),
@@ -746,13 +754,42 @@
                     throw new Error('Please fill in all required fields');
                 }
 
-                const data = await apiCall('/api/register', 'POST', formData);
-                if (!data.success) throw new Error(data.error);
+                // ============================================
+                // FIXED: Use apiCall from config.js which goes to server
+                // NOT supabaseClient.from('orders').insert() directly
+                // ============================================
+                let data;
+                if (typeof apiCall === 'function') {
+                    data = await apiCall('/api/register', 'POST', formData);
+                } else {
+                    // Fallback if apiCall not available
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    
+                    const response = await fetch('https://mtn-afa-api.onrender.com/api/register', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(formData),
+                        credentials: 'include'
+                    });
+                    
+                    data = await response.json();
+                }
+                
+                if (!data.success) {
+                    // Show actual server error
+                    throw new Error(data.error || 'Registration failed. Please try again.');
+                }
 
                 // Redirect to Paystack
                 window.location.href = data.authorization_url;
             } catch (error) {
-                const isNetworkError = error.message && error.message.includes('Unable to connect');
+                const isNetworkError = error.message && (
+                    error.message.includes('Unable to connect') || 
+                    error.message.includes('network') ||
+                    error.message.includes('fetch')
+                );
                 showError(error.message || 'Something went wrong. Please try again.', isNetworkError);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
