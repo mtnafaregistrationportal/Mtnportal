@@ -18,7 +18,6 @@
             --glass-highlight: rgba(255, 255, 255, 0.25);
             --glass-shadow: rgba(0, 0, 0, 0.15);
             --glass-shadow-strong: rgba(0, 0, 0, 0.25);
-            
             --primary-yellow: #FFD700;
             --primary-yellow-glow: rgba(255, 215, 0, 0.3);
             --accent-blue: #5AC8FA;
@@ -26,33 +25,25 @@
             --accent-red: #FF3B30;
             --accent-orange: #FF9500;
             --accent-purple: #AF52DE;
-            
             --text-white: #ffffff;
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.65);
             --text-muted: rgba(255, 255, 255, 0.45);
             --text-dark: #1a1a1a;
-            
             --bg-deep: #0a0f1a;
             --bg-gradient-start: #0a0f1a;
             --bg-gradient-mid: #0d1b2a;
             --bg-gradient-end: #0a1520;
-            
             --radius-sm: 12px;
             --radius-md: 20px;
             --radius-lg: 28px;
             --radius-xl: 36px;
             --radius-full: 9999px;
-            
             --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        html { scroll-behavior: smooth; }
         body::before {
             content: '';
             position: fixed;
@@ -68,43 +59,35 @@
             pointer-events: none;
             z-index: 0;
         }
-        
         @keyframes meshMove {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             33% { transform: translate(2%, 2%) rotate(1deg); }
             66% { transform: translate(-1%, 1%) rotate(-1deg); }
         }
-
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
         @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
-        
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(30px); }
             to { opacity: 1; transform: translateX(0); }
         }
-        
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
             50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
         }
-        
         @keyframes slideUp { 
             from { transform: translateX(-50%) translateY(20px); opacity: 0; } 
             to { transform: translateX(-50%) translateY(0); opacity: 1; } 
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -115,7 +98,6 @@
             padding-bottom: 80px;
             position: relative;
         }
-        
         .dash-header {
             display: flex;
             align-items: center;
@@ -133,14 +115,11 @@
             height: 68px;
             transition: all var(--transition-smooth);
         }
-        
         .dash-header.scrolled {
             background: rgba(10, 15, 26, 0.9);
             box-shadow: 0 4px 30px rgba(0,0,0,0.3);
         }
-        
         .dash-header-left { display: flex; align-items: center; gap: 12px; }
-        
         .mtn-icon-box {
             width: 44px;
             height: 44px;
@@ -161,7 +140,6 @@
             transform: scale(1.08) rotate(-3deg);
             box-shadow: 0 6px 20px rgba(245, 200, 66, 0.4);
         }
-        
         .profile-pic-header {
             width: 44px;
             height: 44px;
@@ -172,16 +150,10 @@
             box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
             transition: all var(--transition-fast);
         }
-        .profile-pic-header.show {
-            display: block;
-        }
-        .profile-pic-header:hover {
-            transform: scale(1.08);
-        }
-        
+        .profile-pic-header.show { display: block; }
+        .profile-pic-header:hover { transform: scale(1.08); }
         .dash-header-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
         .dash-header-text p { font-size: 12px; color: var(--text-muted); }
-        
         .menu-btn {
             width: 40px; height: 40px;
             background: var(--glass-bg);
@@ -205,7 +177,6 @@
         .menu-btn.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
         .menu-btn.active span:nth-child(2) { opacity: 0; }
         .menu-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
-        
         .side-menu {
             position: fixed; 
             top: 0; 
@@ -222,7 +193,6 @@
             box-shadow: -16px 0 48px var(--glass-shadow-strong);
         }
         .side-menu.open { right: 0; }
-        
         .side-menu-overlay {
             position: fixed; 
             top: 0; 
@@ -237,7 +207,6 @@
             transition: opacity var(--transition-smooth);
         }
         .side-menu-overlay.show { display: block; opacity: 1; }
-        
         .menu-item {
             display: flex; 
             align-items: center; 
@@ -259,10 +228,7 @@
             height: 22px; 
             transition: all var(--transition-fast);
         }
-        .menu-item:hover svg {
-            transform: scale(1.1);
-        }
-        
+        .menu-item:hover svg { transform: scale(1.1); }
         .dash-content { 
             padding: 88px 20px 40px; 
             max-width: 480px; 
@@ -270,20 +236,17 @@
             position: relative;
             z-index: 1;
         }
-        
         .profile-upload-section { 
             text-align: center; 
             margin-bottom: 20px; 
             animation: fadeInUp 0.5s var(--transition-smooth);
         }
-        
         .profile-upload-container { 
             position: relative; 
             width: 140px; 
             height: 140px; 
             margin: 0 auto 12px; 
         }
-        
         .profile-pic-dash {
             width: 140px; 
             height: 140px; 
@@ -298,7 +261,6 @@
             transform: scale(1.02);
             box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3);
         }
-        
         .profile-pic-placeholder-dash {
             width: 140px; 
             height: 140px; 
@@ -318,7 +280,6 @@
             transform: scale(1.02);
         }
         .profile-pic-placeholder-dash svg { width: 60px; height: 60px; color: var(--text-muted); }
-        
         .change-pic-btn-dash {
             position: absolute; 
             bottom: 4px; 
@@ -341,7 +302,6 @@
         }
         .change-pic-btn-dash svg { width: 20px; height: 20px; color: var(--text-dark); }
         .change-pic-btn-dash input[type="file"] { display: none; }
-        
         .welcome-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
@@ -379,9 +339,7 @@
             color: #666; 
             margin-bottom: 24px; 
         }
-        
         .btn-row { display: flex; gap: 12px; }
-        
         .btn-black { 
             flex: 1; 
             padding: 16px; 
@@ -405,7 +363,6 @@
         .btn-black:active {
             transform: translateY(0) scale(0.97);
         }
-        
         .btn-yellow-full { 
             flex: 1; 
             padding: 16px; 
@@ -430,7 +387,6 @@
         .btn-yellow-full:active {
             transform: translateY(0) scale(0.97);
         }
-        
         .info-card { 
             background: var(--glass-bg); 
             backdrop-filter: blur(40px) saturate(180%);
@@ -479,7 +435,6 @@
         .info-card:hover .info-value {
             transform: scale(1.05);
         }
-        
         .btn-yellow-block { 
             width: 100%; 
             padding: 16px; 
@@ -504,7 +459,6 @@
         .btn-yellow-block:active {
             transform: translateY(0) scale(0.97);
         }
-        
         .stats-row { display: flex; gap: 14px; margin-bottom: 16px; }
         .stat-card { 
             flex: 1; 
@@ -557,7 +511,6 @@
         .stat-card:hover .stat-value {
             transform: scale(1.1);
         }
-        
         .reg-item { 
             display: flex; 
             justify-content: space-between; 
@@ -602,7 +555,6 @@
             border: 1px solid rgba(255, 59, 48, 0.25);
         }
         .reg-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-        
         .toast {
             position: fixed; 
             bottom: 24px; 
@@ -629,7 +581,6 @@
             background: rgba(52, 199, 89, 0.9); 
             color: white; 
         }
-        
         .bottom-nav {
             position: fixed; 
             bottom: 0; 
@@ -672,7 +623,6 @@
         .bottom-nav-item:hover svg {
             transform: scale(1.1);
         }
-        
         .network-badge {
             display: inline-flex; 
             align-items: center; 
@@ -706,225 +656,11 @@
             color: var(--text-muted); 
             border: 1px solid var(--glass-border);
         }
-        
         @media (min-width: 768px) { 
             .dash-content { max-width: 520px; padding: 96px 24px 40px; }
             .dash-header { padding: 20px 32px; height: 72px; }
             .dash-content { padding-top: 96px; }
         }
-        
-        @media (min-width: 1024px) {
-            .dash-header { padding: 24px 48px; height: 76px; }
-            .dash-content { padding: 104px 24px 40px; }
-        }
-    </style>
-</head>
-<body>
-    <header class="dash-header" id="dashHeader">
-        <div class="dash-header-left">
-            <div class="mtn-icon-box" id="mtnIconBox">MTN</div>
-            <img src="" alt="Profile" class="profile-pic-header" id="profilePicHeader">
-            <div class="dash-header-text">
-                <h2>MTN AFA Portal</h2>
-                <p id="welcomeText">Welcome, User</p>
-            </div>
-        </div>
-        <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
-            <span></span><span></span><span></span>
-        </button>
-    </header>
-
-    <div class="side-menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-    <div class="side-menu" id="sideMenu">
-        <a href="register.html" class="menu-item">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            New Registration
-        </a>
-        <a href="orders.html" class="menu-item">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-            Orders
-        </a>
-        <a href="settings.html" class="menu-item">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            Settings
-        </a>
-    </div>
-
-    <div class="dash-content">
-        <div class="profile-upload-section">
-            <div class="profile-upload-container">
-                <div class="profile-pic-placeholder-dash" id="profilePicPlaceholderDash">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-                <img src="" alt="Profile" class="profile-pic-dash" id="profilePicDash" style="display: none;">
-                <label class="change-pic-btn-dash" title="Change Profile Picture">
-                    <input type="file" id="picInputDash" accept="image/*" onchange="uploadProfilePictureDash()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 012 2H5a2 2 0 01-2-2V9z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                </label>
-            </div>
-            <div class="network-badge network-unknown" id="networkBadge" style="justify-content: center;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                <span id="networkText">Detecting network...</span>
-            </div>
-        </div>
-
-        <div class="welcome-card">
-            <h2 id="greeting">Hello, User</h2>
-            <p>Welcome back. Here is your account overview.</p>
-            <div class="btn-row">
-                <a href="register.html" class="btn-yellow-full">New Registration</a>
-                <a href="orders.html" class="btn-black">My Orders</a>
-            </div>
-        </div>
-
-        <div class="info-card">
-            <div class="info-label">Total Registrations</div>
-            <div class="info-value" id="totalRegistrations">0</div>
-            <a href="register.html" class="btn-yellow-block">New AFA Registration</a>
-        </div>
-
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-label">Pending</div>
-                <div class="stat-value" id="pendingCount">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Approved</div>
-                <div class="stat-value" id="approvedCount">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Rejected</div>
-                <div class="stat-value" id="rejectedCount">0</div>
-            </div>
-        </div>
-
-        <div class="info-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div class="info-label" style="margin: 0;">Recent Registrations</div>
-                <a href="orders.html" style="font-size: 12px; color: var(--primary-yellow); text-decoration: none; font-weight: 700;">View All</a>
-            </div>
-            <div id="registrationList">
-                <p style="color: var(--text-muted); text-align: center; padding: 20px;">Loading registrations...</p>
-            </div>
-        </div>
-    </div>
-
-    <nav class="bottom-nav">
-        <a href="dashboard.html" class="bottom-nav-item active">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            Home
-        </a>
-        <a href="register.html" class="bottom-nav-item">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Register
-        </a>
-        <a href="orders.html" class="bottom-nav-item">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-            Orders
-        </a>
-        <a href="settings.html" class="bottom-nav-item">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            Settings
-        </a>
-    </nav>
-
-    <div class="toast" id="-error { 
-            background: rgba(255, 59, 48, 0.9); 
-            color: white; 
-        }
-        .toast-success { 
-            background: rgba(52, 199, 89, 0.9); 
-            color: white; 
-        }
-        
-        .bottom-nav {
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0;
-            background: rgba(10, 15, 26, 0.85); 
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border-top: 1px solid var(--glass-border);
-            display: flex; 
-            justify-content: space-around;
-            align-items: center; 
-            padding: 8px 0 12px; 
-            z-index: 50;
-            transition: all var(--transition-smooth);
-        }
-        .bottom-nav-item {
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            gap: 4px; 
-            text-decoration: none;
-            color: var(--text-muted); 
-            font-size: 11px;
-            font-weight: 600; 
-            padding: 4px 12px;
-            transition: all var(--transition-fast);
-            border-radius: var(--radius-sm);
-        }
-        .bottom-nav-item.active, 
-        .bottom-nav-item:hover { 
-            color: var(--primary-yellow); 
-            transform: translateY(-2px);
-        }
-        .bottom-nav-item svg { 
-            width: 22px; 
-            height: 22px; 
-            transition: all var(--transition-fast);
-        }
-        .bottom-nav-item:hover svg {
-            transform: scale(1.1);
-        }
-        
-        .network-badge {
-            display: inline-flex; 
-            align-items: center; 
-            gap: 6px;
-            margin-top: 12px; 
-            padding: 8px 16px;
-            border-radius: var(--radius-full); 
-            font-size: 12px; 
-            font-weight: 700;
-            backdrop-filter: blur(10px);
-            transition: all var(--transition-fast);
-            letter-spacing: 0.3px;
-        }
-        .network-mtn { 
-            background: rgba(255, 215, 0, 0.15); 
-            color: var(--primary-yellow); 
-            border: 1px solid rgba(255, 215, 0, 0.25);
-        }
-        .network-airteltigo { 
-            background: rgba(0, 150, 136, 0.15); 
-            color: #009688; 
-            border: 1px solid rgba(0, 150, 136, 0.25);
-        }
-        .network-telecel { 
-            background: rgba(156, 39, 176, 0.15); 
-            color: #9C27B0; 
-            border: 1px solid rgba(156, 39, 176, 0.25);
-        }
-        .network-unknown { 
-            background: var(--glass-bg); 
-            color: var(--text-muted); 
-            border: 1px solid var(--glass-border);
-        }
-        
-        @media (min-width: 768px) { 
-            .dash-content { max-width: 520px; padding: 96px 24px 40px; }
-            .dash-header { padding: 20px 32px; height: 72px; }
-            .dash-content { padding-top: 96px; }
-        }
-        
         @media (min-width: 1024px) {
             .dash-header { padding: 24px 48px; height: 76px; }
             .dash-content { padding: 104px 24px 40px; }
@@ -1047,6 +783,7 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
