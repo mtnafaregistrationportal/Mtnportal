@@ -362,10 +362,10 @@
         <p class="loading" id="loadingText">Verifying payment...</p>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
-        const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
         const BASE_PATH = '/Mtnportal';
         
         // XSS protection - escape HTML entities
@@ -402,7 +402,7 @@
                             </svg>
                         </div>
                         <h2>Payment Successful!</h2>
-                        <p>💳 Payment received. Awaiting AFA approval...<br><br>Your payment of <strong>GH₵ ${escapeHtml(data.amount || '13.00')}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
+                        <p>💳 Payment received. Awaiting AFA approval...<<br><br>Your payment of <strong>GH₵ ${escapeHtml(data.amount || '13.00')}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
                         <div class="reference-box">
                             Reference: <strong>${escapeHtml(reference)}</strong>
                         </div>
