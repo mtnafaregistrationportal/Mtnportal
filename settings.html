@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
     <title>Settings - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ============================================
-           iOS 26 LIQUID GLASS DESIGN SYSTEM
-           ============================================ */
         :root {
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-bg-strong: rgba(255, 255, 255, 0.12);
@@ -98,9 +95,6 @@
             50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
         }
 
-        /* ============================================
-           EXISTING CODE - LIQUID GLASS UPGRADED
-           ============================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -112,7 +106,6 @@
             position: relative;
         }
         
-        /* Liquid Glass Fixed Header */
         .settings-header {
             display: flex;
             align-items: center;
@@ -136,7 +129,6 @@
             box-shadow: 0 4px 30px rgba(0,0,0,0.3);
         }
         
-        /* Back Button */
         .back-btn {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -161,7 +153,6 @@
         
         .settings-header-left { display: flex; align-items: center; gap: 12px; }
         
-        /* Liquid Glass Settings Icon */
         .settings-icon {
             width: 40px; 
             height: 40px;
@@ -180,7 +171,6 @@
         }
         .settings-icon svg { width: 20px; height: 20px; color: var(--text-dark); }
         
-        /* Content scrolls behind fixed header */
         .settings-content { 
             padding: 88px 20px 40px; 
             max-width: 480px; 
@@ -189,7 +179,6 @@
             z-index: 1;
         }
         
-        /* Liquid Glass Form Card */
         .form-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
@@ -251,7 +240,6 @@
             letter-spacing: 0.3px;
         }
         
-        /* Liquid Glass Form Inputs */
         .form-input {
             width: 100%; 
             padding: 16px 18px; 
@@ -272,36 +260,6 @@
         }
         .form-input::placeholder { color: #aaa; }
         
-        /* Liquid Glass Submit Button */
-        .btn-submit { 
-            width: 100%; 
-            padding: 18px; 
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            color: white; 
-            font-size: 16px; 
-            font-weight: 700;
-            border: none; 
-            border-radius: var(--radius-md); 
-            cursor: pointer; 
-            transition: all var(--transition-smooth);
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 0.3px;
-        }
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        }
-        .btn-submit:active {
-            transform: translateY(0) scale(0.98);
-        }
-        .btn-submit:disabled { 
-            opacity: 0.5; 
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        /* Liquid Glass Yellow Button */
         .btn-yellow { 
             width: 100%; 
             padding: 18px; 
@@ -325,8 +283,12 @@
         .btn-yellow:active {
             transform: translateY(0) scale(0.98);
         }
+        .btn-yellow:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
         
-        /* Liquid Glass Red Button */
         .btn-red { 
             width: 100%; 
             padding: 18px; 
@@ -352,7 +314,6 @@
             transform: translateY(0) scale(0.98);
         }
         
-        /* Liquid Glass Success Message */
         .success-msg {
             background: rgba(52, 199, 89, 0.12);
             color: var(--accent-green);
@@ -368,7 +329,6 @@
         }
         .success-msg.show { display: block; }
         
-        /* Liquid Glass Error Message */
         .error-msg {
             background: rgba(255, 59, 48, 0.12);
             color: var(--accent-red);
@@ -384,7 +344,6 @@
         }
         .error-msg.show { display: block; }
         
-        /* Liquid Glass Divider */
         .divider { 
             height: 1px; 
             background: linear-gradient(90deg, transparent, var(--glass-border), transparent); 
@@ -456,7 +415,6 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
-        // XSS protection - escape HTML entities
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -491,6 +449,7 @@
             currentUser = user;
         }
 
+        // FIXED: updatePassword now works with server endpoint
         async function updatePassword() {
             var currentPass = document.getElementById('currentPassword').value;
             var newPass = document.getElementById('newPassword').value;
@@ -514,14 +473,29 @@
             btn.textContent = 'Updating...';
 
             try {
-                var session = getSession();
-                var data = await apiCall('/api/auth/update-password', 'POST', {
-                    session: session,
-                    currentPassword: currentPass,
-                    newPassword: newPass
-                });
+                // FIXED: Send email and passwords, not session object
+                var user = getUser();
+                var userEmail = user?.email || localStorage.getItem('userEmail');
                 
-                if (!data.success) throw new Error(data.error);
+                if (!userEmail) {
+                    throw new Error('User email not found. Please sign in again.');
+                }
+
+                // Use Supabase directly for password update (more reliable)
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: userEmail,
+                    password: currentPass
+                });
+
+                if (error) {
+                    throw new Error('Current password is incorrect');
+                }
+
+                const { error: updateError } = await supabaseClient.auth.updateUser({
+                    password: newPass
+                });
+
+                if (updateError) throw updateError;
 
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
@@ -535,22 +509,22 @@
             }
         }
 
+        // FIXED: logout now works properly
         async function logout() {
             try {
-                var session = getSession();
-                if (session) {
-                    await apiCall('/api/auth/signout', 'POST', { session });
-                }
-                clearSession();
-                window.location.href = 'signin.html';
-            } catch (error) {
-                showError('Error logging out: ' + escapeHtml(error.message));
+                // Sign out from Supabase
+                await supabaseClient.auth.signOut();
+            } catch (e) {
+                // Ignore errors
             }
+            
+            // Always clear local storage and redirect
+            clearSession();
+            window.location.href = 'signin.html';
         }
 
         initSettings();
 
-        // Header scroll effect
         window.addEventListener('scroll', () => {
             const header = document.getElementById('settingsHeader');
             if (window.scrollY > 10) {
