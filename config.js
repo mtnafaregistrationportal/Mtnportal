@@ -48,60 +48,46 @@ setInterval(checkServerConnection, 30000);
 setTimeout(checkServerConnection, 2000);
 
 // ============================================
-// apiCall with better error handling
+// SUPABASE CONFIG - MUST BE BEFORE apiCall
 // ============================================
-async function apiCall(endpoint, method, body) {
-  let token = await getValidToken();
+const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
+
+let supabaseClient = null;
+
+function initSupabase() {
+  // Try different ways Supabase might be exposed
+  const supabaseLib = window.supabase || window.supabaseJs;
   
-  const options = {
-    method: method || 'GET',
-    headers: { 
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include'
-  };
-  
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
+  if (supabaseLib && supabaseLib.createClient) {
+    supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
   }
   
-  if (body) options.body = JSON.stringify(body);
-  
-  let response;
-  try {
-    response = await fetch(API_BASE_URL + endpoint, options);
-  } catch (networkError) {
-    isServerOnline = false;
-    throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+  // Check if it's already initialized globally
+  if (window.supabaseClient) {
+    supabaseClient = window.supabaseClient;
+    return true;
   }
   
-  if ((response.status === 401 || response.status === 403) && endpoint !== '/api/auth/signin' && endpoint !== '/api/auth/signup') {
-    const refreshed = await refreshToken();
-    if (refreshed) {
-      token = await getValidToken();
-      options.headers['Authorization'] = `Bearer ${token}`;
-      try {
-        response = await fetch(API_BASE_URL + endpoint, options);
-      } catch (networkError) {
-        isServerOnline = false;
-        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
-      }
-    } else {
-      clearSession();
-      window.location.href = 'signin.html';
-      throw new Error('Session expired. Please sign in again.');
-    }
-  }
+  return false;
+}
+
+// Try immediately - supabase CDN loads BEFORE config.js now
+initSupabase();
+
+// Helper to get supabase client (waits if needed)
+async function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
   
-  const data = await response.json();
+  // Try to init again
+  if (initSupabase()) return supabaseClient;
   
-  if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
-    clearSession();
-    window.location.href = 'signin.html';
-    throw new Error(data.error || 'Session expired');
-  }
+  // Wait a bit and retry
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  if (initSupabase()) return supabaseClient;
   
-  return data;
+  throw new Error('Supabase client not available. Please refresh the page.');
 }
 
 // ============================================
@@ -162,6 +148,63 @@ async function refreshToken() {
 }
 
 // ============================================
+// apiCall with better error handling
+// ============================================
+async function apiCall(endpoint, method, body) {
+  let token = await getValidToken();
+  
+  const options = {
+    method: method || 'GET',
+    headers: { 
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include'
+  };
+  
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  if (body) options.body = JSON.stringify(body);
+  
+  let response;
+  try {
+    response = await fetch(API_BASE_URL + endpoint, options);
+  } catch (networkError) {
+    isServerOnline = false;
+    throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+  }
+  
+  if ((response.status === 401 || response.status === 403) && endpoint !== '/api/auth/signin' && endpoint !== '/api/auth/signup') {
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      token = await getValidToken();
+      options.headers['Authorization'] = `Bearer ${token}`;
+      try {
+        response = await fetch(API_BASE_URL + endpoint, options);
+      } catch (networkError) {
+        isServerOnline = false;
+        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+      }
+    } else {
+      clearSession();
+      window.location.href = 'signin.html';
+      throw new Error('Session expired. Please sign in again.');
+    }
+  }
+  
+  const data = await response.json();
+  
+  if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
+    clearSession();
+    window.location.href = 'signin.html';
+    throw new Error(data.error || 'Session expired');
+  }
+  
+  return data;
+}
+
+// ============================================
 // SESSION & USER MANAGEMENT
 // ============================================
 function getSession() { 
@@ -211,52 +254,4 @@ function setUser(user) {
     if (user.email) localStorage.setItem('userEmail', user.email);
     if (user.phone) localStorage.setItem('userPhone', user.phone);
   }
-}
-
-// ============================================
-// SUPABASE CONFIG - ROBUST INITIALIZATION
-// ============================================
-const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
-
-let supabaseClient = null;
-
-function initSupabase() {
-  // Try different ways Supabase might be exposed
-  const supabaseLib = window.supabase || window.supabaseJs;
-  
-  if (supabaseLib && supabaseLib.createClient) {
-    supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return true;
-  }
-  
-  // Check if it's already initialized globally
-  if (window.supabaseClient) {
-    supabaseClient = window.supabaseClient;
-    return true;
-  }
-  
-  return false;
-}
-
-// Try immediately
-if (!initSupabase()) {
-  // Retry after delays if supabase script hasn't loaded yet
-  setTimeout(initSupabase, 500);
-  setTimeout(initSupabase, 1500);
-  setTimeout(initSupabase, 3000);
-}
-
-// Helper to get supabase client (waits if needed)
-async function getSupabaseClient() {
-  if (supabaseClient) return supabaseClient;
-  
-  // Try to init again
-  if (initSupabase()) return supabaseClient;
-  
-  // Wait a bit and retry
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  if (initSupabase()) return supabaseClient;
-  
-  throw new Error('Supabase client not available. Please refresh the page.');
 }
