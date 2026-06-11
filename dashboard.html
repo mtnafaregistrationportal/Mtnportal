@@ -855,7 +855,6 @@
     </nav>
 
     <div class="toast" id="toast"></div>
-
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
@@ -924,7 +923,7 @@
         function detectNetwork(phone) {
             const mtn = ['024','025','053','054','055','059'];
             const airteltigo = ['026','027','056','057'];
-            const telecel = ['020','050'];
+            const telecel = ['050','020'];
             const prefix = phone ? phone.substring(0, 3) : '';
             if (mtn.indexOf(prefix) !== -1) return { name: 'MTN', class: 'network-mtn' };
             if (airteltigo.indexOf(prefix) !== -1) return { name: 'AirtelTigo', class: 'network-airteltigo' };
@@ -965,6 +964,51 @@
             return false;
         }
 
+        // NEW: Image compression helper
+        function compressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Get compressed base64 without data URI prefix
+                    const base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+                    resolve(base64);
+                };
+                
+                img.onerror = reject;
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // UPDATED: Profile picture upload with compression
         async function uploadProfilePictureDash() {
             const file = document.getElementById('picInputDash').files[0];
             if (!file) return;
@@ -972,33 +1016,33 @@
                 showToast('Please select an image file.', 'error');
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image must be less than 5MB.', 'error');
+            // Reduced to 1MB for mobile reliability
+            if (file.size > 1 * 1024 * 1024) {
+                showToast('Image must be less than 1MB for mobile upload.', 'error');
                 return;
             }
 
             try {
+                showToast('Uploading...', 'success');
+                
                 const user = getCurrentUser();
                 if (!user || !user.id) { 
                     window.location.href = 'signin.html'; 
                     return; 
                 }
 
-                const base64 = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                    reader.readAsDataURL(file);
-                });
-
-                const fileExt = file.name.split('.').pop();
+                // Compress image before sending
+                const compressedBase64 = await compressImage(file, 800, 800, 0.7);
+                
+                const fileExt = file.name.split('.').pop().toLowerCase();
                 
                 const data = await apiCall('/api/user/upload-avatar', 'POST', {
                     userId: user.id,
-                    fileBase64: base64,
+                    fileBase64: compressedBase64,
                     fileExt: fileExt
                 });
 
-                if (!data.success) throw new Error(data.error);
+                if (!data.success) throw new Error(data.error || 'Upload failed');
 
                 const picUrl = data.url;
                 document.getElementById('profilePicDash').src = picUrl;
@@ -1011,14 +1055,14 @@
 
                 showToast('Profile picture updated!', 'success');
             } catch (error) {
-                showToast('Error uploading picture: ' + escapeHtml(error.message), 'error');
+                showToast('Error: ' + escapeHtml(error.message), 'error');
             }
         }
 
+        // UPDATED: loadDashboard with better network detection and error handling
         async function loadDashboard() {
             const authValid = await isAuthenticated();
             if (!authValid) {
-                // User not authenticated, redirecting to signin
                 clearSession();
                 window.location.href = 'signin.html';
                 return;
@@ -1062,12 +1106,26 @@
                     localStorage.setItem('userProfilePicture', serverProfilePic);
                 }
 
-                const userPhone = data.user?.phone_number || user.phone || data.recentPhone;
+                // FIXED: Network detection - check multiple sources for phone number
+                let userPhone = data.user?.phone_number || user.phone || data.recentPhone;
+                
+                // If still no phone, try localStorage
+                if (!userPhone) {
+                    userPhone = localStorage.getItem('userPhone');
+                }
+                
                 if (userPhone) {
                     const network = detectNetwork(userPhone);
                     const badge = document.getElementById('networkBadge');
                     badge.className = 'network-badge ' + network.class;
+                    badge.style.display = 'inline-flex';
                     document.getElementById('networkText').textContent = network.name + ' • ' + escapeHtml(userPhone);
+                } else {
+                    // No phone detected - hide badge or show unknown
+                    const badge = document.getElementById('networkBadge');
+                    badge.className = 'network-badge network-unknown';
+                    badge.style.display = 'inline-flex';
+                    document.getElementById('networkText').textContent = 'Detecting network...';
                 }
 
                 const orders = data.orders || [];
@@ -1110,19 +1168,23 @@
                 localStorage.setItem('cachedOrders', JSON.stringify(orders));
 
             } catch (error) {
-                // Dashboard error logged silently
-                
-                if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
+                // Check if it's a real network error or just server down
+                if (error.message && error.message.includes('Unable to connect')) {
+                    // Real network issue - show cached data
+                    showToast('You appear to be offline. Showing cached data.', 'error');
+                } else if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     clearSession();
                     window.location.href = 'signin.html';
                     return;
+                } else {
+                    showToast('Error: ' + escapeHtml(error.message), 'error');
                 }
                 
+                // Try to load cached data
                 const cachedOrders = localStorage.getItem('cachedOrders');
                 if (cachedOrders) {
                     try {
                         const orders = JSON.parse(cachedOrders);
-                        showToast('Showing cached data (offline mode)', 'error');
                         
                         const total = orders.length;
                         const pending = orders.filter(o => o.status === 'pending' || o.status === 'paid' || o.status === 'processing').length;
@@ -1161,8 +1223,6 @@
                         // Failed to parse cached orders
                     }
                 }
-                
-                showToast('Error loading dashboard: ' + escapeHtml(error.message), 'error');
             }
         }
 
