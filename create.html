@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
     <title>Create Account - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -548,6 +550,14 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -603,19 +613,19 @@
 
         function showDuplicate(msg) {
             const el = document.getElementById('duplicateMsg');
-            document.getElementById('duplicateText').textContent = msg;
+            document.getElementById('duplicateText').textContent = escapeHtml(msg);
             el.classList.add('show');
         }
 
         function showSuccess(elId, msg) {
             const el = document.getElementById(elId);
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
         }
 
         function showFieldErrorMsg(msg) {
             const el = document.getElementById('fieldErrorMsg');
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
         }
 
@@ -630,7 +640,7 @@
             this.value = this.value.replace(/\D/g, '');
             
             if (this.value.length > 0 && this.value.length !== 10) {
-                phoneHint.textContent = `⚠️ ${this.value.length}/10 digits entered. Must be exactly 10 digits!`;
+                phoneHint.textContent = '⚠️ ' + this.value.length + '/10 digits entered. Must be exactly 10 digits!';
                 phoneHint.classList.add('warning');
             } else if (this.value.length === 10) {
                 phoneHint.textContent = '✓ 10 digits - looks good!';
@@ -721,10 +731,10 @@
                     setSession(session);
                 }
 
-                localStorage.setItem('userName', name);
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', user.id);
-                localStorage.setItem('userPhone', phone);
+                localStorage.setItem('userName', escapeHtml(name));
+                localStorage.setItem('userEmail', escapeHtml(email));
+                localStorage.setItem('userId', escapeHtml(user.id));
+                localStorage.setItem('userPhone', escapeHtml(phone));
 
                 showSuccess('successMsg', 'Account created successfully! Redirecting...');
                 
