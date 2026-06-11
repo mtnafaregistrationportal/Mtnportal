@@ -21,7 +21,7 @@ let isServerOnline = true;
 async function checkServerConnection() {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
     
     const response = await fetch(`${API_BASE_URL}/api/health`, {
       method: 'GET',
@@ -47,11 +47,11 @@ async function checkServerConnection() {
 // Run check every 30 seconds
 setInterval(checkServerConnection, 30000);
 
-// Initial check on load
-checkServerConnection();
+// Initial check on load - delay slightly to let page settle
+setTimeout(checkServerConnection, 2000);
 
 // ============================================
-// FIXED: apiCall with token refresh and 401 handling
+// FIXED: apiCall with better error handling
 // ============================================
 async function apiCall(endpoint, method, body) {
   let token = await getValidToken();
@@ -74,9 +74,9 @@ async function apiCall(endpoint, method, body) {
   try {
     response = await fetch(API_BASE_URL + endpoint, options);
   } catch (networkError) {
-    // Network error - server might be down
+    // Network error - server might be down or mobile data issue
     isServerOnline = false;
-    throw new Error('Network error. Please check your connection and try again.');
+    throw new Error('Unable to connect to server. Please check your internet connection and try again.');
   }
   
   if ((response.status === 401 || response.status === 403) && endpoint !== '/api/auth/signin' && endpoint !== '/api/auth/signup') {
@@ -88,7 +88,7 @@ async function apiCall(endpoint, method, body) {
         response = await fetch(API_BASE_URL + endpoint, options);
       } catch (networkError) {
         isServerOnline = false;
-        throw new Error('Network error. Please check your connection and try again.');
+        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
       }
     } else {
       clearSession();
