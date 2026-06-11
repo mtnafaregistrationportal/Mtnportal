@@ -412,6 +412,7 @@
         <button class="btn-red" onclick="logout()">Logout</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
@@ -449,7 +450,7 @@
             currentUser = user;
         }
 
-        // FIXED: updatePassword now works with server endpoint
+        // FIXED: Uses server API endpoint instead of supabaseClient
         async function updatePassword() {
             var currentPass = document.getElementById('currentPassword').value;
             var newPass = document.getElementById('newPassword').value;
@@ -473,29 +474,20 @@
             btn.textContent = 'Updating...';
 
             try {
-                // FIXED: Send email and passwords, not session object
-                var user = getUser();
-                var userEmail = user?.email || localStorage.getItem('userEmail');
+                // FIXED: Get session properly - just send what the server needs
+                var session = getSession();
+                if (!session || !session.access_token) {
+                    throw new Error('Session expired. Please sign in again.');
+                }
+
+                // Call server endpoint
+                var data = await apiCall('/api/auth/update-password', 'POST', {
+                    session: session,
+                    currentPassword: currentPass,
+                    newPassword: newPass
+                });
                 
-                if (!userEmail) {
-                    throw new Error('User email not found. Please sign in again.');
-                }
-
-                // Use Supabase directly for password update (more reliable)
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: userEmail,
-                    password: currentPass
-                });
-
-                if (error) {
-                    throw new Error('Current password is incorrect');
-                }
-
-                const { error: updateError } = await supabaseClient.auth.updateUser({
-                    password: newPass
-                });
-
-                if (updateError) throw updateError;
+                if (!data.success) throw new Error(data.error);
 
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
@@ -509,16 +501,25 @@
             }
         }
 
-        // FIXED: logout now works properly
+        // FIXED: Simple logout - just clear and redirect
         async function logout() {
             try {
-                // Sign out from Supabase
-                await supabaseClient.auth.signOut();
+                // Try to call signout endpoint but don't wait for it
+                var token = await getValidToken();
+                if (token) {
+                    fetch(API_BASE_URL + '/api/auth/signout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        }
+                    }).catch(() => {});
+                }
             } catch (e) {
                 // Ignore errors
             }
             
-            // Always clear local storage and redirect
+            // Always clear and redirect
             clearSession();
             window.location.href = 'signin.html';
         }
