@@ -14,6 +14,43 @@ function escapeHtml(text) {
 }
 
 // ============================================
+// NETWORK / OFFLINE HANDLING
+// ============================================
+let isServerOnline = true;
+
+async function checkServerConnection() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    clearTimeout(timeout);
+    
+    if (response.ok) {
+      isServerOnline = true;
+      return true;
+    }
+  } catch (e) {
+    // Server unreachable or network error
+  }
+  
+  isServerOnline = false;
+  return false;
+}
+
+// Run check every 30 seconds
+setInterval(checkServerConnection, 30000);
+
+// Initial check on load
+checkServerConnection();
+
+// ============================================
 // FIXED: apiCall with token refresh and 401 handling
 // ============================================
 async function apiCall(endpoint, method, body) {
@@ -33,14 +70,26 @@ async function apiCall(endpoint, method, body) {
   
   if (body) options.body = JSON.stringify(body);
   
-  let response = await fetch(API_BASE_URL + endpoint, options);
+  let response;
+  try {
+    response = await fetch(API_BASE_URL + endpoint, options);
+  } catch (networkError) {
+    // Network error - server might be down
+    isServerOnline = false;
+    throw new Error('Network error. Please check your connection and try again.');
+  }
   
   if ((response.status === 401 || response.status === 403) && endpoint !== '/api/auth/signin' && endpoint !== '/api/auth/signup') {
     const refreshed = await refreshToken();
     if (refreshed) {
       token = await getValidToken();
       options.headers['Authorization'] = `Bearer ${token}`;
-      response = await fetch(API_BASE_URL + endpoint, options);
+      try {
+        response = await fetch(API_BASE_URL + endpoint, options);
+      } catch (networkError) {
+        isServerOnline = false;
+        throw new Error('Network error. Please check your connection and try again.');
+      }
     } else {
       clearSession();
       window.location.href = 'signin.html';
