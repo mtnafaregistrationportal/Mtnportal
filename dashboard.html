@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:;">
     <title>Dashboard - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -857,6 +859,14 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         async function getAuthToken() {
             if (typeof getValidToken === 'function') {
                 return await getValidToken();
@@ -898,7 +908,7 @@
 
         function showToast(message, type) {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.textContent = escapeHtml(message);
             toast.className = 'toast toast-' + (type || 'success');
             if (type === 'error') toast.classList.add('toast-error');
             toast.classList.add('show');
@@ -1001,14 +1011,14 @@
 
                 showToast('Profile picture updated!', 'success');
             } catch (error) {
-                showToast('Error uploading picture: ' + error.message, 'error');
+                showToast('Error uploading picture: ' + escapeHtml(error.message), 'error');
             }
         }
 
         async function loadDashboard() {
             const authValid = await isAuthenticated();
             if (!authValid) {
-                console.log('User not authenticated, redirecting to signin');
+                // User not authenticated, redirecting to signin
                 clearSession();
                 window.location.href = 'signin.html';
                 return;
@@ -1018,8 +1028,8 @@
             const token = await getAuthToken();
 
             const displayName = user.name || localStorage.getItem('userName') || 'User';
-            document.getElementById('greeting').textContent = 'Hello, ' + displayName;
-            document.getElementById('welcomeText').textContent = 'Welcome, ' + displayName;
+            document.getElementById('greeting').textContent = 'Hello, ' + escapeHtml(displayName);
+            document.getElementById('welcomeText').textContent = 'Welcome, ' + escapeHtml(displayName);
 
             loadProfilePicture();
 
@@ -1037,8 +1047,8 @@
 
                 const serverName = data.user?.name;
                 if (serverName) {
-                    document.getElementById('greeting').textContent = 'Hello, ' + serverName;
-                    document.getElementById('welcomeText').textContent = 'Welcome, ' + serverName;
+                    document.getElementById('greeting').textContent = 'Hello, ' + escapeHtml(serverName);
+                    document.getElementById('welcomeText').textContent = 'Welcome, ' + escapeHtml(serverName);
                     localStorage.setItem('userName', serverName);
                 }
 
@@ -1057,7 +1067,7 @@
                     const network = detectNetwork(userPhone);
                     const badge = document.getElementById('networkBadge');
                     badge.className = 'network-badge ' + network.class;
-                    document.getElementById('networkText').textContent = network.name + ' • ' + userPhone;
+                    document.getElementById('networkText').textContent = network.name + ' • ' + escapeHtml(userPhone);
                 }
 
                 const orders = data.orders || [];
@@ -1083,12 +1093,12 @@
                         return `
                             <div class="reg-item">
                                 <div class="reg-left">
-                                    <div class="reg-name">${order.applicant_name || 'Unknown'}</div>
-                                    <div class="reg-phone">${order.applicant_phone || ''}</div>
-                                    <div class="reg-date">${date}</div>
+                                    <div class="reg-name">${escapeHtml(order.applicant_name || 'Unknown')}</div>
+                                    <div class="reg-phone">${escapeHtml(order.applicant_phone || '')}</div>
+                                    <div class="reg-date">${escapeHtml(date)}</div>
                                 </div>
                                 <div class="reg-right">
-                                    <span class="reg-status ${statusClass}">${statusText}</span>
+                                    <span class="reg-status ${statusClass}">${escapeHtml(statusText)}</span>
                                 </div>
                             </div>
                         `;
@@ -1100,7 +1110,7 @@
                 localStorage.setItem('cachedOrders', JSON.stringify(orders));
 
             } catch (error) {
-                console.error('Dashboard error:', error);
+                // Dashboard error logged silently
                 
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     clearSession();
@@ -1135,12 +1145,12 @@
                             return `
                                 <div class="reg-item">
                                     <div class="reg-left">
-                                        <div class="reg-name">${order.applicant_name || 'Unknown'}</div>
-                                        <div class="reg-phone">${order.applicant_phone || ''}</div>
-                                        <div class="reg-date">${date}</div>
+                                        <div class="reg-name">${escapeHtml(order.applicant_name || 'Unknown')}</div>
+                                        <div class="reg-phone">${escapeHtml(order.applicant_phone || '')}</div>
+                                        <div class="reg-date">${escapeHtml(date)}</div>
                                     </div>
                                     <div class="reg-right">
-                                        <span class="reg-status ${statusClass}">${statusText}</span>
+                                        <span class="reg-status ${statusClass}">${escapeHtml(statusText)}</span>
                                     </div>
                                 </div>
                             `;
@@ -1148,11 +1158,11 @@
                         
                         return;
                     } catch (e) {
-                        console.error('Failed to parse cached orders:', e);
+                        // Failed to parse cached orders
                     }
                 }
                 
-                showToast('Error loading dashboard: ' + error.message, 'error');
+                showToast('Error loading dashboard: ' + escapeHtml(error.message), 'error');
             }
         }
 
