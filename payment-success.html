@@ -360,14 +360,32 @@
             }
             
             try {
-                let response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}`);
-                let data = await response.json();
+                // ============================================
+                // FIXED: Try BOTH endpoints with cache-busting
+                // ============================================
+                let response, data;
                 
-                if (!data.success || data.error) {
-                    response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}`);
+                // First try check-status with cache buster
+                try {
+                    response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
                     data = await response.json();
+                } catch (e) {
+                    data = { success: false };
                 }
                 
+                // If check-status failed or returned not verified, try verify-status
+                if (!data.success || !data.verified) {
+                    try {
+                        response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
+                        data = await response.json();
+                    } catch (e) {
+                        data = { success: false, verified: false };
+                    }
+                }
+                
+                // ============================================
+                // FIXED: More robust success detection
+                // ============================================
                 const isSuccess = data.verified === true || 
                                   data.status === 'paid' || 
                                   data.from_database === true ||
