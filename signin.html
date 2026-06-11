@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
     <title>Sign In - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -742,7 +744,7 @@
                     </div>
                     <div class="check-email-title">Check your email</div>
                     <div class="check-email-text">
-                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<<br><br>
+                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<br><br>
                         Click the link in your email to reset your password.
                     </div>
                     <button type="button" class="btn-submit" onclick="backToSignIn()">Back to Sign In</button>
@@ -775,6 +777,14 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -788,14 +798,14 @@
 
         function showSuccess(elId, msg) {
             const el = document.getElementById(elId);
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 5000);
         }
 
         function showError(elId, msg) {
             const el = document.getElementById(elId);
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 5000);
         }
@@ -837,10 +847,10 @@
                 setUser(data.user);
                 
                 if (data.user) {
-                    localStorage.setItem('userName', data.user.fullName || data.user.name || email.split('@')[0]);
-                    localStorage.setItem('userEmail', data.user.email || email);
-                    localStorage.setItem('userId', data.user.id);
-                    localStorage.setItem('userPhone', data.user.phone || '');
+                    localStorage.setItem('userName', escapeHtml(data.user.fullName || data.user.name || email.split('@')[0]));
+                    localStorage.setItem('userEmail', escapeHtml(data.user.email || email));
+                    localStorage.setItem('userId', escapeHtml(data.user.id));
+                    localStorage.setItem('userPhone', escapeHtml(data.user.phone || ''));
                 }
                 
                 window.location.href = 'dashboard.html';
@@ -911,7 +921,7 @@
                 
                 document.getElementById('forgotStep1').style.display = 'none';
                 document.getElementById('forgotStep2').style.display = 'block';
-                document.getElementById('resetEmailDisplay').textContent = email;
+                document.getElementById('resetEmailDisplay').textContent = escapeHtml(email);
                 showSuccess('forgotSuccess', 'Reset link sent! Check your email.');
                 
             } catch (error) {
@@ -920,7 +930,7 @@
                 if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('not registered')) {
                     document.getElementById('notFoundMsg').classList.add('show');
                 } else {
-                    showError('forgotError', 'Error: ' + errorMsg);
+                    showError('forgotError', 'Error: ' + escapeHtml(errorMsg));
                 }
                 
                 btn.disabled = false;
