@@ -4,10 +4,19 @@
 const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
 
 // ============================================
+// SECURITY: XSS Sanitization Helper
+// ============================================
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ============================================
 // FIXED: apiCall with token refresh and 401 handling
 // ============================================
 async function apiCall(endpoint, method, body) {
-  // Try to get valid token (refresh if needed)
   let token = await getValidToken();
   
   const options = {
@@ -26,17 +35,13 @@ async function apiCall(endpoint, method, body) {
   
   let response = await fetch(API_BASE_URL + endpoint, options);
   
-  // If 401/403, try refreshing token once
   if ((response.status === 401 || response.status === 403) && endpoint !== '/api/auth/signin' && endpoint !== '/api/auth/signup') {
-    console.log('Token expired, attempting refresh...');
     const refreshed = await refreshToken();
     if (refreshed) {
       token = await getValidToken();
       options.headers['Authorization'] = `Bearer ${token}`;
       response = await fetch(API_BASE_URL + endpoint, options);
     } else {
-      // Refresh failed - clear session and redirect
-      console.log('Token refresh failed, redirecting to login...');
       clearSession();
       window.location.href = 'signin.html';
       throw new Error('Session expired. Please sign in again.');
@@ -45,7 +50,6 @@ async function apiCall(endpoint, method, body) {
   
   const data = await response.json();
   
-  // Handle auth errors in response body
   if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
     clearSession();
     window.location.href = 'signin.html';
@@ -61,10 +65,8 @@ async function apiCall(endpoint, method, body) {
 async function getValidToken() {
   const session = getSession();
   
-  // Check if token is expired
   if (session && session.expires_at) {
     const now = Math.floor(Date.now() / 1000);
-    // If expires in less than 5 minutes, refresh it
     if (session.expires_at - now < 300) {
       const refreshed = await refreshToken();
       if (refreshed) {
@@ -97,7 +99,6 @@ async function refreshToken() {
     const data = await response.json();
     
     if (data.access_token) {
-      // Update stored session
       const newSession = {
         access_token: data.access_token,
         refresh_token: data.refresh_token || refreshToken,
@@ -106,13 +107,11 @@ async function refreshToken() {
       };
       setSession(newSession);
       if (data.user) setUser(data.user);
-      console.log('Token refreshed successfully');
       return true;
     }
     
     return false;
   } catch (error) {
-    console.error('Token refresh error:', error);
     return false;
   }
 }
@@ -150,6 +149,7 @@ function clearSession() {
   localStorage.removeItem('profilePicture');
   localStorage.removeItem('userProfilePicture');
   localStorage.removeItem('cachedOrders');
+  localStorage.removeItem('sb-iqzjpdynmnucxswbrkho-auth-token');
 }
 
 function getUser() { 
