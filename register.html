@@ -524,7 +524,7 @@
 
         <div class="package-card">
             <div class="package-row"><span class="package-label">Package</span><span class="package-value">MTN AFA Bundle</span></div>
-            <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 13.00</span></div>
+            <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 13.40</span></div>
             <div class="package-row"><span class="package-label">Review Time</span><span class="package-value"> 5-10 minutes</span></div>
         </div>
 
@@ -533,7 +533,7 @@
         <form id="afaForm">
             <div class="form-card">
                 <h2 class="form-title">Applicant Details</h2>
-                <p class="form-subtitle">Fill the form carefully. GH₵13 will be charged via Paystack.</p>
+                <p class="form-subtitle">Fill the form carefully. GH₵13.40 will be charged via Paystack.</p>
 
                 <div class="form-group">
                     <label class="form-label">Full Name <span class="required">*</span></label>
@@ -575,7 +575,7 @@
             <div class="summary-card">
                 <h2 class="summary-title">Submission Summary</h2>
                 <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
-                <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.00</span></div>
+                <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.40</span></div>
                 <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
             </div>
 
@@ -706,12 +706,10 @@
             try {
                 let user = null;
                 
-                // Try to get user from config.js getUser()
                 if (typeof getUser === 'function') {
                     user = getUser();
                 }
                 
-                // Fallback to localStorage
                 if (!user || !user.id) {
                     user = {
                         id: localStorage.getItem('userId'),
@@ -754,15 +752,10 @@
                     throw new Error('Please fill in all required fields');
                 }
 
-                // ============================================
-                // FIXED: Use apiCall from config.js which goes to server
-                // NOT supabaseClient.from('orders').insert() directly
-                // ============================================
                 let data;
                 if (typeof apiCall === 'function') {
                     data = await apiCall('/api/register', 'POST', formData);
                 } else {
-                    // Fallback if apiCall not available
                     const token = localStorage.getItem('access_token');
                     const headers = { 'Content-Type': 'application/json' };
                     if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -778,11 +771,9 @@
                 }
                 
                 if (!data.success) {
-                    // Show actual server error
                     throw new Error(data.error || 'Registration failed. Please try again.');
                 }
 
-                // Redirect to Paystack
                 window.location.href = data.authorization_url;
             } catch (error) {
                 const isNetworkError = error.message && (
