@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
     <title>Settings - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -454,18 +456,26 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         let currentUser = null;
 
         function showSuccess(msg) {
             var el = document.getElementById('successMsg');
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
             setTimeout(function() { el.classList.remove('show'); }, 4000);
         }
 
         function showError(msg) {
             var el = document.getElementById('errorMsg');
-            el.textContent = msg;
+            el.textContent = escapeHtml(msg);
             el.classList.add('show');
             setTimeout(function() { el.classList.remove('show'); }, 4000);
         }
@@ -518,7 +528,7 @@
                 document.getElementById('confirmPassword').value = '';
                 showSuccess('Password updated successfully!');
             } catch (error) {
-                showError('Error: ' + error.message);
+                showError('Error: ' + escapeHtml(error.message));
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Update Password';
@@ -532,10 +542,9 @@
                     await apiCall('/api/auth/signout', 'POST', { session });
                 }
                 clearSession();
-                localStorage.clear();
                 window.location.href = 'signin.html';
             } catch (error) {
-                showError('Error logging out: ' + error.message);
+                showError('Error logging out: ' + escapeHtml(error.message));
             }
         }
 
