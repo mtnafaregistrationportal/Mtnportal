@@ -222,15 +222,41 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient = null;
 
 function initSupabase() {
-  if (typeof supabase !== 'undefined' && supabase.createClient) {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Try different ways Supabase might be exposed
+  const supabaseLib = window.supabase || window.supabaseJs;
+  
+  if (supabaseLib && supabaseLib.createClient) {
+    supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return true;
   }
+  
+  // Check if it's already initialized globally
+  if (window.supabaseClient) {
+    supabaseClient = window.supabaseClient;
+    return true;
+  }
+  
   return false;
 }
 
 // Try immediately
 if (!initSupabase()) {
-  // Retry after a short delay if supabase script hasn't loaded yet
+  // Retry after delays if supabase script hasn't loaded yet
   setTimeout(initSupabase, 500);
+  setTimeout(initSupabase, 1500);
+  setTimeout(initSupabase, 3000);
+}
+
+// Helper to get supabase client (waits if needed)
+async function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  
+  // Try to init again
+  if (initSupabase()) return supabaseClient;
+  
+  // Wait a bit and retry
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  if (initSupabase()) return supabaseClient;
+  
+  throw new Error('Supabase client not available. Please refresh the page.');
 }
