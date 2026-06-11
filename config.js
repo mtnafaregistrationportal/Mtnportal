@@ -48,7 +48,7 @@ setInterval(checkServerConnection, 30000);
 setTimeout(checkServerConnection, 2000);
 
 // ============================================
-// apiCall with token refresh
+// apiCall with better error handling
 // ============================================
 async function apiCall(endpoint, method, body) {
   let token = await getValidToken();
@@ -214,12 +214,23 @@ function setUser(user) {
 }
 
 // ============================================
-// SUPABASE CONFIG
+// SUPABASE CONFIG - ROBUST INITIALIZATION
 // ============================================
 const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
 
 let supabaseClient = null;
-if (typeof supabase !== 'undefined') {
+
+function initSupabase() {
+  if (typeof supabase !== 'undefined' && supabase.createClient) {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  }
+  return false;
+}
+
+// Try immediately
+if (!initSupabase()) {
+  // Retry after a short delay if supabase script hasn't loaded yet
+  setTimeout(initSupabase, 500);
 }
