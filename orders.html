@@ -1001,6 +1001,11 @@
                 const safeRef = escapeHtml(order.payment_reference || 'N/A');
                 const safeNoteText = escapeHtml(displayStatus.noteText);
                 
+                // ============================================
+                // FIXED: Always show 13.00, not 13.40
+                // ============================================
+                const displayAmount = 13.00;
+                
                 let adminNoteHtml = '';
                 if (displayStatus.verifying) {
                     adminNoteHtml = `
@@ -1038,7 +1043,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Amount</span>
-                                <span class="detail-value">GH₵ ${(order.amount || 13.40).toFixed(2)}</span>
+                                <span class="detail-value">GH₵ ${displayAmount.toFixed(2)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Payment Ref</span>
