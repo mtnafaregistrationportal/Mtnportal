@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
     <title>MTN Ghana - AFA Association Bundles</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -391,12 +393,16 @@
             <div class="carousel-slide">
                 <img src="IMG_8059.WEBP" alt="MTN Promo">
             </div>
+            <div class="carousel-slide">
+                <img src="IMG_8060.WEBP" alt="MTN Promo 2">
+            </div>
         </div>
 
         <div class="carousel-dots">
             <span class="dot active" onclick="goToSlide(0)"></span>
             <span class="dot" onclick="goToSlide(1)"></span>
             <span class="dot" onclick="goToSlide(2)"></span>
+            <span class="dot" onclick="goToSlide(3)"></span>
         </div>
 
         <div class="hero-text">
