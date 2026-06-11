@@ -630,6 +630,7 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
@@ -975,8 +976,18 @@
                 const displayStatus = await getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
-                if (status !== 'approved') pendingCount++;
-                if (status === 'approved') approvedCount++;
+                
+                // ============================================
+                // FIXED: Only count truly pending orders
+                // Pending = 'pending' or 'paid' (awaiting approval)
+                // NOT rejected, failed, or approved
+                // ============================================
+                if (status === 'approved') {
+                    approvedCount++;
+                } else if (status === 'pending' || status === 'paid') {
+                    pendingCount++;
+                }
+                // rejected and failed do NOT count as pending
                 
                 const date = order.created_at 
                     ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) 
