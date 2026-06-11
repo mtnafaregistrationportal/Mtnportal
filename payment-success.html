@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
     <title>Payment Status - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -366,6 +368,14 @@
         const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
         const BASE_PATH = '/Mtnportal';
         
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         async function verifyPayment() {
             const urlParams = new URLSearchParams(window.location.search);
             const reference = urlParams.get('reference') || urlParams.get('trxref');
@@ -381,7 +391,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${reference}`);
+                const response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}`);
                 const data = await response.json();
                 
                 if (data.verified) {
@@ -392,9 +402,9 @@
                             </svg>
                         </div>
                         <h2>Payment Successful!</h2>
-                        <p>💳 Payment received. Awaiting AFA approval...<<br><br>Your payment of <strong>GH₵ ${data.amount || '13.00'}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
+                        <p>💳 Payment received. Awaiting AFA approval...<br><br>Your payment of <strong>GH₵ ${escapeHtml(data.amount || '13.00')}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
                         <div class="reference-box">
-                            Reference: <strong>${reference}</strong>
+                            Reference: <strong>${escapeHtml(reference)}</strong>
                         </div>
                         <a href="${BASE_PATH}/orders.html" class="btn-primary">View My Orders</a>
                         <a href="${BASE_PATH}/dashboard.html" class="btn-secondary">Go to Dashboard</a>
@@ -412,9 +422,9 @@
                             </svg>
                         </div>
                         <h2 style="color: var(--accent-red);">Payment Not Completed</h2>
-                        <p>⚠️ Transaction failed. Your registration will be processed. Please make sure your payment is confirmed so that registration will be completed.<br><br>${data.gateway_response ? '<strong>Reason:</strong> ' + data.gateway_response + '<br><br>' : ''}If you believe this is an error, please contact support.</p>
+                        <p>⚠️ Transaction failed. Your registration will be processed. Please make sure your payment is confirmed so that registration will be completed.<br><br>${data.gateway_response ? '<strong>Reason:</strong> ' + escapeHtml(data.gateway_response) + '<br><br>' : ''}If you believe this is an error, please contact support.</p>
                         <div class="reference-box">
-                            Reference: <strong>${reference}</strong>
+                            Reference: <strong>${escapeHtml(reference)}</strong>
                         </div>
                         <a href="${BASE_PATH}/register.html" class="btn-primary">Try Again</a>
                         <a href="${BASE_PATH}/orders.html" class="btn-secondary">View My Orders</a>
@@ -427,7 +437,7 @@
                     `;
                 }
             } catch (error) {
-                console.error('Verification error:', error);
+                // Verification error logged silently
                 card.innerHTML = `
                     <div class="error-msg">Error verifying payment. Please check your orders.</div>
                     <a href="${BASE_PATH}/orders.html" class="btn-primary">View My Orders</a>
