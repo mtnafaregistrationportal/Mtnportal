@@ -37,21 +37,18 @@ async function checkServerConnection() {
       return true;
     }
   } catch (e) {
-    // Server unreachable or network error
+    // Server unreachable
   }
   
   isServerOnline = false;
   return false;
 }
 
-// Run check every 30 seconds
 setInterval(checkServerConnection, 30000);
-
-// Initial check on load - delay slightly to let page settle
 setTimeout(checkServerConnection, 2000);
 
 // ============================================
-// FIXED: apiCall with better error handling
+// apiCall with token refresh
 // ============================================
 async function apiCall(endpoint, method, body) {
   let token = await getValidToken();
@@ -74,7 +71,6 @@ async function apiCall(endpoint, method, body) {
   try {
     response = await fetch(API_BASE_URL + endpoint, options);
   } catch (networkError) {
-    // Network error - server might be down or mobile data issue
     isServerOnline = false;
     throw new Error('Unable to connect to server. Please check your internet connection and try again.');
   }
@@ -109,7 +105,7 @@ async function apiCall(endpoint, method, body) {
 }
 
 // ============================================
-// NEW: Get valid token (with refresh if expired)
+// Get valid token
 // ============================================
 async function getValidToken() {
   const session = getSession();
@@ -129,7 +125,7 @@ async function getValidToken() {
 }
 
 // ============================================
-// NEW: Refresh token using Supabase
+// Refresh token
 // ============================================
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refresh_token');
