@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
     <title>Sign In - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -744,7 +744,7 @@
                     </div>
                     <div class="check-email-title">Check your email</div>
                     <div class="check-email-text">
-                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<br><br>
+                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<<br><br>
                         Click the link in your email to reset your password.
                     </div>
                     <button type="button" class="btn-submit" onclick="backToSignIn()">Back to Sign In</button>
@@ -774,6 +774,605 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="glass.js"></script>
+    <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        function showSuccess(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function showError(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function hideAllMessages() {
+            document.getElementById('signinSuccess').classList.remove('show');
+            document.getElementById('signinError').classList.remove('show');
+            document.getElement0.5px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .welcome-title { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 12px; 
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
+        }
+        .welcome-text { 
+            font-size: 15px; 
+            color: var(--text-secondary); 
+            line-height: 1.6; 
+            margin-bottom: 24px; 
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.2s backwards;
+        }
+        
+        /* Liquid Glass Auth Card */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl);
+            padding: 44px 32px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .auth-card h3 { 
+            color: var(--text-dark); 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .subtitle { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 32px; 
+            font-weight: 400;
+        }
+        
+        .form-group { 
+            margin-bottom: 22px; 
+            position: relative;
+        }
+        .form-group label { 
+            display: block; 
+            color: var(--text-dark); 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.3px;
+        }
+        
+        /* Input wrapper with proper spacing for toggle button */
+        .input-wrapper { 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Liquid Glass Form Inputs - with right padding for toggle */
+        .form-input {
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            font-family: inherit;
+            color: var(--text-dark); 
+            background: rgba(0,0,0,0.03); 
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+        /* Extra right padding for password input to prevent toggle overlap */
+        .form-input[type="password"],
+        .form-input[type="text"] {
+            padding-right: 80px;
+        }
+        .form-input:focus { 
+            border-color: var(--primary-yellow); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.15); 
+            transform: scale(1.01);
+        }
+        .form-input::placeholder { 
+            color: #aaa; 
+            opacity: 1;
+        }
+        
+        /* Liquid Glass Password Toggle - positioned inside input */
+        .password-toggle {
+            position: absolute; 
+            right: 8px; 
+            top: 50%; 
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.06); 
+            border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: var(--radius-sm);
+            padding: 8px 14px; 
+            font-size: 12px; 
+            color: #666; 
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .password-toggle:hover {
+            background: rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            transform: translateY(-50%) translateY(-1px);
+        }
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        /* Forgot Password Link */
+        .forgot-link {
+            color: var(--accent-red);
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            display: block;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: right;
+            transition: all var(--transition-fast);
+        }
+        .forgot-link:hover { 
+            text-decoration: underline; 
+            transform: translateX(-2px);
+        }
+        
+        /* Liquid Glass Submit Button */
+        .btn-submit {
+            width: 100%; 
+            padding: 18px; 
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: white; 
+            font-size: 16px; 
+            font-weight: 700;
+            border: none; 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            margin-top: 8px;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .btn-submit:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-submit:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-link { 
+            text-align: center; 
+            margin-top: 24px; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .auth-link a { 
+            color: var(--text-dark); 
+            font-weight: 700; 
+            text-decoration: underline; 
+            transition: all var(--transition-fast);
+        }
+        .auth-link a:hover {
+            color: #000;
+        }
+        
+        /* Liquid Glass Success Message */
+        .success-msg {
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--accent-green);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .success-msg.show { display: block; }
+        
+        /* Liquid Glass Error Message */
+        .error-msg {
+            background: rgba(255, 59, 48, 0.12);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .error-msg.show { display: block; }
+        
+        /* Liquid Glass Suspended Message */
+        .suspended-msg {
+            background: rgba(175, 82, 222, 0.12);
+            border: 1px solid rgba(175, 82, 222, 0.25);
+            color: var(--accent-purple);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .suspended-msg.show { display: block; }
+        .suspended-msg a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 13px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+        }
+        .suspended-msg a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+        .suspended-msg a svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* Liquid Glass Info Box */
+        .info-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            margin-bottom: 24px; 
+            font-size: 14px;
+            color: var(--text-secondary); 
+            line-height: 1.5;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+        }
+        .info-box:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+        }
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        
+        /* Liquid Glass Feature Cards */
+        .feature-cards { display: flex; flex-direction: column; gap: 14px; }
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) backwards;
+        }
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .feature-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .feature-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            letter-spacing: 1px; 
+            color: var(--text-muted); 
+            margin-bottom: 4px; 
+            text-transform: uppercase; 
+        }
+        .feature-value { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--text-primary); 
+        }
+        
+        /* Email Sent Icon */
+        .email-sent-icon {
+            width: 64px; height: 64px;
+            background: rgba(52, 199, 89, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 16px rgba(52, 199, 89, 0.2);
+        }
+        .email-sent-icon svg { width: 32px; height: 32px; color: var(--accent-green); }
+        .check-email-title { 
+            text-align: center; 
+            color: var(--text-dark); 
+            font-size: 22px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .check-email-text { 
+            text-align: center; 
+            color: #666; 
+            font-size: 14px; 
+            line-height: 1.5; 
+            margin-bottom: 24px; 
+        }
+        
+        /* Not Found Message */
+        .not-found-msg {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            color: var(--accent-orange);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .not-found-msg.show { display: block; }
+        
+        /* Back button */
+        .btn-back {
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #666;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            border-radius: var(--radius-sm);
+        }
+        .btn-back:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-dark);
+        }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .auth-content { max-width: 520px; padding: 96px 24px 40px; }
+            .auth-header { padding: 20px 32px; height: 72px; }
+            .auth-content { padding-top: 96px; }
+            .welcome-title { font-size: 40px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .auth-header { padding: 24px 48px; height: 76px; }
+            .auth-content { padding: 104px 24px 40px; }
+            .welcome-title { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="auth-header" id="authHeader">
+            <div class="auth-header-left">
+                <div class="auth-icon">
+                    <span>MTN</span>
+                </div>
+                <div class="auth-header-text">
+                    <h2>MTN AFA Portal</h2>
+                    <p>Secure user access</p>
+                </div>
+            </div>
+            <a href="create.html" class="btn-yellow">Create Account</a>
+        </header>
+
+        <div class="auth-content" style="flex: 1;">
+            <div style="margin-bottom: 24px;">
+                <span class="badge">MTN AFA User Login</span>
+                <h2 class="welcome-title">Welcome back</h2>
+                <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
+            </div>
+
+            <div class="auth-card" id="signinCard">
+                <h3>Sign in</h3>
+                <p class="subtitle">Enter your account details below.</p>
+
+                <div class="success-msg" id="signinSuccess"></div>
+                <div class="error-msg" id="signinError"></div>
+                <div class="suspended-msg" id="suspendedMsg">
+                    <strong>🚫 Account Suspended</strong><br>
+                    Your account has been suspended by the admin. Please contact support for assistance.<br>
+                    <a href="https://wa.me/233503107100" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5.02L2 22l5.11-1.34A9.93 9.93 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.53 0-2.97-.43-4.2-1.17l-.3-.18-3.03.79.81-2.95-.2-.31A8.02 8.02 0 014 12c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8z"/>
+                        </svg>
+                        Chat Support on WhatsApp
+                    </a>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signinEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signinPassword" class="form-input" placeholder="Enter your password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('signinPassword', this)">Show</button>
+                    </div>
+                </div>
+
+                <p class="forgot-link" onclick="showForgotCard()">Forgot Password?</p>
+
+                <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+
+                <div class="auth-link">
+                    Do not have an account? <a href="create.html">Create one</a>
+                </div>
+            </div>
+
+            <div class="auth-card" id="forgotCard" style="display: none;">
+                <h3>Reset Password</h3>
+                <p class="subtitle" id="forgotSubtitle">Enter your email to receive a password reset link.</p>
+                
+                <div class="success-msg" id="forgotSuccess"></div>
+                <div class="error-msg" id="forgotError"></div>
+                <div class="not-found-msg" id="notFoundMsg">
+                    <strong>Email Not Found</strong><br>
+                    This email is not registered with MTN AFA Portal. Please create an account first.
+                </div>
+
+                <div id="forgotStep1">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetLink()">Send Reset Link</button>
+                </div>
+
+                <div id="forgotStep2" style="display: none;">
+                    <div class="email-sent-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="check-email-title">Check your email</div>
+                    <div class="check-email-text">
+                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<<br><br>
+                        Click the link in your email to reset your password.
+                    </div>
+                    <button type="button" class="btn-submit" onclick="backToSignIn()">Back to Sign In</button>
+                </div>
+
+                <button type="button" class="btn-back" onclick="backToSignIn()">← Back to Sign In</button>
+            </div>
+
+            <div class="info-box">
+                Use the same email address you registered with to access your dashboard.
+            </div>
+
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-label">Orders</div>
+                    <div class="feature-value">Track status</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Registrations</div>
+                    <div class="feature-value">Submit AFA applications</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Security</div>
+                    <div class="feature-value">Protected access</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
@@ -841,7 +1440,11 @@
                     return;
                 }
                 
-                if (!data.success) throw new Error(data.error);
+                if (!data.success) {
+                    // Show the actual error from the server instead of generic message
+                    const serverError = data.error || data.message || 'Authentication failed.';
+                    throw new Error(serverError);
+                }
                 
                 setSession(data.session);
                 setUser(data.user);
@@ -860,10 +1463,21 @@
                 hideAllMessages();
                 
                 const errorMsg = error.message || '';
-                if (errorMsg.toLowerCase().includes('suspended') || errorMsg.toLowerCase().includes('contact support')) {
+                const errorLower = errorMsg.toLowerCase();
+                
+                if (errorLower.includes('suspended') || errorLower.includes('contact support')) {
                     document.getElementById('suspendedMsg').classList.add('show');
+                } else if (errorLower.includes('invalid login credentials')) {
+                    showError('signinError', 'Invalid email or password. Please check your credentials and try again.');
+                } else if (errorLower.includes('email not confirmed')) {
+                    showError('signinError', 'Please confirm your email address before signing in. Check your inbox for the confirmation link.');
+                } else if (errorLower.includes('too many requests')) {
+                    showError('signinError', 'Too many login attempts. Please wait a moment and try again.');
+                } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('failed to fetch')) {
+                    showError('signinError', 'Unable to connect to server. Please check your internet connection and try again.');
                 } else {
-                    showError('signinError', 'Wrong password or email. Please try again or click "Forgot Password".');
+                    // Show the actual error message from Supabase/server
+                    showError('signinError', errorMsg);
                 }
             }
         }
@@ -917,7 +1531,11 @@
                     return;
                 }
                 
-                if (!data.success) throw new Error(data.error || data.message);
+                if (!data.success) {
+                    // Show actual server error
+                    const serverError = data.error || data.message || 'Failed to send reset link.';
+                    throw new Error(serverError);
+                }
                 
                 document.getElementById('forgotStep1').style.display = 'none';
                 document.getElementById('forgotStep2').style.display = 'block';
@@ -926,11 +1544,15 @@
                 
             } catch (error) {
                 const errorMsg = error.message || '';
+                const errorLower = errorMsg.toLowerCase();
                 
-                if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('not registered')) {
+                if (errorLower.includes('not found') || errorLower.includes('not registered') || errorLower.includes('user not found')) {
                     document.getElementById('notFoundMsg').classList.add('show');
+                } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('failed to fetch')) {
+                    showError('forgotError', 'Unable to connect to server. Please check your internet connection and try again.');
                 } else {
-                    showError('forgotError', 'Error: ' + escapeHtml(errorMsg));
+                    // Show actual error from Supabase/server
+                    showError('forgotError', 'Error: ' + errorMsg);
                 }
                 
                 btn.disabled = false;
