@@ -1363,6 +1363,7 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script>
         // XSS Protection - escape HTML before inserting into DOM
@@ -1541,7 +1542,15 @@
         }
 
         function updateStats() {
-            const pending = allRegistrations.filter(r => r.status !== 'approved' && r.status !== 'rejected').length;
+            // ============================================
+            // FIXED: Only count truly pending registrations
+            // Pending = 'pending' or 'paid' (awaiting approval)
+            // NOT rejected, failed, or approved
+            // ============================================
+            const pending = allRegistrations.filter(r => {
+                const status = r.status || 'pending';
+                return status === 'pending' || status === 'paid';
+            }).length;
             document.getElementById('statPending').textContent = pending;
         }
 
