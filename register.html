@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
     <title>MTN AFA Portal - Register AFA</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -598,6 +600,14 @@
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         const dobInput = document.getElementById('dobInput');
         dobInput.addEventListener('change', function() {
             if (this.value) this.classList.add('has-value');
@@ -654,7 +664,7 @@
             this.value = this.value.replace(/\D/g, '');
             
             if (this.value.length > 0 && this.value.length !== 10) {
-                phoneHint.textContent = `⚠️ ${this.value.length}/10 digits entered. Must be exactly 10 digits!`;
+                phoneHint.textContent = '⚠️ ' + this.value.length + '/10 digits entered. Must be exactly 10 digits!';
                 phoneHint.classList.add('warning');
             } else if (this.value.length === 10) {
                 phoneHint.textContent = '✓ 10 digits - looks good!';
@@ -678,7 +688,7 @@
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMsg');
-            errorDiv.textContent = message;
+            errorDiv.textContent = escapeHtml(message);
             errorDiv.classList.add('visible');
             setTimeout(() => errorDiv.classList.remove('visible'), 5000);
         }
