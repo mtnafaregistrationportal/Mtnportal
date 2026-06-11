@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - MTN AFA Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://mtn-afa-api.onrender.com https://iqzjpdynmnucxswbrkho.supabase.co https://api.paystack.co;">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <style>
         /* ============================================
            iOS 26 LIQUID GLASS DESIGN SYSTEM
@@ -1360,8 +1365,16 @@
 
     <script src="config.js"></script>
     <script>
+        // XSS Protection - escape HTML before inserting into DOM
+        function escapeHtml(text) {
+          if (!text) return '';
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
         let currentAdmin = null;
-        let adminToken = null;
+        let adminToken = sessionStorage.getItem('adminToken') || null;
         let allUsers = [];
         let allRegistrations = [];
         let allPayments = [];
@@ -1372,6 +1385,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // ALWAYS show login screen - never auto-login
             // Clear any stale tokens to ensure fresh login
+            sessionStorage.removeItem('adminToken');
             localStorage.removeItem('adminToken');
             adminToken = null;
             currentAdmin = null;
@@ -1402,7 +1416,6 @@
         function showDashboard() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('dashboardScreen').classList.add('show');
-            // Scroll to top smoothly
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1433,8 +1446,9 @@
                 
                 if (!data.success) throw new Error(data.error);
 
-                // Store token ONLY in memory - NOT in localStorage
-                // This ensures fresh login required on every refresh
+                // Store token in sessionStorage (clears when tab closes)
+                // NEVER in localStorage (persists forever, vulnerable to theft)
+                sessionStorage.setItem('adminToken', data.token);
                 adminToken = data.token;
                 currentAdmin = data.admin;
                 
@@ -1451,6 +1465,7 @@
 
         function adminLogout() {
             // Clear everything
+            sessionStorage.removeItem('adminToken');
             localStorage.removeItem('adminToken');
             adminToken = null;
             currentAdmin = null;
@@ -1491,7 +1506,6 @@
                 document.getElementById('statTotalUsers').textContent = allUsers.length;
                 renderUsers();
             } catch (error) {
-                console.error('Error loading users:', error);
                 if (error.message && (error.message.includes('token') || error.message.includes('denied'))) {
                     adminLogout();
                 }
@@ -1504,18 +1518,12 @@
                 if (!data.success) throw new Error(data.error);
                 
                 allRegistrations = data.orders || [];
-                console.log('=== LOAD REGISTRATIONS ===');
-                console.log('Total registrations from API:', allRegistrations.length);
-                if (allRegistrations.length > 0) {
-                    console.log('First reg:', JSON.stringify(allRegistrations[0], null, 2));
-                }
                 document.getElementById('statTotalReg').textContent = allRegistrations.length;
                 renderRegistrations();
                 updateStats();
             } catch (error) {
-                console.error('Error loading registrations:', error);
                 document.getElementById('registrationsList').innerHTML = 
-                    '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error loading registrations: ' + error.message + '</div>';
+                    '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error loading registrations: ' + escapeHtml(error.message) + '</div>';
             }
         }
 
@@ -1525,36 +1533,23 @@
                 if (!data.success) throw new Error(data.error);
                 
                 allPayments = data.payments || [];
-                
-                // Revenue comes from server ONLY - never calculate on frontend
-                const revenue = data.totalRevenue || '0.00';
-                document.getElementById('statRevenue').textContent = revenue;
-                
+                document.getElementById('statRevenue').textContent = data.totalRevenue || '0.00';
                 renderPayments();
             } catch (error) {
-                console.error('Error loading payments:', error);
                 showToast('Error loading payments: ' + error.message, 'error');
             }
         }
 
         function updateStats() {
-            // Pending = registrations that are NOT approved and NOT rejected (regardless of payment)
             const pending = allRegistrations.filter(r => r.status !== 'approved' && r.status !== 'rejected').length;
             document.getElementById('statPending').textContent = pending;
-            console.log('Pending count:', pending);
         }
 
-        // ============================================
-        // REGISTRATION STATUS BADGE - WITH PAYMENT BADGE
-        // ============================================
-        // Returns registration status badge + payment badge
-        // Approval does NOT affect payment status
         function getRegistrationStatusBadge(order) {
             const isPaystackVerified = order.paystack_verified === true || order.paystack_verified === 'true';
             const hasPaidAt = order.paid_at && order.paid_at !== null;
             const isPaid = isPaystackVerified || hasPaidAt || order.status === 'paid';
             
-            // If approved - show COMPLETED + PAID badge (if paid)
             if (order.status === 'approved') {
                 const paymentBadge = isPaid
                     ? `<div class="payment-status-banner paid">✅ PAID</div>` 
@@ -1567,7 +1562,6 @@
                     showActions: false
                 };
             }
-            // If rejected - show REJECTED + FAILED badge (if not paid)
             if (order.status === 'rejected') {
                 const paymentBadge = isPaid
                     ? `<div class="payment-status-banner paid">✅ PAID</div>` 
@@ -1580,7 +1574,6 @@
                     showActions: false
                 };
             }
-            // For pending/failed/paid - show payment status only
             if (order.status === 'failed') {
                 return {
                     html: `<div class="payment-status-banner failed">❌ FAILED</div>`,
@@ -1597,7 +1590,6 @@
                     showActions: true
                 };
             }
-            // Default pending - show based on payment verification
             if (isPaid) {
                 return {
                     html: `<div class="payment-status-banner paid">✅ PAID</div>`,
@@ -1638,20 +1630,23 @@
                 const isSuspended = u.status === 'suspended';
                 const regCount = u.total_registrations || 0;
                 const walletAmount = (u.amount_spent || 0).toFixed(2);
+                const safeName = escapeHtml(u.name || 'Unknown');
+                const safeEmail = escapeHtml(u.email || 'No email');
+                const safePhone = escapeHtml(u.phone_number || 'No phone');
                 
                 return `
                     <div class="user-card">
                         <div class="user-card-header">
                             <div class="user-info">
                                 ${profilePic 
-                                    ? `<img src="${profilePic}" class="user-avatar-img" alt="Profile" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                    ? `<img src="${escapeHtml(profilePic)}" class="user-avatar-img" alt="Profile" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                        <div class="user-avatar-placeholder" style="display:none;">${initials}</div>`
                                     : `<div class="user-avatar-placeholder">${initials}</div>`
                                 }
                                 <div>
-                                    <div class="user-name">${u.name || 'Unknown'}</div>
-                                    <div class="user-email">${u.email || 'No email'}</div>
-                                    <div class="user-phone">${u.phone_number || 'No phone'}</div>
+                                    <div class="user-name">${safeName}</div>
+                                    <div class="user-email">${safeEmail}</div>
+                                    <div class="user-phone">${safePhone}</div>
                                 </div>
                             </div>
                             <span class="status-badge ${isSuspended ? 'badge-suspended' : 'badge-approved'}">
@@ -1691,37 +1686,22 @@
         function renderRegistrations(filter) {
             const container = document.getElementById('registrationsList');
             
-            // SAFETY CHECK: If allRegistrations is empty or not loaded
             if (!allRegistrations || allRegistrations.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div>No registrations found</div>';
                 return;
             }
 
-            let regs = [...allRegistrations]; // Create a copy to avoid mutating original
+            let regs = [...allRegistrations];
             
-            console.log('=== RENDER REGISTRATIONS ===');
-            console.log('Total registrations:', regs.length);
-            
-            // Show status breakdown
-            const statusCounts = {};
-            regs.forEach(r => {
-                statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
-            });
-            console.log('Status breakdown:', statusCounts);
-            
-            // Apply search filter ONLY (no status filtering)
             if (filter) {
                 const f = filter.toLowerCase();
-                const beforeFilter = regs.length;
                 regs = regs.filter(r => 
                     (r.applicant_name || '').toLowerCase().includes(f) ||
                     (r.applicant_phone || '').includes(f) ||
                     (r.id_number || '').includes(f)
                 );
-                console.log('After search filter:', regs.length, '(removed', beforeFilter - regs.length, ')');
             }
 
-            // Sort: unattended first, then by date (newest first)
             regs.sort((a, b) => {
                 if (a.admin_attended !== b.admin_attended) {
                     return a.admin_attended ? 1 : -1;
@@ -1740,10 +1720,6 @@
                     const r = regs[i];
                     const statusInfo = getRegistrationStatusBadge(r);
                     
-                    // Attended dot logic:
-                    // - Approved: yellow (attended)
-                    // - Rejected: white (unattended - stays white)
-                    // - Everything else: based on admin_attended flag
                     let dotClass = 'unattended';
                     if (r.status === 'approved') {
                         dotClass = 'attended';
@@ -1751,20 +1727,18 @@
                         dotClass = r.admin_attended ? 'attended' : 'unattended';
                     }
                     
-                    // Amount: 0.00 for failed, actual amount for paid/approved/pending
                     const isPaid = r.paystack_verified === true || r.paystack_verified === 'true' || r.paid_at || r.status === 'paid';
-                    const displayAmount = r.status === 'failed' ? 0.00 : (r.amount || 13.00);
+                    const displayAmount = r.status === 'failed' ? 0.00 : (r.amount || 13.40);
                     
-                    const safeName = (r.applicant_name || 'Unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safePhone = (r.applicant_phone || 'No phone').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeId = (r.id_number || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeLocation = (r.location || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeDob = (r.dob || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeOccupation = (r.occupation || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeRef = (r.payment_reference || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const safeNote = (r.admin_note || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeName = escapeHtml(r.applicant_name || 'Unknown');
+                    const safePhone = escapeHtml(r.applicant_phone || 'No phone');
+                    const safeId = escapeHtml(r.id_number || 'N/A');
+                    const safeLocation = escapeHtml(r.location || 'N/A');
+                    const safeDob = escapeHtml(r.dob || 'N/A');
+                    const safeOccupation = escapeHtml(r.occupation || 'N/A');
+                    const safeRef = escapeHtml(r.payment_reference || 'N/A');
+                    const safeNote = escapeHtml(r.admin_note || '');
                     
-                    // FIX: Convert r.id to string before using substring
                     const idStr = String(r.id || '');
                     const orderIdShort = idStr ? idStr.substring(0, 12) + '...' : 'N/A';
                     const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
@@ -1837,13 +1811,11 @@
                         </div>
                     `;
                 } catch (itemError) {
-                    console.error('Error rendering registration item', i, ':', itemError);
-                    html += `<div style="color:var(--accent-red);padding:10px;">Error rendering item ${i}: ${itemError.message}</div>`;
+                    html += `<div style="color:var(--accent-red);padding:10px;">Error rendering item ${i}</div>`;
                 }
             }
             
             container.innerHTML = html;
-            console.log('Rendering successful:', regs.length, 'cards');
         }
 
         function renderPayments(filter) {
@@ -1860,7 +1832,6 @@
                 );
             }
 
-            // Sort: paid first, then failed, then by date
             payments.sort((a, b) => {
                 if (a.paymentStatus !== b.paymentStatus) {
                     return a.paymentStatus === 'paid' ? -1 : 1;
@@ -1887,9 +1858,9 @@
                                     ${statusBadge}
                                     <span class="payment-amount" style="font-size:16px;">GH₵ ${parseFloat(p.amount || 0).toFixed(2)}</span>
                                 </div>
-                                <div class="payment-meta"><strong>${p.name || 'Unknown'}</strong> • ${p.phone || 'No phone'}</div>
-                                <div class="payment-meta">Ghana Card: ${p.id_number || 'N/A'}</div>
-                                <div class="payment-meta">Ref: ${p.reference || 'N/A'} • ${p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                <div class="payment-meta"><strong>${escapeHtml(p.name || 'Unknown')}</strong> • ${escapeHtml(p.phone || 'No phone')}</div>
+                                <div class="payment-meta">Ghana Card: ${escapeHtml(p.id_number || 'N/A')}</div>
+                                <div class="payment-meta">Ref: ${escapeHtml(p.reference || 'N/A')} • ${p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                             </div>
                             <button class="btn-delete" onclick="deletePayment('${String(p.id)}')" style="flex-shrink: 0;">🗑 Delete</button>
                         </div>
@@ -2116,7 +2087,6 @@
             if (e.key === 'Escape') closeImgModal();
         });
         
-        // Enter key on login
         document.getElementById('adminPassword').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') adminLogin();
         });
