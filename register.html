@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
     <title>MTN AFA Portal - Register AFA</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -544,11 +544,12 @@
 
         <div class="error-msg" id="errorMsg"></div>
 
-        <div class="form-card">
-            <h2 class="form-title">Applicant Details</h2>
-            <p class="form-subtitle">Fill the form carefully. GH₵13 will be charged via Paystack.</p>
+        <!-- FORM NOW WRAPS EVERYTHING INCLUDING SUBMIT BUTTON -->
+        <form id="afaForm">
+            <div class="form-card">
+                <h2 class="form-title">Applicant Details</h2>
+                <p class="form-subtitle">Fill the form carefully. GH₵13 will be charged via Paystack.</p>
 
-            <form id="afaForm">
                 <div class="form-group">
                     <label class="form-label">Full Name <span class="required">*</span></label>
                     <input type="text" class="form-input" id="fullName" placeholder="e.g. John Doe" required>
@@ -584,23 +585,23 @@
                     <label class="form-label">Occupation <span class="required">*</span></label>
                     <input type="text" class="form-input" id="occupation" placeholder="e.g. Student, Teacher, Business Owner" required>
                 </div>
-            </form>
-        </div>
+            </div>
 
-        <div class="summary-card">
-            <h2 class="summary-title">Submission Summary</h2>
-            <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
-            <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.00</span></div>
-            <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
-        </div>
+            <div class="summary-card">
+                <h2 class="summary-title">Submission Summary</h2>
+                <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
+                <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.00</span></div>
+                <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
+            </div>
 
-        <button type="submit" form="afaForm" class="submit-btn" id="submitBtn">Submit Registration</button>
+            <!-- BUTTON IS NOW INSIDE THE FORM -->
+            <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
+        </form>
     </main>
 
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
-        // XSS protection - escape HTML entities
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -717,10 +718,6 @@
                     return; 
                 }
 
-                // ============================================
-                // CRITICAL FIX: Removed amount from formData
-                // Backend now controls the amount (GH₵ 13.00)
-                // ============================================
                 const formData = {
                     fullName: document.getElementById('fullName').value.trim(),
                     phone: document.getElementById('phone').value.trim(),
@@ -731,7 +728,6 @@
                     dob: document.getElementById('dobInput').value,
                     occupation: document.getElementById('occupation').value.trim(),
                     userId: user.id
-                    // ✅ REMOVED: amount - now controlled by backend only!
                 };
 
                 if (!/^\d{10}$/.test(formData.phone)) {
@@ -754,6 +750,7 @@
                 const data = await apiCall('/api/register', 'POST', formData);
                 if (!data.success) throw new Error(data.error);
 
+                // Redirect to Paystack
                 window.location.href = data.authorization_url;
             } catch (error) {
                 showError(error.message || 'Something went wrong. Please try again.');
