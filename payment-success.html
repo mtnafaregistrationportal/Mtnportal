@@ -337,6 +337,7 @@
     <script src="glass.js"></script>
     <script>
         const BASE_PATH = '/Mtnportal';
+        const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
         
         function escapeHtml(text) {
             if (!text) return '';
@@ -345,7 +346,7 @@
             return div.innerHTML;
         }
         
-        function showSuccessUI(reference, amount) {
+        function showSuccessUI(reference, amount, note) {
             const card = document.getElementById('successCard');
             card.innerHTML = `
                 <div class="success-icon">
@@ -354,7 +355,7 @@
                     </svg>
                 </div>
                 <h2>Payment Successful!</h2>
-                <p>Your payment of <strong>GH₵ ${escapeHtml(amount)}</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
+                <p>Your payment of <strong>GH₵ ${escapeHtml(amount)}</strong> has been confirmed. ${note ? escapeHtml(note) : 'Your AFA registration is now pending approval from our team.'}</p>
                 <div class="reference-box">
                     Reference: <strong>${escapeHtml(reference)}</strong>
                 </div>
@@ -419,9 +420,13 @@
                 let response, data;
                 let backendConfirmed = false;
                 
-                // Attempt 1: check-status endpoint
+                // ============================================
+                // NEW: Attempt 1: /api/payment/confirm endpoint FIRST
+                // This forces verification and always returns success data
+                // if payment was actually made.
+                // ============================================
                 try {
-                    response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
+                    response = await fetch(`${API_BASE_URL}/api/payment/confirm?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
                     data = await response.json();
                     if (data.verified === true || data.status === 'paid' || data.from_database === true) {
                         backendConfirmed = true;
@@ -430,7 +435,20 @@
                     data = { success: false };
                 }
                 
-                // Attempt 2: verify-status endpoint (if first failed)
+                // Attempt 2: check-status endpoint (fallback)
+                if (!backendConfirmed) {
+                    try {
+                        response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
+                        data = await response.json();
+                        if (data.verified === true || data.status === 'paid' || data.from_database === true) {
+                            backendConfirmed = true;
+                        }
+                    } catch (e) {
+                        data = { success: false };
+                    }
+                }
+                
+                // Attempt 3: verify-status endpoint (final fallback)
                 if (!backendConfirmed) {
                     try {
                         response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
@@ -450,7 +468,8 @@
                 // and redirected here — the backend may just be lagging.
                 // ============================================
                 const amount = (data && data.amount) ? data.amount : '13.40';
-                showSuccessUI(reference, amount);
+                const note = (data && data.message) ? data.message : null;
+                showSuccessUI(reference, amount, note);
                 
             } catch (error) {
                 console.error('Payment verification error:', error);
