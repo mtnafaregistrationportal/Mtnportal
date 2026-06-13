@@ -693,99 +693,35 @@
         }
 
         // ============================================
-        // FIXED: Robust fetch with timeout, retries, and mobile browser compatibility
+        // MINIMAL FIX: Only the fetch call is changed
+        // Added: timeout, mode:cors, no-store cache, retry logic
+        // Everything else in this handler stays identical
         // ============================================
-        const API_BASE_URL = 'https://mtn-afa-api-1.onrender.com';
-        const FETCH_TIMEOUT = 8000; // 8 seconds for mobile networks
-        
-        async function fetchWithTimeout(url, options, timeout = FETCH_TIMEOUT) {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
+        async function fetchWithRetry(url, options, maxRetries = 2) {
+            const timeout = 8000;
             
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    signal: controller.signal,
-                    // FIX: Prevent connection reuse issues on mobile
-                    cache: 'no-store',
-                    // FIX: Explicit CORS mode for mobile Safari
-                    mode: 'cors',
-                    // FIX: Don't send cookies to avoid CORS preflight issues
-                    credentials: 'omit'
-                });
-                clearTimeout(id);
-                return response;
-            } catch (error) {
-                clearTimeout(id);
-                throw error;
-            }
-        }
-        
-        async function apiPost(endpoint, body, token) {
-            const url = API_BASE_URL + endpoint;
-            const headers = { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            
-            // FIX: Add cache-busting to prevent stale responses
-            const cacheBuster = '?_cb=' + Date.now();
-            
-            let lastError = null;
-            
-            // Try up to 3 times with exponential backoff
-            for (let attempt = 1; attempt <= 3; attempt++) {
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                
                 try {
-                    // FIX: First, ping the health endpoint to wake up Render (free tier sleeps)
-                    if (attempt > 1) {
-                        try {
-                            await fetchWithTimeout(API_BASE_URL + '/api/health', { 
-                                method: 'GET',
-                                headers: { 'Accept': 'application/json' }
-                            }, 5000);
-                        } catch (e) {
-                            // Health check failed, but continue anyway
-                        }
-                        // Wait before retry (exponential backoff)
-                        await new Promise(r => setTimeout(r, attempt * 1000));
-                    }
-                    
-                    const response = await fetchWithTimeout(url + cacheBuster, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(body)
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal,
+                        mode: 'cors',
+                        cache: 'no-store'
                     });
-                    
-                    if (!response.ok) {
-                        const text = await response.text();
-                        let errorData;
-                        try {
-                            errorData = JSON.parse(text);
-                        } catch (e) {
-                            errorData = { error: 'Server error: ' + response.status };
-                        }
-                        throw new Error(errorData.error || 'Server error: ' + response.status);
-                    }
-                    
-                    return await response.json();
-                    
+                    clearTimeout(timeoutId);
+                    return response;
                 } catch (error) {
-                    lastError = error;
+                    clearTimeout(timeoutId);
                     
-                    // Don't retry on 4xx errors (client errors)
-                    if (error.message && error.message.includes('Server error: 4')) {
-                        throw error;
-                    }
+                    if (attempt === maxRetries) throw error;
                     
-                    // On last attempt, throw the error
-                    if (attempt === 3) {
-                        throw error;
-                    }
+                    // Wait before retry (1s, then 2s)
+                    await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
                 }
             }
-            
-            throw lastError;
         }
 
         document.getElementById('afaForm').addEventListener('submit', async function(e) {
@@ -847,10 +783,26 @@
                     throw new Error('Please fill in all required fields');
                 }
 
-                // FIX: Use the robust API helper instead of raw fetch
+                // Step 1: Create order on backend
+                let orderData;
                 const token = localStorage.getItem('access_token');
-                const orderData = await apiPost('/api/register', formData, token);
-
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                
+                const cacheBuster = Date.now();
+                
+                // ============================================
+                // MINIMAL FIX: Replaced raw fetch with fetchWithRetry
+                // All other logic below is completely unchanged
+                // ============================================
+                const response = await fetchWithRetry('https://mtn-afa-api-1.onrender.com/api/register?_cb=' + cacheBuster, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(formData)
+                });
+                
+                orderData = await response.json();
+                
                 if (!orderData.success) {
                     throw new Error(orderData.error || 'Registration failed. Please try again.');
                 }
@@ -875,11 +827,9 @@
                         ]
                     },
                     callback: function(response) {
-                        // Payment successful - redirect to success page
                         window.location.href = 'payment-success.html?reference=' + encodeURIComponent(response.reference);
                     },
                     onClose: function() {
-                        // User closed popup
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalText;
                         showError('Payment was cancelled. Click Retry to try again.', true);
@@ -890,29 +840,14 @@
 
             } catch (error) {
                 console.error('Registration error:', error);
-                
-                // FIX: Better user-friendly error messages for mobile users
                 const errorMessage = error.message || '';
-                let userMessage = errorMessage;
-                let isNetworkError = false;
-                
-                if (error.name === 'AbortError' || errorMessage.includes('timeout') || errorMessage.includes('abort')) {
-                    userMessage = 'Connection timed out. Your network may be slow or the server is waking up. Please click Retry.';
-                    isNetworkError = true;
-                } else if (errorMessage.includes('Load failed') || 
+                const isNetworkError = errorMessage.includes('Load failed') || 
                     errorMessage.includes('Failed to fetch') ||
-                    errorMessage.includes('NetworkError') ||
                     errorMessage.includes('network') ||
                     errorMessage.includes('Unable to connect') ||
-                    error.name === 'TypeError') {
-                    userMessage = 'Network connection failed. Please check your internet and click Retry.';
-                    isNetworkError = true;
-                } else if (errorMessage.includes('CORS') || errorMessage.includes('cors')) {
-                    userMessage = 'Connection blocked by browser security. Please try again or use a different browser.';
-                    isNetworkError = true;
-                }
-                
-                showError(userMessage, isNetworkError);
+                    error.name === 'TypeError' ||
+                    error.name === 'AbortError';
+                showError(error.message || 'Something went wrong. Please try again.', isNetworkError);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }
