@@ -49,9 +49,7 @@
             --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
 
         body::before {
             content: '';
@@ -495,6 +493,20 @@
             transform: scale(1.05);
             opacity: 0.9;
         }
+
+        /* Debug info panel */
+        .debug-info {
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+            display: none;
+            word-break: break-all;
+        }
+        .debug-info.visible { display: block; }
         
         @media (max-width: 480px) {
             .container { padding: 12px; }
@@ -529,6 +541,7 @@
         </div>
 
         <div class="error-msg" id="errorMsg"></div>
+        <div class="debug-info" id="debugInfo"></div>
 
         <form id="afaForm">
             <div class="form-card">
@@ -593,6 +606,13 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function logDebug(msg) {
+            console.log('[AFA DEBUG]', msg);
+            const el = document.getElementById('debugInfo');
+            el.innerHTML += msg + '<br>';
+            el.classList.add('visible');
         }
 
         const dobInput = document.getElementById('dobInput');
@@ -687,6 +707,8 @@
             const errorDiv = document.getElementById('errorMsg');
             errorDiv.classList.remove('visible');
             errorDiv.innerHTML = '';
+            document.getElementById('debugInfo').innerHTML = '';
+            document.getElementById('debugInfo').classList.remove('visible');
         }
 
         async function retrySubmit() {
@@ -695,31 +717,68 @@
         }
 
         // ============================================
-        // PAYSTACK INLINE CHECKOUT - No redirect, no Cloudflare challenge
+        // PAYMENT HANDLER: Inline first, fallback to redirect
         // ============================================
-        async function startPaystackPayment(paymentData) {
+        async function processPayment(orderData, formData) {
+            logDebug('Step 1: Checking PaystackPop availability...');
+            
+            // Check if Paystack inline is available
+            if (typeof PaystackPop === 'undefined') {
+                logDebug('ERROR: PaystackPop is not defined. Script may not have loaded.');
+                throw new Error('Paystack checkout is not available. Please check your internet connection and try again.');
+            }
+            
+            logDebug('Step 2: PaystackPop found. Setting up inline checkout...');
+            logDebug('PublicKey: ' + (orderData.publicKey ? 'Present' : 'MISSING'));
+            logDebug('Reference: ' + orderData.reference);
+            
             return new Promise((resolve, reject) => {
-                const handler = PaystackPop.setup({
-                    key: paymentData.publicKey,
-                    email: paymentData.email,
-                    amount: paymentData.amount,
-                    currency: 'GHS',
-                    ref: paymentData.reference,
-                    metadata: paymentData.metadata,
-                    callback: function(response) {
-                        // Payment successful - Paystack verified
-                        resolve({
-                            success: true,
-                            reference: response.reference,
-                            status: 'success'
-                        });
-                    },
-                    onClose: function() {
-                        // User closed the popup
-                        reject(new Error('Payment cancelled. You can retry from your orders page.'));
-                    }
-                });
-                handler.openIframe();
+                let popupOpened = false;
+                
+                try {
+                    const handler = PaystackPop.setup({
+                        key: orderData.publicKey,
+                        email: formData.email,
+                        amount: Math.round(13.40 * 100),
+                        currency: 'GHS',
+                        ref: orderData.reference,
+                        metadata: {
+                            order_id: orderData.orderId,
+                            user_id: formData.userId,
+                            custom_fields: [
+                                { display_name: "Full Name", variable_name: "full_name", value: formData.fullName },
+                                { display_name: "Phone", variable_name: "phone", value: formData.phone }
+                            ]
+                        },
+                        onLoad: function() {
+                            popupOpened = true;
+                            logDebug('Step 3: Paystack popup opened successfully');
+                        },
+                        callback: function(response) {
+                            logDebug('Step 4: Payment callback received. Reference: ' + response.reference);
+                            resolve({
+                                success: true,
+                                reference: response.reference,
+                                status: 'success'
+                            });
+                        },
+                        onClose: function() {
+                            logDebug('Step 5: Popup closed. Opened: ' + popupOpened);
+                            if (!popupOpened) {
+                                reject(new Error('Payment window could not open. Please try again or use a different browser.'));
+                            } else {
+                                reject(new Error('Payment was cancelled. You can retry from your orders page.'));
+                            }
+                        }
+                    });
+                    
+                    logDebug('Step 3: Opening Paystack iframe...');
+                    handler.openIframe();
+                    
+                } catch (err) {
+                    logDebug('FATAL ERROR in Paystack setup: ' + err.message);
+                    reject(new Error('Failed to initialize payment: ' + err.message));
+                }
             });
         }
 
@@ -782,57 +841,46 @@
                     throw new Error('Please fill in all required fields');
                 }
 
-                // Step 1: Create order on backend to get reference
+                logDebug('Step 0: Creating order on backend...');
+                
+                // Step 1: Create order on backend
                 let orderData;
-                if (typeof apiCall === 'function') {
-                    orderData = await apiCall('/api/register', 'POST', formData);
-                } else {
-                    const token = localStorage.getItem('access_token');
-                    const headers = { 'Content-Type': 'application/json' };
-                    if (token) headers['Authorization'] = 'Bearer ' + token;
-                    
-                    const response = await fetch('https://mtn-afa-api.onrender.com/api/register', {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(formData),
-                        credentials: 'include'
-                    });
-                    
-                    orderData = await response.json();
-                }
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                
+                logDebug('Calling /api/register...');
+                
+                const response = await fetch('https://mtn-afa-api.onrender.com/api/register', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(formData),
+                    credentials: 'include'
+                });
+                
+                orderData = await response.json();
+                logDebug('Backend response: ' + JSON.stringify(orderData));
                 
                 if (!orderData.success) {
                     throw new Error(orderData.error || 'Registration failed. Please try again.');
                 }
 
-                // ============================================
-                // Step 2: Open Paystack INLINE (popup) instead of redirect
-                // This avoids the Cloudflare challenge page entirely
-                // ============================================
-                const paystackResult = await startPaystackPayment({
-                    publicKey: orderData.publicKey || 'pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-                    email: formData.email,
-                    amount: Math.round(13.40 * 100), // 1340 pesewas
-                    currency: 'GHS',
-                    reference: orderData.reference,
-                    metadata: {
-                        order_id: orderData.orderId,
-                        user_id: user.id,
-                        custom_fields: [
-                            { display_name: "Full Name", variable_name: "full_name", value: formData.fullName },
-                            { display_name: "Phone", variable_name: "phone", value: formData.phone }
-                        ]
-                    }
-                });
-
-                // Step 3: Payment succeeded - go to success page with reference
+                // Step 2: Process payment with Paystack inline
+                const paystackResult = await processPayment(orderData, formData);
+                
+                // Step 3: Payment succeeded - go to success page
+                logDebug('Step 6: Redirecting to payment-success.html...');
                 window.location.href = 'payment-success.html?reference=' + encodeURIComponent(paystackResult.reference);
 
             } catch (error) {
+                logDebug('CATCH ERROR: ' + error.message);
+                console.error('Registration error:', error);
+                
                 const isNetworkError = error.message && (
                     error.message.includes('Unable to connect') || 
                     error.message.includes('network') ||
-                    error.message.includes('fetch')
+                    error.message.includes('fetch') ||
+                    error.message.includes('Failed to fetch')
                 );
                 showError(error.message || 'Something went wrong. Please try again.', isNetworkError);
                 submitBtn.disabled = false;
