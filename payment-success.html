@@ -324,12 +324,45 @@
             transform: translateY(0) scale(0.98);
         }
         .whatsapp-btn svg { width: 20px; height: 20px; }
+
+        /* Background sync indicator */
+        .sync-status {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 11px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sync-status.visible {
+            opacity: 1;
+        }
+        .sync-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #34C759;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        .sync-status.syncing .dot {
+            background: #FF9500;
+        }
+        .sync-status.error .dot {
+            background: #FF3B30;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
     </style>
 </head>
 <body>
     <div class="success-card" id="successCard">
-        <div class="spinner" id="spinner"></div>
-        <p class="loading" id="loadingText">Verifying payment...</p>
+        <!-- Content rendered immediately by JS -->
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -349,6 +382,10 @@
         function showSuccessUI(reference, amount, note) {
             const card = document.getElementById('successCard');
             card.innerHTML = `
+                <div class="sync-status" id="syncStatus">
+                    <span class="dot"></span>
+                    <span id="syncText">Syncing...</span>
+                </div>
                 <div class="success-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -362,10 +399,6 @@
                 <a href="${BASE_PATH}/orders.html" class="btn-primary">View My Orders</a>
                 <a href="${BASE_PATH}/dashboard.html" class="btn-secondary">Go to Dashboard</a>
             `;
-            
-            setTimeout(() => {
-                window.location.href = `${BASE_PATH}/orders.html`;
-            }, 5000);
         }
         
         function showFailureUI(reference, reason) {
@@ -394,7 +427,57 @@
             `;
         }
         
-        async function verifyPayment() {
+        function updateSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            const txt = document.getElementById('syncText');
+            if (!el || !txt) return;
+            el.className = 'sync-status visible ' + status;
+            txt.textContent = text;
+        }
+        
+        // ============================================
+        // BACKGROUND SYNC: Fire-and-forget backend calls
+        // These run AFTER success UI is already shown
+        // ============================================
+        async function syncPaymentToBackend(reference) {
+            const endpoints = [
+                `${API_BASE_URL}/api/payment/confirm?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`,
+                `${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`,
+                `${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`
+            ];
+            
+            for (const url of endpoints) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    
+                    const response = await fetch(url, { 
+                        signal: controller.signal,
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.verified === true || data.status === 'paid' || data.from_database === true) {
+                            updateSyncStatus('', 'Synced');
+                            setTimeout(() => {
+                                const el = document.getElementById('syncStatus');
+                                if (el) el.style.opacity = '0';
+                            }, 2000);
+                            return data;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Background sync attempt failed:', e.message);
+                }
+            }
+            
+            updateSyncStatus('error', 'Sync pending');
+            return null;
+        }
+        
+        async function handlePaymentSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const reference = urlParams.get('reference') || urlParams.get('trxref');
             
@@ -409,76 +492,34 @@
             }
             
             // ============================================
-            // CRITICAL FIX: This page ONLY opens after Paystack
-            // has already verified the payment successfully.
-            // We ALWAYS show success UI here, and use the backend
-            // call purely to trigger side effects (SMS, status update).
-            // The backend call is fire-and-forget for the UI.
+            // CRITICAL FIX: Show success UI IMMEDIATELY.
+            // Paystack only redirects here after successful payment.
+            // The user has ALREADY paid. No verification needed.
             // ============================================
             
-            try {
-                let response, data;
-                let backendConfirmed = false;
-                
-                // ============================================
-                // NEW: Attempt 1: /api/payment/confirm endpoint FIRST
-                // This forces verification and always returns success data
-                // if payment was actually made.
-                // ============================================
-                try {
-                    response = await fetch(`${API_BASE_URL}/api/payment/confirm?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
-                    data = await response.json();
-                    if (data.verified === true || data.status === 'paid' || data.from_database === true) {
-                        backendConfirmed = true;
-                    }
-                } catch (e) {
-                    data = { success: false };
-                }
-                
-                // Attempt 2: check-status endpoint (fallback)
-                if (!backendConfirmed) {
-                    try {
-                        response = await fetch(`${API_BASE_URL}/api/payment/check-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
-                        data = await response.json();
-                        if (data.verified === true || data.status === 'paid' || data.from_database === true) {
-                            backendConfirmed = true;
-                        }
-                    } catch (e) {
-                        data = { success: false };
+            // Show success immediately with default amount
+            showSuccessUI(reference, '13.40');
+            
+            // ============================================
+            // Background sync: try to get real amount from backend
+            // and trigger SMS/admin notifications. Fire-and-forget.
+            // User already sees success — this is just bookkeeping.
+            // ============================================
+            syncPaymentToBackend(reference).then(data => {
+                if (data && data.amount) {
+                    // Update amount if backend returned different value
+                    const amountEl = document.querySelector('.success-card p strong');
+                    if (amountEl) {
+                        amountEl.textContent = `GH₵ ${escapeHtml(String(data.amount))}`;
                     }
                 }
-                
-                // Attempt 3: verify-status endpoint (final fallback)
-                if (!backendConfirmed) {
-                    try {
-                        response = await fetch(`${API_BASE_URL}/api/payment/verify-status?reference=${encodeURIComponent(reference)}&_t=${Date.now()}`);
-                        data = await response.json();
-                        if (data.verified === true || data.status === 'paid' || data.from_database === true) {
-                            backendConfirmed = true;
-                        }
-                    } catch (e) {
-                        data = { success: false, verified: false };
-                    }
-                }
-                
-                // ============================================
-                // FIX: Always show success on this page.
-                // If backend also confirms, great. If not, we still
-                // show success because Paystack already took the money
-                // and redirected here — the backend may just be lagging.
-                // ============================================
-                const amount = (data && data.amount) ? data.amount : '13.40';
-                const note = (data && data.message) ? data.message : null;
-                showSuccessUI(reference, amount, note);
-                
-            } catch (error) {
-                console.error('Payment verification error:', error);
-                // Even on total error, show success — Paystack already verified
-                showSuccessUI(reference, '13.40');
-            }
+                console.log('Background sync completed:', data);
+            }).catch(err => {
+                console.log('Background sync error (non-critical):', err);
+            });
         }
         
-        verifyPayment();
+        handlePaymentSuccess();
     </script>
 </body>
 </html>
