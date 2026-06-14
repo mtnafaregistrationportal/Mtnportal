@@ -499,28 +499,6 @@
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
         }
         
-        .verify-loading {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-        .verify-loading .dot {
-            width: 6px;
-            height: 6px;
-            background: var(--primary-yellow);
-            border-radius: 50%;
-            animation: pulse-dot 1.4s infinite;
-        }
-        .verify-loading .dot:nth-child(2) { animation-delay: 0.2s; }
-        .verify-loading .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-        
         /* Delete Order Button */
         .btn-delete-order {
             margin-top: 14px;
@@ -797,34 +775,20 @@
         }
 
         // ============================================
-        // PAYMENT VERIFICATION
+        // REMOVED: verifyPaymentWithBackend() 
+        // Orders page NO LONGER verifies payments.
+        // It only reads the status from the database.
+        // Webhook + Cron handle all verification.
         // ============================================
-        async function verifyPaymentWithBackend(reference) {
-            try {
-                // ============================================
-                // NEW: Try /api/payment/confirm first — forces verification
-                // ============================================
-                let response = await fetch(API_BASE + '/api/payment/confirm?reference=' + encodeURIComponent(reference) + '&_t=' + Date.now());
-                let data = await response.json();
-                
-                if (data.verified === true || data.status === 'paid') {
-                    return data;
-                }
-                
-                // Fallback to verify-status
-                response = await fetch(API_BASE + '/api/payment/verify-status?reference=' + encodeURIComponent(reference) + '&_t=' + Date.now());
-                data = await response.json();
-                return data;
-            } catch (error) {
-                return { verified: false, error: true };
-            }
-        }
 
         // ============================================
-        // ORDER STATUS DETERMINATION
+        // ORDER STATUS FROM DATABASE ONLY
+        // No payment verification. Just reads existing status.
         // ============================================
-        async function getOrderDisplayStatus(order) {
-            if (order.status === 'approved') {
+        function getOrderDisplayStatus(order) {
+            const status = order.status || 'pending';
+            
+            if (status === 'approved') {
                 return {
                     badge: 'Completed',
                     badgeClass: 'status-approved',
@@ -833,7 +797,7 @@
                 };
             }
             
-            if (order.status === 'rejected') {
+            if (status === 'rejected') {
                 return {
                     badge: 'Rejected',
                     badgeClass: 'status-rejected',
@@ -842,7 +806,7 @@
                 };
             }
             
-            if (order.status === 'failed') {
+            if (status === 'failed') {
                 return {
                     badge: 'Payment Failed',
                     badgeClass: 'status-failed',
@@ -851,7 +815,7 @@
                 };
             }
             
-            if (order.status === 'paid') {
+            if (status === 'paid') {
                 return {
                     badge: 'Pending Approval',
                     badgeClass: 'status-paid',
@@ -860,53 +824,12 @@
                 };
             }
             
-            if (order.status === 'pending') {
-                if (!order.payment_reference) {
-                    return {
-                        badge: 'Pending',
-                        badgeClass: 'status-pending',
-                        noteClass: 'pending',
-                        noteText: '⏳ Waiting for payment initialization...',
-                        verifying: true
-                    };
-                }
-                
-                // ============================================
-                // NEW: Auto-verify pending orders with reference
-                // This prevents "verifying..." from hanging forever
-                // ============================================
-                const verifyData = await verifyPaymentWithBackend(order.payment_reference);
-                
-                if (verifyData.verified === true || verifyData.status === 'paid') {
-                    return {
-                        badge: 'Pending Approval',
-                        badgeClass: 'status-paid',
-                        noteClass: 'paid',
-                        noteText: '💳 Payment received. Awaiting AFA approval...'
-                    };
-                } else if (verifyData.paystack_status === 'abandoned' || verifyData.paystack_status === 'failed') {
-                    return {
-                        badge: 'Payment Failed',
-                        badgeClass: 'status-failed',
-                        noteClass: 'failed',
-                        noteText: '⚠️ Payment was not completed. Please register again.'
-                    };
-                } else {
-                    return {
-                        badge: 'Pending',
-                        badgeClass: 'status-pending',
-                        noteClass: 'pending',
-                        noteText: '⏳ Waiting for payment completion...',
-                        verifying: true
-                    };
-                }
-            }
-            
+            // pending
             return {
-                badge: 'Unknown',
+                badge: 'Pending',
                 badgeClass: 'status-pending',
                 noteClass: 'pending',
-                noteText: '⏳ Status unknown. Please refresh the page.'
+                noteText: '⏳ Waiting for payment completion...'
             };
         }
 
@@ -944,7 +867,7 @@
                 
                 if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
                 
-                await renderOrders(data.orders || []);
+                renderOrders(data.orders || []);
                 
             } catch (error) {
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
@@ -958,7 +881,7 @@
                     try {
                         const orders = JSON.parse(cachedOrders);
                         showToast('Showing cached data (offline mode)', 'error');
-                        await renderOrders(orders);
+                        renderOrders(orders);
                         return;
                     } catch (e) {}
                 }
@@ -993,7 +916,7 @@
         // ============================================
         // RENDER ORDERS
         // ============================================
-        async function renderOrders(orders) {
+        function renderOrders(orders) {
             const container = document.getElementById('ordersList');
             totalCount = orders.length;
             pendingCount = 0;
@@ -1014,21 +937,15 @@
             let html = '';
             for (let i = 0; i < orders.length; i++) {
                 const order = orders[i];
-                const displayStatus = await getOrderDisplayStatus(order);
+                const displayStatus = getOrderDisplayStatus(order);
                 
                 const status = order.status || 'pending';
                 
-                // ============================================
-                // FIXED: Only count truly pending orders
-                // Pending = 'pending' or 'paid' (awaiting approval)
-                // NOT rejected, failed, or approved
-                // ============================================
                 if (status === 'approved') {
                     approvedCount++;
                 } else if (status === 'pending' || status === 'paid') {
                     pendingCount++;
                 }
-                // rejected and failed do NOT count as pending
                 
                 const date = order.created_at 
                     ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) 
@@ -1036,29 +953,14 @@
                 
                 const orderId = order.id ? order.id.toString().substr(-8).toUpperCase() : 'N/A';
                 
-                // XSS FIX: Escape all user data
                 const safeName = escapeHtml(order.applicant_name || 'N/A');
                 const safePhone = escapeHtml(order.applicant_phone || 'N/A');
                 const safeRef = escapeHtml(order.payment_reference || 'N/A');
                 const safeNoteText = escapeHtml(displayStatus.noteText);
                 
-                // ============================================
-                // FIXED: Always show 13.40, not 13.00
-                // ============================================
                 const displayAmount = 13.40;
                 
-                let adminNoteHtml = '';
-                if (displayStatus.verifying) {
-                    adminNoteHtml = `
-                        <div class="admin-note ${displayStatus.noteClass}">
-                            <div class="verify-loading">
-                                <span>Verifying payment status</span>
-                                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                            </div>
-                        </div>`;
-                } else {
-                    adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${safeNoteText}</div>`;
-                }
+                let adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${safeNoteText}</div>`;
                 
                 if (order.admin_note && order.admin_note.trim()) {
                     const safeAdminNote = escapeHtml(order.admin_note);
