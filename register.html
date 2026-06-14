@@ -827,6 +827,8 @@
                         ]
                     },
                     callback: function(response) {
+                        // INSTANT REDIRECT: Paystack already confirmed payment
+                        // Verification happens in background via webhook + success page
                         window.location.href = 'payment-success.html?reference=' + encodeURIComponent(response.reference);
                     },
                     onClose: function() {
