@@ -795,7 +795,7 @@
                 // MINIMAL FIX: Replaced raw fetch with fetchWithRetry
                 // All other logic below is completely unchanged
                 // ============================================
-                const response = await fetchWithRetry('https://mtn-afa-api-1.onrender.com/api/register?_cb=' + cacheBuster, {
+                const response = await fetchWithRetry('https://mtn-afa-api.onrender.com/api/register?_cb=' + cacheBuster, {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify(formData)
