@@ -18,7 +18,6 @@
             --glass-highlight: rgba(255, 255, 255, 0.25);
             --glass-shadow: rgba(0, 0, 0, 0.15);
             --glass-shadow-strong: rgba(0, 0, 0, 0.25);
-            
             --primary-yellow: #FFD700;
             --primary-yellow-glow: rgba(255, 215, 0, 0.3);
             --accent-blue: #5AC8FA;
@@ -26,33 +25,25 @@
             --accent-red: #FF3B30;
             --accent-orange: #FF9500;
             --accent-purple: #AF52DE;
-            
             --text-white: #ffffff;
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.65);
             --text-muted: rgba(255, 255, 255, 0.45);
             --text-dark: #1a1a1a;
-            
             --bg-deep: #0a0f1a;
             --bg-gradient-start: #0a0f1a;
             --bg-gradient-mid: #0d1b2a;
             --bg-gradient-end: #0a1520;
-            
             --radius-sm: 12px;
             --radius-md: 20px;
             --radius-lg: 28px;
             --radius-xl: 36px;
             --radius-full: 9999px;
-            
             --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        html { scroll-behavior: smooth; }
         body::before {
             content: '';
             position: fixed;
@@ -68,37 +59,30 @@
             pointer-events: none;
             z-index: 0;
         }
-        
         @keyframes meshMove {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             33% { transform: translate(2%, 2%) rotate(1deg); }
             66% { transform: translate(-1%, 1%) rotate(-1deg); }
         }
-
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
         @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
-        
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
             50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
         }
-        
         @keyframes spin { 
             to { transform: rotate(360deg); } 
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -111,7 +95,6 @@
             padding: 20px;
             position: relative;
         }
-        
         .success-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
@@ -140,7 +123,6 @@
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
             opacity: 0.6;
         }
-        
         .success-icon {
             width: 80px;
             height: 80px;
@@ -159,7 +141,6 @@
             box-shadow: 0 12px 40px rgba(52, 199, 89, 0.4);
         }
         .success-icon svg { width: 40px; height: 40px; color: white; }
-        
         .success-card h2 { 
             color: var(--text-dark); 
             font-size: 26px; 
@@ -175,7 +156,6 @@
             line-height: 1.6; 
             animation: fadeInUp 0.5s var(--transition-smooth) 0.3s backwards;
         }
-        
         .reference-box {
             background: rgba(0,0,0,0.03);
             border-radius: var(--radius-sm);
@@ -197,7 +177,6 @@
             font-size: 14px; 
             font-weight: 700;
         }
-        
         .processing-note {
             background: rgba(255, 215, 0, 0.08);
             border: 1px solid rgba(255, 215, 0, 0.2);
@@ -208,7 +187,6 @@
             color: #8a6d0b;
             animation: fadeInUp 0.5s var(--transition-smooth) 0.45s backwards;
         }
-        
         .btn-primary {
             width: 100%;
             padding: 16px;
@@ -236,7 +214,6 @@
         .btn-primary:active {
             transform: translateY(0) scale(0.98);
         }
-        
         .btn-secondary {
             width: 100%;
             padding: 16px;
@@ -264,12 +241,6 @@
     </style>
 </head>
 <body>
-    <!-- ============================================ -->
-    <!-- PURE DISPLAY PAGE - NO API CALLS, NO VERIFICATION -->
-    <!-- Paystack already verified the payment. -->
-    <!-- Webhook handles DB update + admin SMS. -->
-    <!-- This page only shows the reference and thanks the user. -->
-    <!-- ============================================ -->
     <div class="success-card" id="successCard">
         <div class="success-icon">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -296,11 +267,31 @@
     <script src="glass.js"></script>
     <script>
         // ============================================
-        // ONLY display the reference from URL — NO fetch, NO verification
+        // FIXED: Better reference extraction with debug logging
         // ============================================
         const urlParams = new URLSearchParams(window.location.search);
-        const reference = urlParams.get('reference') || urlParams.get('trxref') || 'N/A';
-        document.getElementById('referenceDisplay').textContent = reference;
+        
+        // Paystack passes reference in multiple ways
+        const reference = urlParams.get('reference') 
+            || urlParams.get('trxref') 
+            || urlParams.get('paystack-trxref')
+            || 'N/A';
+        
+        console.log('Success page URL:', window.location.href);
+        console.log('Success page reference:', reference);
+        
+        const refDisplay = document.getElementById('referenceDisplay');
+        if (refDisplay) {
+            // Handle case where reference is literally the string "undefined"
+            if (reference === 'undefined' || reference === 'null' || !reference || reference === 'N/A') {
+                refDisplay.textContent = 'Reference not available';
+                refDisplay.style.color = '#FF3B30';
+            } else {
+                refDisplay.textContent = reference;
+            }
+        } else {
+            console.error('referenceDisplay element not found!');
+        }
     </script>
 </body>
 </html>
