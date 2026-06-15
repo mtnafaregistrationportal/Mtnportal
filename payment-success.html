@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com https://api.paystack.co; img-src 'self' data:;">
     <title>Payment Status - MTN AFA Portal</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -249,49 +249,23 @@
         </div>
         <h2>Payment Successful!</h2>
         <p>Your payment of <strong>GH₵ 13.40</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
-        
         <div class="processing-note">
             ⏳ Your order is being processed. You will receive a confirmation shortly.
         </div>
-        
         <div class="reference-box">
             Reference: <strong id="referenceDisplay">Loading...</strong>
         </div>
-        
         <a href="/Mtnportal/orders.html" class="btn-primary">View My Orders</a>
         <a href="/Mtnportal/dashboard.html" class="btn-secondary">Go to Dashboard</a>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="glass.js"></script>
     <script>
-        // ============================================
-        // FIXED: Better reference extraction with debug logging
-        // ============================================
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // Paystack passes reference in multiple ways
-        const reference = urlParams.get('reference') 
-            || urlParams.get('trxref') 
-            || urlParams.get('paystack-trxref')
-            || 'N/A';
-        
-        console.log('Success page URL:', window.location.href);
-        console.log('Success page reference:', reference);
-        
-        const refDisplay = document.getElementById('referenceDisplay');
-        if (refDisplay) {
-            // Handle case where reference is literally the string "undefined"
-            if (reference === 'undefined' || reference === 'null' || !reference || reference === 'N/A') {
-                refDisplay.textContent = 'Reference not available';
-                refDisplay.style.color = '#FF3B30';
-            } else {
-                refDisplay.textContent = reference;
-            }
-        } else {
-            console.error('referenceDisplay element not found!');
-        }
+        const rawRef = urlParams.get('reference') || urlParams.get('trxref') || '';
+        const reference = (rawRef && rawRef !== 'undefined' && rawRef !== 'null') ? rawRef : 'N/A';
+        document.getElementById('referenceDisplay').textContent = reference;
     </script>
 </body>
 </html>
