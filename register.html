@@ -18,7 +18,6 @@
             --glass-highlight: rgba(255, 255, 255, 0.25);
             --glass-shadow: rgba(0, 0, 0, 0.15);
             --glass-shadow-strong: rgba(0, 0, 0, 0.25);
-            
             --primary-yellow: #FFD700;
             --primary-yellow-glow: rgba(255, 215, 0, 0.3);
             --accent-blue: #5AC8FA;
@@ -26,31 +25,25 @@
             --accent-red: #FF3B30;
             --accent-orange: #FF9500;
             --accent-purple: #AF52DE;
-            
             --text-white: #ffffff;
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.65);
             --text-muted: rgba(255, 255, 255, 0.45);
             --text-dark: #1a1a1a;
-            
             --bg-deep: #0a0f1a;
             --bg-gradient-start: #0a0f1a;
             --bg-gradient-mid: #0d1b2a;
             --bg-gradient-end: #0a1520;
-            
             --radius-sm: 12px;
             --radius-md: 20px;
             --radius-lg: 28px;
             --radius-xl: 36px;
             --radius-full: 9999px;
-            
             --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
         html { scroll-behavior: smooth; }
-
         body::before {
             content: '';
             position: fixed;
@@ -66,43 +59,35 @@
             pointer-events: none;
             z-index: 0;
         }
-        
         @keyframes meshMove {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             33% { transform: translate(2%, 2%) rotate(1deg); }
             66% { transform: translate(-1%, 1%) rotate(-1deg); }
         }
-
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
         @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
-        
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
             50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
         }
-        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
-        
         @keyframes spin { 
             to { transform: rotate(360deg); } 
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -113,9 +98,7 @@
             position: relative;
             overflow-x: hidden;
         }
-        
         .container { max-width: 600px; margin: 0 auto; padding: 16px; position: relative; z-index: 1; }
-        
         .page-header {
             display: flex;
             align-items: center;
@@ -123,7 +106,6 @@
             margin-bottom: 16px;
             padding-top: 16px;
         }
-        
         .back-btn {
             display: flex;
             align-items: center;
@@ -145,7 +127,6 @@
             transform: translateX(-2px);
         }
         .back-btn svg { width: 20px; height: 20px; }
-        
         .logo-section {
             text-align: center;
             margin-bottom: 20px;
@@ -179,7 +160,6 @@
             letter-spacing: -1px;
             text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
         }
-        
         .my-orders-btn {
             width: 100%; 
             padding: 16px;
@@ -203,7 +183,6 @@
         .my-orders-btn:active { 
             transform: translateY(0) scale(0.98); 
         }
-        
         .package-card {
             background: var(--glass-bg);
             backdrop-filter: blur(40px) saturate(180%);
@@ -258,7 +237,6 @@
             font-size: 15px; 
             font-weight: 700; 
         }
-        
         .form-card { 
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
@@ -306,7 +284,6 @@
             letter-spacing: 0.3px;
         }
         .required { color: var(--accent-red); }
-        
         .form-input {
             width: 100%; 
             padding: 16px 18px; 
@@ -327,7 +304,6 @@
             transform: scale(1.01);
         }
         .form-input::placeholder { color: #aaa; }
-        
         input[type="date"].form-input {
             color: #aaa;
             appearance: none;
@@ -335,7 +311,6 @@
             min-height: 44px;
         }
         input[type="date"].form-input.has-value { color: var(--text-dark); }
-        
         .input-hint {
             font-size: 12px;
             color: #64748b;
@@ -347,13 +322,11 @@
             color: var(--accent-red);
             font-weight: 600;
         }
-        
         .shake {
             animation: shake 0.5s ease-in-out;
             border-color: var(--accent-red) !important;
             box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.15) !important;
         }
-        
         .summary-card { 
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(60px) saturate(200%);
@@ -419,7 +392,6 @@
             font-size: 14px; 
             font-weight: 700; 
         }
-        
         .submit-btn {
             width: 100%; 
             padding: 18px;
@@ -450,7 +422,6 @@
             transform: none;
             animation: none;
         }
-        
         .spinner {
             display: inline-block; 
             width: 18px; 
@@ -461,7 +432,6 @@
             animation: spin 0.8s linear infinite; 
             margin-right: 8px;
         }
-        
         .error-msg {
             background: rgba(255, 59, 48, 0.12);
             border: 1px solid rgba(255, 59, 48, 0.25);
@@ -476,7 +446,6 @@
             animation: fadeInUp 0.3s var(--transition-smooth);
         }
         .error-msg.visible { display: block; }
-        
         .retry-btn {
             background: var(--accent-red);
             color: white;
@@ -493,7 +462,6 @@
             transform: scale(1.05);
             opacity: 0.9;
         }
-        
         @media (max-width: 480px) {
             .container { padding: 12px; }
             .page-title { font-size: 24px; }
@@ -512,27 +480,21 @@
                 Back
             </a>
         </div>
-
         <div class="logo-section">
             <div class="mtn-icon-box">MTN</div>
             <h1 class="page-title">Register AFA</h1>
         </div>
-
         <button class="my-orders-btn" type="button" onclick="window.location.href='orders.html'">My Orders</button>
-
         <div class="package-card">
             <div class="package-row"><span class="package-label">Package</span><span class="package-value">MTN AFA Bundle</span></div>
             <div class="package-row"><span class="package-label">Fee</span><span class="package-value">GH₵ 13.40</span></div>
             <div class="package-row"><span class="package-label">Review Time</span><span class="package-value"> 5-10 minutes</span></div>
         </div>
-
         <div class="error-msg" id="errorMsg"></div>
-
         <form id="afaForm">
             <div class="form-card">
                 <h2 class="form-title">Applicant Details</h2>
                 <p class="form-subtitle">Fill the form carefully. GH₵13.40 will be charged via Paystack.</p>
-
                 <div class="form-group">
                     <label class="form-label">Full Name <span class="required">*</span></label>
                     <input type="text" class="form-input" id="fullName" placeholder="e.g. John Doe" required>
@@ -552,8 +514,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Ghana Card ID Number <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="idNumber" placeholder="GHA-000000000-0" required
-                           inputmode="numeric" autocomplete="off">
+                    <input type="text" class="form-input" id="idNumber" placeholder="GHA-000000000-0" required inputmode="numeric" autocomplete="off">
                     <p class="input-hint">Format: GHA-000000000-0</p>
                 </div>
                 <div class="form-group">
@@ -569,18 +530,15 @@
                     <input type="text" class="form-input" id="occupation" placeholder="e.g. Student, Teacher, Business Owner" required>
                 </div>
             </div>
-
             <div class="summary-card">
                 <h2 class="summary-title">Submission Summary</h2>
                 <div class="summary-row"><span class="summary-label">Package</span><span class="summary-value">MTN AFA Bundle</span></div>
                 <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 13.40</span></div>
                 <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">Paystack</span></div>
             </div>
-
             <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
         </form>
     </main>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://js.paystack.co/v2/inline.js"></script>
     <script src="config.js"></script>
@@ -592,47 +550,36 @@
             div.textContent = text;
             return div.innerHTML;
         }
-
         const dobInput = document.getElementById('dobInput');
         dobInput.addEventListener('change', function() {
             if (this.value) this.classList.add('has-value');
             else this.classList.remove('has-value');
         });
-
         const idNumberInput = document.getElementById('idNumber');
-        
         idNumberInput.addEventListener('focus', function() {
             if (this.value === '') {
                 this.value = 'GHA-';
             }
         });
-        
         idNumberInput.addEventListener('input', function(e) {
             let val = this.value.toUpperCase();
-            
             if (!val.startsWith('GHA-')) {
                 val = 'GHA-' + val.replace(/^GHA-?/, '');
             }
-            
             let prefix = 'GHA-';
             let numbers = val.substring(4).replace(/\D/g, '');
             numbers = numbers.substring(0, 9);
-            
             let formatted = prefix + numbers;
-            
             if (numbers.length === 9) {
                 formatted = formatted + '-';
             }
-            
             let remainder = val.substring(prefix.length + numbers.length + (numbers.length === 9 ? 1 : 0));
             if (remainder && numbers.length === 9) {
                 let lastDigit = remainder.replace(/\D/g, '').substring(0, 1);
                 formatted = formatted + lastDigit;
             }
-            
             this.value = formatted;
         });
-        
         idNumberInput.addEventListener('blur', function() {
             const regex = /^GHA-\d{9}-\d$/;
             if (this.value && !regex.test(this.value)) {
@@ -641,13 +588,10 @@
                 this.style.borderColor = '#e2e8f0';
             }
         });
-
         const phoneInput = document.getElementById('phone');
         const phoneHint = document.getElementById('phoneHint');
-        
         phoneInput.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
-            
             if (this.value.length > 0 && this.value.length !== 10) {
                 phoneHint.textContent = '⚠️ ' + this.value.length + '/10 digits entered. Must be exactly 10 digits!';
                 phoneHint.classList.add('warning');
@@ -661,7 +605,6 @@
                 phoneHint.style.color = '#64748b';
             }
         });
-        
         phoneInput.addEventListener('blur', function() {
             if (this.value.length !== 10 && this.value.length > 0) {
                 this.classList.add('shake');
@@ -670,7 +613,6 @@
                 setTimeout(() => this.classList.remove('shake'), 500);
             }
         });
-
         function showError(message, showRetry) {
             const errorDiv = document.getElementById('errorMsg');
             let html = escapeHtml(message);
@@ -680,30 +622,20 @@
             errorDiv.innerHTML = html;
             errorDiv.classList.add('visible');
         }
-
         function hideError() {
             const errorDiv = document.getElementById('errorMsg');
             errorDiv.classList.remove('visible');
             errorDiv.innerHTML = '';
         }
-
         async function retrySubmit() {
             hideError();
             document.getElementById('afaForm').dispatchEvent(new Event('submit'));
         }
-
-        // ============================================
-        // MINIMAL FIX: Only the fetch call is changed
-        // Added: timeout, mode:cors, no-store cache, retry logic
-        // Everything else in this handler stays identical
-        // ============================================
         async function fetchWithRetry(url, options, maxRetries = 2) {
             const timeout = 8000;
-            
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), timeout);
-                
                 try {
                     const response = await fetch(url, {
                         ...options,
@@ -715,32 +647,23 @@
                     return response;
                 } catch (error) {
                     clearTimeout(timeoutId);
-                    
                     if (attempt === maxRetries) throw error;
-                    
-                    // Wait before retry (1s, then 2s)
                     await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
                 }
             }
         }
-
         document.getElementById('afaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             hideError();
-            
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.textContent;
-            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span>Processing...';
-
             try {
                 let user = null;
-                
                 if (typeof getUser === 'function') {
                     user = getUser();
                 }
-                
                 if (!user || !user.id) {
                     user = {
                         id: localStorage.getItem('userId'),
@@ -748,12 +671,10 @@
                         email: localStorage.getItem('userEmail')
                     };
                 }
-                
                 if (!user || !user.id) { 
                     window.location.href = 'signin.html'; 
                     return; 
                 }
-
                 const formData = {
                     fullName: document.getElementById('fullName').value.trim(),
                     phone: document.getElementById('phone').value.trim(),
@@ -765,7 +686,6 @@
                     occupation: document.getElementById('occupation').value.trim(),
                     userId: user.id
                 };
-
                 if (!/^\d{10}$/.test(formData.phone)) {
                     phoneInput.classList.add('shake');
                     phoneHint.textContent = '❌ Phone number must be exactly 10 digits! Please check carefully.';
@@ -773,45 +693,30 @@
                     setTimeout(() => phoneInput.classList.remove('shake'), 500);
                     throw new Error('Phone number must be exactly 10 digits (e.g. 0240000000)');
                 }
-
                 if (!/^GHA-\d{9}-\d$/.test(formData.idNumber)) {
                     throw new Error('Ghana Card ID must be in format: GHA-000000000-0');
                 }
-
                 if (!formData.fullName || !formData.phone || !formData.email || !formData.idNumber || 
                     !formData.location || !formData.dob || !formData.occupation) {
                     throw new Error('Please fill in all required fields');
                 }
-
-                // Step 1: Create order on backend
                 let orderData;
                 const token = localStorage.getItem('access_token');
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-                
                 const cacheBuster = Date.now();
-                
-                // ============================================
-                // MINIMAL FIX: Replaced raw fetch with fetchWithRetry
-                // All other logic below is completely unchanged
-                // ============================================
                 const response = await fetchWithRetry('https://mtn-afa-api.onrender.com/api/register?_cb=' + cacheBuster, {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify(formData)
                 });
-                
                 orderData = await response.json();
-                
                 if (!orderData.success) {
                     throw new Error(orderData.error || 'Registration failed. Please try again.');
                 }
-
-                // Step 2: Open Paystack INLINE (popup)
                 if (typeof PaystackPop === 'undefined') {
                     throw new Error('Paystack checkout failed to load. Please refresh the page and try again.');
                 }
-
                 const handler = PaystackPop.setup({
                     key: orderData.publicKey,
                     email: formData.email,
@@ -827,9 +732,8 @@
                         ]
                     },
                     callback: function(response) {
-                        // INSTANT REDIRECT: Paystack already confirmed payment
-                        // Verification happens in background via webhook + success page
-                        window.location.href = 'payment-success.html?reference=' + encodeURIComponent(response.reference);
+                        const ref = response.reference || response.trxref || response.transaction || orderData.reference;
+                        window.location.href = 'payment-success.html?reference=' + encodeURIComponent(ref);
                     },
                     onClose: function() {
                         submitBtn.disabled = false;
@@ -837,9 +741,7 @@
                         showError('Payment was cancelled. Click Retry to try again.', true);
                     }
                 });
-                
                 handler.openIframe();
-
             } catch (error) {
                 console.error('Registration error:', error);
                 const errorMessage = error.message || '';
