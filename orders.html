@@ -747,7 +747,6 @@
         // ============================================
         async function deleteUserOrder(orderId) {
             if (!confirm('Are you sure you want to remove this order from your history? This will hide it from your view but your payment record remains on file.')) return;
-            
             const user = getUserUnified();
             const btn = document.getElementById('delete-btn-' + orderId);
             if (btn) {
@@ -845,7 +844,11 @@
         // ============================================
         // FIXED: MAIN INIT with async auth
         // ============================================
+            logDiv.innerHTML += '<div style="margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.3);padding-bottom:4px;">' + message + '</div>';
+        }
+
         async function initOrders() {
+
             // Safety timeout - if loading takes more than 10 seconds, show error
             const loadingTimeout = setTimeout(() => {
                 const ordersList = document.getElementById('ordersList');
@@ -867,7 +870,6 @@
                 window.location.href = 'signin.html';
                 return;
             }
-
             const user = getUserUnified();
             
             try {
