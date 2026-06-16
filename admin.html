@@ -556,15 +556,34 @@
                 },
                 credentials: 'include'
             };
-            if (body) options.body = JSON.stringify(body);
+            if (body && method !== 'GET') options.body = JSON.stringify(body);
             const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, options);
             return response.json();
+        }
+
+        // Persistent revenue cache — never resets on tab switch or refresh
+        let cachedRevenue = null;
+
+        async function loadTotalRevenue() {
+            try {
+                const data = await adminApiCall('/api/admin/revenue', 'GET');
+                if (data.success) {
+                    cachedRevenue = data.totalRevenue;
+                    document.getElementById('statRevenue').textContent = cachedRevenue;
+                }
+            } catch (error) {
+                console.error('Revenue load error:', error);
+                if (cachedRevenue) {
+                    document.getElementById('statRevenue').textContent = cachedRevenue;
+                }
+            }
         }
 
         async function loadAllData() {
             await loadUsers();
             await loadRegistrations();
             await loadPayments();
+            await loadTotalRevenue();
         }
 
         async function loadUsers() {
@@ -600,7 +619,7 @@
                 const data = await adminApiCall('/api/admin/payments', 'POST');
                 if (!data.success) throw new Error(data.error);
                 allPayments = data.payments || [];
-                document.getElementById('statRevenue').textContent = safeAmount(data.totalRevenue);
+                // Revenue loaded separately via loadTotalRevenue() to persist across tabs
                 renderPayments();
             } catch (error) {
                 showToast('Error loading payments: ' + error.message, 'error');
@@ -630,7 +649,56 @@
         // ============================================
         // GET REGISTRATION STATUS WITH PAYSTACK VERIFICATION
         // ============================================
-        function getRegistrationStatusBadge(order) {
+        // Cache for Paystack verification results
+const paystackVerifyCache = new Map();
+
+async function checkPaystackPayment(reference) {
+    if (!reference || reference === 'N/A') return { paid: false, amount: 0 };
+    if (paystackVerifyCache.has(reference)) return paystackVerifyCache.get(reference);
+
+    try {
+        const response = await fetch('https://mtn-afa-api.onrender.com/api/payment/verify?reference=' + encodeURIComponent(reference));
+        const data = await response.json();
+        const result = { 
+            paid: data.verified === true, 
+            amount: data.amount || 13.40 
+        };
+        paystackVerifyCache.set(reference, result);
+        return result;
+    } catch (err) {
+        return { paid: false, amount: 0 };
+    }
+}
+
+// NEW: Async version that checks Paystack directly for pending/failed orders
+async function getRegistrationStatusBadgeAsync(order) {
+    // If already approved/rejected, use database status (fast path)
+    if (order.status === 'approved' || order.status === 'rejected') {
+        return getRegistrationStatusBadge(order);
+    }
+
+    // For pending/failed orders, check Paystack directly
+    const reference = order.payment_reference;
+    if (reference && reference !== 'N/A') {
+        const paystackStatus = await checkPaystackPayment(reference);
+        if (paystackStatus.paid) {
+            // Payment succeeded on Paystack! Show as PAID
+            const badgeClass = order.status === 'approved' ? 'approved' : 'pending';
+            const badgeText = order.status === 'approved' ? '✅ COMPLETED' : '⏳ PAID - AWAITING APPROVAL';
+            return {
+                html: '<div class="payment-status-banner paid">✅ PAID (Paystack Verified)</div><div class="reg-status-badge ' + badgeClass + '">' + badgeText + '</div>',
+                isApproved: order.status === 'approved',
+                isRejected: false,
+                showActions: order.status !== 'approved'
+            };
+        }
+    }
+
+    // Fall back to original function
+    return getRegistrationStatusBadge(order);
+}
+
+function getRegistrationStatusBadge(order) {
             const isPaystackVerified = order.paystack_verified === true || order.paystack_verified === 'true';
             const hasPaidAt = order.paid_at && order.paid_at !== null;
             const isPaid = isPaystackVerified || hasPaidAt || order.status === 'paid';
@@ -774,7 +842,7 @@
         // ============================================
         // RENDER REGISTRATIONS - FIXED amount formatting
         // ============================================
-        function renderRegistrations(filter) {
+        async function renderRegistrations(filter) {
             const container = document.getElementById('registrationsList');
 
             if (!allRegistrations || allRegistrations.length === 0) {
@@ -809,7 +877,7 @@
             for (let i = 0; i < regs.length; i++) {
                 try {
                     const r = regs[i];
-                    const statusInfo = getRegistrationStatusBadge(r);
+                    const statusInfo = await getRegistrationStatusBadgeAsync(r);
 
                     let dotClass = 'unattended';
                     if (r.status === 'approved') {
