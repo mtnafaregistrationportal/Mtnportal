@@ -806,6 +806,53 @@ async function checkPaystackPaymentOrders(reference) {
     }
 }
 
+// Cache for Paystack verification
+const paystackVerifyCache = new Map();
+
+async function checkPaystackPaymentOrders(reference) {
+    if (!reference || reference === 'N/A') return { paid: false, amount: 0 };
+    if (paystackVerifyCache.has(reference)) return paystackVerifyCache.get(reference);
+
+    try {
+        const response = await fetch('https://mtn-afa-api.onrender.com/api/payment/verify?reference=' + encodeURIComponent(reference));
+        const data = await response.json();
+        const result = { 
+            paid: data.verified === true, 
+            amount: data.amount || 13.40 
+        };
+        paystackVerifyCache.set(reference, result);
+        return result;
+    } catch (err) {
+        return { paid: false, amount: 0 };
+    }
+}
+
+// Async version that checks Paystack for pending/failed orders
+async function getOrderDisplayStatusAsync(order) {
+    const status = order.status || 'pending';
+
+    // For approved/rejected, use database status
+    if (status === 'approved' || status === 'rejected') {
+        return getOrderDisplayStatus(order);
+    }
+
+    // For pending/failed, check Paystack directly
+    const reference = order.payment_reference;
+    if (reference && reference !== 'N/A') {
+        const paystackStatus = await checkPaystackPaymentOrders(reference);
+        if (paystackStatus.paid) {
+            return {
+                badge: 'Pending Approval',
+                badgeClass: 'status-paid',
+                noteClass: 'paid',
+                noteText: '💳 Payment verified by Paystack! Awaiting AFA approval...'
+            };
+        }
+    }
+
+    return getOrderDisplayStatus(order);
+}
+
 function getOrderDisplayStatus(order) {
             const status = order.status || 'pending';
             
@@ -888,7 +935,7 @@ function getOrderDisplayStatus(order) {
                 
                 if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
                 
-                renderOrders(data.orders || []);
+                await renderOrders(data.orders || []);
                 
             } catch (error) {
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
@@ -902,7 +949,7 @@ function getOrderDisplayStatus(order) {
                     try {
                         const orders = JSON.parse(cachedOrders);
                         showToast('Showing cached data (offline mode)', 'error');
-                        renderOrders(orders);
+                        await renderOrders(orders);
                         return;
                     } catch (e) {}
                 }
@@ -956,8 +1003,7 @@ function getOrderDisplayStatus(order) {
             }
             
             let html = '';
-            for (let i = 0; i < orders.length; i++) {
-                const order = orders[i];
+            for (const order of orders) {
                 const displayStatus = await getOrderDisplayStatusAsync(order);
                 
                 const status = order.status || 'pending';
