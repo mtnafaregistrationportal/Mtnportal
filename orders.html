@@ -785,7 +785,28 @@
         // ORDER STATUS FROM DATABASE ONLY
         // No payment verification. Just reads existing status.
         // ============================================
-        function getOrderDisplayStatus(order) {
+        // Cache for Paystack verification
+const paystackVerifyCache = new Map();
+
+async function checkPaystackPaymentOrders(reference) {
+    if (!reference || reference === 'N/A') return { paid: false, amount: 0 };
+    if (paystackVerifyCache.has(reference)) return paystackVerifyCache.get(reference);
+
+    try {
+        const response = await fetch('https://mtn-afa-api.onrender.com/api/payment/verify?reference=' + encodeURIComponent(reference));
+        const data = await response.json();
+        const result = { 
+            paid: data.verified === true, 
+            amount: data.amount || 13.40 
+        };
+        paystackVerifyCache.set(reference, result);
+        return result;
+    } catch (err) {
+        return { paid: false, amount: 0 };
+    }
+}
+
+function getOrderDisplayStatus(order) {
             const status = order.status || 'pending';
             
             if (status === 'approved') {
@@ -916,7 +937,7 @@
         // ============================================
         // RENDER ORDERS
         // ============================================
-        function renderOrders(orders) {
+        async function renderOrders(orders) {
             const container = document.getElementById('ordersList');
             totalCount = orders.length;
             pendingCount = 0;
@@ -937,7 +958,7 @@
             let html = '';
             for (let i = 0; i < orders.length; i++) {
                 const order = orders[i];
-                const displayStatus = getOrderDisplayStatus(order);
+                const displayStatus = await getOrderDisplayStatusAsync(order);
                 
                 const status = order.status || 'pending';
                 
