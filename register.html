@@ -731,11 +731,16 @@
                             { display_name: "Phone", variable_name: "phone", value: formData.phone }
                         ]
                     },
-                    callback: function(response) {
+                    onSuccess: function(response) {
+                        console.log('Paystack onSuccess:', JSON.stringify(response));
                         const ref = response.reference || response.trxref || response.transaction || orderData.reference;
-                        window.location.href = 'payment-success.html?reference=' + encodeURIComponent(ref);
+                        // Wait 3 seconds so user sees Paystack's green checkmark, then redirect
+                        setTimeout(function() {
+                            window.location.href = 'payment-success.html?reference=' + encodeURIComponent(ref);
+                        }, 3000);
                     },
-                    onClose: function() {
+                    onCancel: function() {
+                        console.log('Paystack onCancel');
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalText;
                         showError('Payment was cancelled. Click Retry to try again.', true);
