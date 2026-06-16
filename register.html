@@ -717,7 +717,8 @@
                 if (typeof PaystackPop === 'undefined') {
                     throw new Error('Paystack checkout failed to load. Please refresh the page and try again.');
                 }
-                const handler = PaystackPop.setup({
+                                localStorage.setItem('lastPaymentReference', orderData.reference);
+const handler = PaystackPop.setup({
                     key: orderData.publicKey,
                     email: formData.email,
                     amount: Math.round(13.40 * 100),
