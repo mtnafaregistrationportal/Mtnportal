@@ -187,6 +187,16 @@
             color: #8a6d0b;
             animation: fadeInUp 0.5s var(--transition-smooth) 0.45s backwards;
         }
+        .processing-note.error {
+            background: rgba(255, 59, 48, 0.08);
+            border-color: rgba(255, 59, 48, 0.2);
+            color: #c0392b;
+        }
+        .processing-note.success {
+            background: rgba(52, 199, 89, 0.08);
+            border-color: rgba(52, 199, 89, 0.2);
+            color: #27ae60;
+        }
         .btn-primary {
             width: 100%;
             padding: 16px;
@@ -214,6 +224,11 @@
         .btn-primary:active {
             transform: translateY(0) scale(0.98);
         }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
         .btn-secondary {
             width: 100%;
             padding: 16px;
@@ -238,6 +253,17 @@
         .btn-secondary:active {
             transform: translateY(0) scale(0.98);
         }
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,215,0,0.2);
+            border-top-color: var(--primary-yellow);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -249,23 +275,79 @@
         </div>
         <h2>Payment Successful!</h2>
         <p>Your payment of <strong>GH₵ 13.40</strong> has been confirmed. Your AFA registration is now pending approval from our team.</p>
-        <div class="processing-note">
-            ⏳ Your order is being processed. You will receive a confirmation shortly.
+        <div class="processing-note" id="processingNote">
+            ⏳ Verifying payment and sending confirmation...
         </div>
         <div class="reference-box">
             Reference: <strong id="referenceDisplay">Loading...</strong>
         </div>
-        <a href="/Mtnportal/orders.html" class="btn-primary">View My Orders</a>
+        <a href="/Mtnportal/orders.html" class="btn-primary" id="viewOrdersBtn">View My Orders</a>
         <a href="/Mtnportal/dashboard.html" class="btn-secondary">Go to Dashboard</a>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
-    <script src="glass.js"></script>
+
     <script>
+        // ============================================
+        // OPTION 1: Get reference from URL or localStorage
+        // If no reference found, redirect to orders page
+        // ============================================
+
         const urlParams = new URLSearchParams(window.location.search);
-        const rawRef = urlParams.get('reference') || urlParams.get('trxref') || '';
-        const reference = (rawRef && rawRef !== 'undefined' && rawRef !== 'null') ? rawRef : 'N/A';
-        document.getElementById('referenceDisplay').textContent = reference;
+        let reference = urlParams.get('reference') || urlParams.get('trxref') || '';
+
+        // If no reference in URL, try localStorage (stored during registration)
+        if (!reference || reference === 'undefined' || reference === 'null') {
+            reference = localStorage.getItem('lastPaymentReference') || '';
+        }
+
+        // If still no reference, redirect to orders page immediately (Option 1)
+        if (!reference || reference === 'undefined' || reference === 'null') {
+            console.log('[SUCCESS-PAGE] No reference found. Redirecting to orders...');
+            window.location.replace('/Mtnportal/orders.html');
+        } else {
+            // Show reference
+            document.getElementById('referenceDisplay').textContent = reference;
+
+            // Auto-verify with Paystack and send SMS
+            verifyPaymentAndSendSMS(reference);
+        }
+
+        // ============================================
+        // AUTO-VERIFY: Calls backend to verify + send SMS
+        // ============================================
+        async function verifyPaymentAndSendSMS(reference) {
+            const note = document.getElementById('processingNote');
+            const btn = document.getElementById('viewOrdersBtn');
+
+            try {
+                note.innerHTML = '<span class="spinner"></span> Verifying payment with Paystack...';
+                btn.style.display = 'none';
+
+                const response = await fetch('https://mtn-afa-api.onrender.com/api/payment/verify?reference=' + encodeURIComponent(reference));
+                const data = await response.json();
+
+                if (data.success && data.verified) {
+                    note.className = 'processing-note success';
+                    note.innerHTML = '✅ Payment verified! SMS sent to admin. Your order is being processed.';
+
+                    // Clear stored reference
+                    localStorage.removeItem('lastPaymentReference');
+                } else if (data.alreadyProcessed) {
+                    note.className = 'processing-note success';
+                    note.innerHTML = '✅ Already verified! Your order is being processed.';
+                } else {
+                    note.className = 'processing-note error';
+                    note.innerHTML = '⚠️ ' + (data.message || 'Payment verification pending. Please check your orders.');
+                }
+
+                btn.style.display = 'block';
+
+            } catch (error) {
+                console.error('[SUCCESS-PAGE] Verify error:', error);
+                note.className = 'processing-note error';
+                note.innerHTML = '⚠️ Could not verify. Please check your orders page.';
+                btn.style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>
