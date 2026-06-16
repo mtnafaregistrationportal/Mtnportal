@@ -912,6 +912,21 @@ function getOrderDisplayStatus(order) {
         // FIXED: MAIN INIT with async auth
         // ============================================
         async function initOrders() {
+            // Safety timeout - if loading takes more than 10 seconds, show error
+            const loadingTimeout = setTimeout(() => {
+                const ordersList = document.getElementById('ordersList');
+                if (ordersList && ordersList.innerHTML.includes('Loading your orders')) {
+                    ordersList.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p>Loading timed out. Please check your connection and try again.</p>
+                            <button onclick="initOrders()" style="margin-top:16px;padding:10px 20px;background:var(--primary-yellow);border:none;border-radius:var(--radius-sm);color:var(--text-dark);font-weight:700;cursor:pointer;">Retry</button>
+                        </div>
+                    `;
+                }
+            }, 10000);
             const authValid = await isAuthenticatedOrders();
             if (!authValid) {
                 if (typeof clearSession === 'function') clearSession();
@@ -936,8 +951,10 @@ function getOrderDisplayStatus(order) {
                 if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
                 
                 await renderOrders(data.orders || []);
+                clearTimeout(loadingTimeout);
                 
             } catch (error) {
+                console.error('initOrders ERROR:', error);
                 if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
                     if (typeof clearSession === 'function') clearSession();
                     window.location.href = 'signin.html';
@@ -959,7 +976,8 @@ function getOrderDisplayStatus(order) {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <p>Error loading orders. Please try again.</p>
+                        <p>Error loading orders: ${escapeHtml(error.message || 'Unknown error')}</p>
+                        <button onclick="initOrders()" style="margin-top:16px;padding:10px 20px;background:var(--primary-yellow);border:none;border-radius:var(--radius-sm);color:var(--text-dark);font-weight:700;cursor:pointer;">Retry</button>
                     </div>
                 `;
             }
