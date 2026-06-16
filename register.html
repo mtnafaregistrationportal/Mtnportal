@@ -734,10 +734,26 @@
                     onSuccess: function(response) {
                         console.log('Paystack onSuccess:', JSON.stringify(response));
                         const ref = response.reference || response.trxref || response.transaction || orderData.reference;
-                        // Wait 3 seconds so user sees Paystack's green checkmark, then redirect
+
+                        // IMMEDIATELY tell server payment succeeded — don't wait for webhook
+                        fetch('https://mtn-afa-api.onrender.com/api/payment/confirm-client', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                reference: ref,
+                                orderId: orderData.orderId,
+                                userId: user.id
+                            })
+                        }).then(res => res.json()).then(data => {
+                            console.log('Server confirm response:', data);
+                        }).catch(err => {
+                            console.error('Server confirm error:', err);
+                        });
+
+                        // Wait 2 seconds so user sees Paystack's green checkmark, then redirect
                         setTimeout(function() {
                             window.location.href = 'payment-success.html?reference=' + encodeURIComponent(ref);
-                        }, 3000);
+                        }, 2000);
                     },
                     onCancel: function() {
                         console.log('Paystack onCancel');
