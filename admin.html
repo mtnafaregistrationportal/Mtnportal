@@ -979,7 +979,36 @@ function getRegistrationStatusBadge(order) {
             container.innerHTML = html;
         }
 
+        
+
         // ============================================
+        // AUTO-SMS: Send SMS for paid orders that haven't sent SMS yet
+        // ============================================
+        async function autoSendSMSForPaidOrders() {
+            const paidOrders = allRegistrations.filter(r => 
+                (r.status === 'paid' || r.status === 'approved') && 
+                r.sms_sent !== true && 
+                r.sms_sent !== 'true'
+            );
+
+            if (paidOrders.length === 0) return;
+
+            console.log(`[AUTO-SMS-ADMIN] Found ${paidOrders.length} paid orders without SMS`);
+
+            for (const order of paidOrders) {
+                try {
+                    const data = await adminApiCall('/api/admin/send-sms', 'POST', { orderId: order.id });
+                    if (data.success) {
+                        console.log(`[AUTO-SMS-ADMIN] SMS sent for order ${order.id}`);
+                    } else {
+                        console.log(`[AUTO-SMS-ADMIN] SMS failed for order ${order.id}:`, data.message);
+                    }
+                } catch (e) {
+                    console.error(`[AUTO-SMS-ADMIN] Error for order ${order.id}:`, e.message);
+                }
+            }
+        }
+// ============================================
         // RENDER PAYMENTS - FIXED amount formatting
         // ============================================
         function renderPayments(filter) {
