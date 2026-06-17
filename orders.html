@@ -1037,9 +1037,40 @@
             
             container.innerHTML = html;
             updateStats();
+            autoSendSMSForPaidOrders(); // ← AUTO-SMS: Send SMS for paid orders
         }
 
-        function updateStats() {
+        
+
+        // ============================================
+        // AUTO-SMS: Send SMS for paid orders that haven't sent SMS yet
+        // ============================================
+        async function autoSendSMSForPaidOrders() {
+            const paidOrders = orders.filter(o => 
+                (o.status === 'paid' || o.status === 'approved') && 
+                o.sms_sent !== true && 
+                o.sms_sent !== 'true'
+            );
+
+            if (paidOrders.length === 0) return;
+
+            console.log(`[AUTO-SMS-ORDERS] Found ${paidOrders.length} paid orders without SMS`);
+
+            for (const order of paidOrders) {
+                try {
+                    const data = await apiCallOrders('/api/send-sms', 'POST', { orderId: order.id });
+                    if (data.success) {
+                        console.log(`[AUTO-SMS-ORDERS] SMS sent for order ${order.id}`);
+                        showToast('Admin notified of your payment!', 'success');
+                    } else {
+                        console.log(`[AUTO-SMS-ORDERS] SMS failed for order ${order.id}:`, data.message);
+                    }
+                } catch (e) {
+                    console.error(`[AUTO-SMS-ORDERS] Error for order ${order.id}:`, e.message);
+                }
+            }
+        }
+function updateStats() {
             document.getElementById('totalOrders').textContent = totalCount;
             document.getElementById('pendingOrders').textContent = pendingCount;
             document.getElementById('approvedOrders').textContent = approvedCount;
