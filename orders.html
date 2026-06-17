@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - MTN AFA Portal</title>
+    <link rel="stylesheet" href="glass.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://mtn-afa-api.onrender.com https://iqzjpdynmnucxswbrkho.supabase.co https://api.paystack.co;">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <style>
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        
+        @keyframes colorShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-bottom: 100px;
+            position: relative;
+        }
+        
+        /* Liquid Glass Fixed Header */
+        .orders-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 68px;
+            transition: all var(--transition-smooth);
+        }
+        
+        .orders-header.scrolled {
+            background: rgba(10, 15, 26, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Back Button */
+        .back-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-fast);
+        }
+        .back-btn:hover {
+            background: var(--glass-bg-hover);
+            color: var(--primary-yellow);
+            transform: translateX(-2px);
+        }
+        
+        .orders-header-left { display: flex; align-items: center; gap: 12px; }
+        
+        /* Liquid Glass Orders Icon */
+        .orders-icon {
+            width: 40px; 
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-radius: 12px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+        }
+        .orders-icon:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        .orders-icon svg { width: 20px; height: 20px; color: var(--text-dark); }
+        
+        .orders-header-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        
+        /* Content scrolls behind fixed header */
+        .orders-content { 
+            padding: 88px 20px 40px; 
+            max-width: 480px; 
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-title { 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth);
+        }
+        
+        /* Liquid Glass Stats Row */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 14px; 
+            margin-bottom: 24px; 
+        }
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 10px;
+            text-align: center;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) backwards;
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .stat-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .stat-value { 
+            font-size: 28px; 
+            font-weight: 800; 
+            color: var(--primary-yellow); 
+            letter-spacing: -1px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            transition: all var(--transition-fast);
+        }
+        .stat-card:hover .stat-value {
+            transform: scale(1.1);
+        }
+        .stat-label { 
+            font-size: 11px; 
+            color: var(--text-muted); 
+            margin-top: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            font-weight: 700;
+        }
+        
+        /* Empty State */
+        .empty-state { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: var(--text-muted); 
+            animation: fadeInUp 0.5s var(--transition-smooth);
+        }
+        .empty-state svg { 
+            width: 64px; 
+            height: 64px; 
+            margin-bottom: 16px; 
+            opacity: 0.5; 
+        }
+        
+        /* Liquid Glass Order Card */
+        .order-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 0.4s var(--transition-smooth) backwards;
+        }
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .order-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .order-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 14px; 
+        }
+        .order-id { 
+            font-size: 12px; 
+            color: var(--text-muted); 
+            font-family: monospace; 
+            font-weight: 600;
+        }
+        
+        /* Liquid Glass Status Badges */
+        .order-status {
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-fast);
+        }
+        .status-pending { 
+            background: rgba(255, 152, 0, 0.15); 
+            color: var(--accent-orange); 
+            border: 1px solid rgba(255, 152, 0, 0.25);
+        }
+        .status-processing { 
+            background: rgba(90, 200, 250, 0.15); 
+            color: var(--accent-blue); 
+            border: 1px solid rgba(90, 200, 250, 0.25);
+        }
+        .status-approved { 
+            background: rgba(52, 199, 89, 0.15); 
+            color: var(--accent-green); 
+            border: 1px solid rgba(52, 199, 89, 0.25);
+        }
+        .status-rejected { 
+            background: rgba(255, 59, 48, 0.15); 
+            color: var(--accent-red); 
+            border: 1px solid rgba(255, 59, 48, 0.25);
+        }
+        .status-paid { 
+            background: rgba(255, 215, 0, 0.15); 
+            color: var(--primary-yellow); 
+            border: 1px solid rgba(255, 215, 0, 0.25);
+        }
+        .status-failed { 
+            background: rgba(255, 59, 48, 0.15); 
+            color: var(--accent-red); 
+            border: 1px solid rgba(255, 59, 48, 0.25);
+        }
+        
+        .order-details { 
+            border-top: 1px solid rgba(255,255,255,0.1); 
+            padding-top: 14px; 
+        }
+        .detail-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 8px 0; 
+            font-size: 13px; 
+            transition: all var(--transition-fast);
+        }
+        .detail-row:hover {
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+        .detail-label { 
+            color: var(--text-muted); 
+            font-weight: 500;
+        }
+        .detail-value { 
+            font-weight: 700; 
+            color: var(--text-primary);
+        }
+        
+        /* Liquid Glass Admin Notes */
+        .admin-note {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-top: 14px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-fast);
+        }
+        .admin-note.rejected { 
+            background: rgba(255, 59, 48, 0.12); 
+            border-color: rgba(255, 59, 48, 0.25); 
+            color: var(--accent-red); 
+        }
+        .admin-note.approved { 
+            background: rgba(52, 199, 89, 0.12); 
+            border-color: rgba(52, 199, 89, 0.25); 
+            color: var(--accent-green); 
+        }
+        .admin-note.failed { 
+            background: rgba(255, 59, 48, 0.12); 
+            border-color: rgba(255, 59, 48, 0.25); 
+            color: var(--accent-red); 
+        }
+        .admin-note.paid { 
+            background: rgba(255, 215, 0, 0.12); 
+            border-color: rgba(255, 215, 0, 0.25); 
+            color: var(--primary-yellow); 
+        }
+        
+        /* ============================================
+           CONTACT SUPPORT BUTTON - FIXED
+           Green > Black > Gold shifting continuously
+           ============================================ */
+        .contact-support-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #22c55e, #000000, #FFD700, #22c55e);
+            background-size: 300% 100%;
+            animation: colorShift 4.8s ease infinite;
+            border-radius: var(--radius-full);
+            padding: 14px 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            text-decoration: none;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+            line-height: 1;
+        }
+        .contact-support-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .contact-support-btn svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+            flex-shrink: 0;
+            display: block;
+        }
+        .contact-support-text {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            line-height: 1;
+            display: block;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,215,0,0.2);
+            border-top-color: var(--primary-yellow);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        /* Delete Order Button */
+        .btn-delete-order {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 59, 48, 0.12);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            color: var(--accent-red);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all var(--transition-fast);
+            backdrop-filter: blur(10px);
+            letter-spacing: 0.3px;
+        }
+        .btn-delete-order:hover {
+            background: rgba(255, 59, 48, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 59, 48, 0.2);
+        }
+        .btn-delete-order:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-delete-order:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Liquid Glass Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px) scale(0.9);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.4s var(--transition-spring);
+            white-space: nowrap;
+            backdrop-filter: blur(40px) saturate(180%);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            max-width: 400px;
+            text-align: center;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+        .toast-success { 
+            background: rgba(52, 199, 89, 0.9); 
+            color: white; 
+        }
+        .toast-error { 
+            background: rgba(255, 59, 48, 0.9); 
+            color: white; 
+        }
+        
+        @media (min-width: 768px) { 
+            .orders-content { max-width: 720px; padding: 96px 24px 40px; }
+            .orders-header { padding: 20px 32px; height: 72px; }
+            .orders-content { padding-top: 96px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .orders-header { padding: 24px 48px; height: 76px; }
+            .orders-content { padding: 104px 24px 40px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="orders-header" id="ordersHeader">
+        <a href="dashboard.html" class="back-btn">← Back</a>
+        <div class="orders-header-left">
+            <div class="orders-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            </div>
+            <div class="orders-header-text"><h2>My Orders</h2></div>
+        </div>
+        <div style="width: 60px;"></div>
+    </header>
+
+    <div class="orders-content">
+        <h1 class="section-title">Orders</h1>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalOrders">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingOrders">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="approvedOrders">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
+        </div>
+
+        <div id="ordersList">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Loading your orders...</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/233503107100" target="_blank" class="contact-support-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5.02L2 22l5.11-1.34A9.93 9.93 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.53 0-2.97-.43-4.2-1.17l-.3-.18-3.03.79.81-2.95-.2-.31A8.02 8.02 0 014 12c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8zm4.54-6.15c-.25-.12-1.47-.73-1.7-.81-.23-.08-.4-.12-.56.12-.17.25-.64.81-.78.97-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        <span class="contact-support-text">Contact Support</span>
+    </a>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="glass.js"></script>
+    <script>
+        // ============================================
+        // FIXED: Use config.js getValidToken for auto-refresh
+        // ============================================
+        async function getAuthToken() {
+            if (typeof getValidToken === 'function') {
+                return await getValidToken();
+            }
+            const session = getSessionUnified();
+            return session ? (session.access_token || session.token) : null;
+        }
+
+        // ============================================
+        // FIXED: Async auth check with token refresh
+        // ============================================
+        async function isAuthenticatedOrders() {
+            const token = await getAuthToken();
+            const user = getUserUnified();
+            return !!(token && user && user.id);
+        }
+
+        // ============================================
+        // UNIFIED USER HELPERS (keep for compatibility)
+        // ============================================
+        function getUserUnified() {
+            if (typeof getUser === 'function') {
+                const user = getUser();
+                if (user && user.id) return user;
+            }
+            if (typeof getCurrentUser === 'function') {
+                const user = getCurrentUser();
+                if (user && user.id) return user;
+            }
+            const afaUser = localStorage.getItem('afa_user');
+            if (afaUser) {
+                try { return JSON.parse(afaUser); } catch (e) {}
+            }
+            return {
+                id: localStorage.getItem('userId'),
+                name: localStorage.getItem('userName'),
+                email: localStorage.getItem('userEmail'),
+                phone: localStorage.getItem('userPhone'),
+                profilePicture: localStorage.getItem('profilePicture') || localStorage.getItem('userProfilePicture')
+            };
+        }
+
+        function getSessionUnified() {
+            if (typeof getSession === 'function') {
+                const session = getSession();
+                if (session) return session;
+            }
+            const afaSession = localStorage.getItem('afa_session');
+            if (afaSession) {
+                try { return JSON.parse(afaSession); } catch (e) {}
+            }
+            return {
+                access_token: localStorage.getItem('access_token') || localStorage.getItem('sb_token') || localStorage.getItem('token')
+            };
+        }
+
+        // ============================================
+        // FIXED: API CALL with token refresh
+        // ============================================
+        async function apiCallOrders(endpoint, method, body) {
+            // Use config.js apiCall() if available (same as dashboard)
+            if (typeof apiCall === 'function') {
+                try {
+                    return await apiCall(endpoint, method, body);
+                } catch (e) {
+                    console.log('config.js apiCall failed, using fallback:', e.message);
+                }
+            }
+
+            // Fallback: direct fetch (same pattern as dashboard)
+            const token = await getAuthToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            const response = await fetch(API_BASE + endpoint, {
+                method: method || 'GET',
+                headers: headers,
+                body: body ? JSON.stringify(body) : null,
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!data.success && (data.error?.includes('token') || data.error?.includes('Access denied') || data.error?.includes('Invalid or expired'))) {
+                if (typeof clearSession === 'function') clearSession();
+                window.location.href = 'signin.html';
+                throw new Error(data.error || 'Session expired');
+            }
+
+            return data;
+        }
+
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const API_BASE = 'https://mtn-afa-api.onrender.com';
+
+        // ============================================
+        // TOAST NOTIFICATION
+        // ============================================
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + (type || 'success');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // ============================================
+        // USER DELETE OWN ORDER
+        // ============================================
+        async function deleteUserOrder(orderId) {
+            if (!confirm('Are you sure you want to remove this order from your history? This will hide it from your view but your payment record remains on file.')) return;
+            const user = getUserUnified();
+            const btn = document.getElementById('delete-btn-' + orderId);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = 'Deleting...';
+            }
+            
+            try {
+                const data = await apiCallOrders('/api/user/delete-order', 'POST', {
+                    userId: user.id,
+                    orderId: orderId
+                });
+                
+                if (data.success) {
+                    showToast('Order removed from your history', 'success');
+                    await initOrders();
+                } else {
+                    throw new Error(data.error || 'Failed to delete order');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🗑 Remove from History';
+                }
+            }
+        }
+
+        // ============================================
+        // REMOVED: verifyPaymentWithBackend() 
+        // Orders page NO LONGER verifies payments.
+        // It only reads the status from the database.
+        // Webhook + Cron handle all verification.
+        // ============================================
+
+        // ============================================
+        // ORDER STATUS FROM DATABASE ONLY
+        // No payment verification. Just reads existing status.
+        // ============================================
+        function getOrderDisplayStatus(order) {
+            const status = order.status || 'pending';
+            
+            if (status === 'approved') {
+                return {
+                    badge: 'Completed',
+                    badgeClass: 'status-approved',
+                    noteClass: 'approved',
+                    noteText: '✅ Order completed! Your registration has been approved.'
+                };
+            }
+            
+            if (status === 'rejected') {
+                return {
+                    badge: 'Rejected',
+                    badgeClass: 'status-rejected',
+                    noteClass: 'rejected',
+                    noteText: '❌ Registration rejected. Please contact support for assistance.'
+                };
+            }
+            
+            if (status === 'failed') {
+                return {
+                    badge: 'Payment Failed',
+                    badgeClass: 'status-failed',
+                    noteClass: 'failed',
+                    noteText: '⚠️ Payment failed or was not completed. Please register again.'
+                };
+            }
+            
+            if (status === 'paid') {
+                return {
+                    badge: 'Pending Approval',
+                    badgeClass: 'status-paid',
+                    noteClass: 'paid',
+                    noteText: '💳 Payment received and verified. Awaiting AFA approval...'
+                };
+            }
+            
+            // pending
+            return {
+                badge: 'Pending',
+                badgeClass: 'status-pending',
+                noteClass: 'pending',
+                noteText: '⏳ Waiting for payment completion...'
+            };
+        }
+
+        // ============================================
+        // STATS TRACKING
+        // ============================================
+        let totalCount = 0;
+        let pendingCount = 0;
+        let approvedCount = 0;
+
+        // ============================================
+        // FIXED: MAIN INIT with async auth
+        // ============================================
+        async function initOrders() {
+
+            // Safety timeout - if loading takes more than 10 seconds, show error
+            const loadingTimeout = setTimeout(() => {
+                const ordersList = document.getElementById('ordersList');
+                if (ordersList && ordersList.innerHTML.includes('Loading your orders')) {
+                    ordersList.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p>Loading timed out. Please check your connection and try again.</p>
+                            <button onclick="initOrders()" style="margin-top:16px;padding:10px 20px;background:var(--primary-yellow);border:none;border-radius:var(--radius-sm);color:var(--text-dark);font-weight:700;cursor:pointer;">Retry</button>
+                        </div>
+                    `;
+                }
+            }, 10000);
+            const authValid = await isAuthenticatedOrders();
+            if (!authValid) {
+                if (typeof clearSession === 'function') clearSession();
+                window.location.href = 'signin.html';
+                return;
+            }
+            const user = getUserUnified();
+            
+            try {
+                const data = await apiCallOrders('/api/user/orders', 'POST', { userId: user.id });
+                
+                if (!data.success) {
+                    if (data.error && (data.error.includes('token') || data.error.includes('Access denied') || data.error.includes('Invalid or expired'))) {
+                        if (typeof clearSession === 'function') clearSession();
+                        window.location.href = 'signin.html';
+                        return;
+                    }
+                    throw new Error(data.error || 'Failed to load orders');
+                }
+                
+                if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
+                
+                renderOrders(data.orders || []);
+                clearTimeout(loadingTimeout);
+                
+            } catch (error) {
+                console.error('initOrders ERROR:', error);
+
+                // ALWAYS show cached orders if available, regardless of error
+                const cachedOrders = localStorage.getItem('cachedOrders');
+                if (cachedOrders) {
+                    try {
+                        const orders = JSON.parse(cachedOrders);
+                        showToast('Showing cached orders', 'error');
+                        renderOrders(orders);
+
+                        // If auth error, redirect after showing cached data
+                        if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
+                            setTimeout(() => {
+                                if (typeof clearSession === 'function') clearSession();
+                                window.location.href = 'signin.html';
+                            }, 2000);
+                        }
+                        return;
+                    } catch (e) {}
+                }
+
+                // If auth error and no cached orders, redirect immediately
+                if (error.message && (error.message.includes('Session expired') || error.message.includes('token') || error.message.includes('unauthorized') || error.message.includes('Access denied'))) {
+                    if (typeof clearSession === 'function') clearSession();
+                    window.location.href = 'signin.html';
+                    return;
+                }
+
+                // Show error with retry button
+                document.getElementById('ordersList').innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p>Error loading orders: ${escapeHtml(error.message || 'Unknown error')}</p>
+                        <button onclick="initOrders()" style="margin-top:16px;padding:10px 20px;background:var(--primary-yellow);border:none;border-radius:var(--radius-sm);color:var(--text-dark);font-weight:700;cursor:pointer;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================
+        // PAGE VISIBILITY REFRESH
+        // ============================================
+        let isRefreshingOrders = false;
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                if (isRefreshingOrders) return;
+                isRefreshingOrders = true;
+                try {
+                    await initOrders();
+                } catch (err) {} finally {
+                    isRefreshingOrders = false;
+                }
+            }
+        });
+
+        // ============================================
+        // RENDER ORDERS
+        // ============================================
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersList');
+            totalCount = orders.length;
+            pendingCount = 0;
+            approvedCount = 0;
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p>No orders yet. Submit your first AFA registration.</p>
+                    </div>`;
+                updateStats();
+                return;
+            }
+            
+            let html = '';
+            for (const order of orders) {
+                const displayStatus = getOrderDisplayStatus(order);
+                
+                const status = order.status || 'pending';
+                
+                if (status === 'approved') {
+                    approvedCount++;
+                } else if (status === 'pending' || status === 'paid') {
+                    pendingCount++;
+                }
+                
+                const date = order.created_at 
+                    ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                    : 'Just now';
+                
+                const orderId = order.id ? order.id.toString().substr(-8).toUpperCase() : 'N/A';
+                
+                const safeName = escapeHtml(order.applicant_name || 'N/A');
+                const safePhone = escapeHtml(order.applicant_phone || 'N/A');
+                const safeRef = escapeHtml(order.payment_reference || 'N/A');
+                const safeNoteText = escapeHtml(displayStatus.noteText);
+                
+                const displayAmount = 13.40;
+                
+                let adminNoteHtml = `<div class="admin-note ${displayStatus.noteClass}">${safeNoteText}</div>`;
+                
+                if (order.admin_note && order.admin_note.trim()) {
+                    const safeAdminNote = escapeHtml(order.admin_note);
+                    adminNoteHtml += `<div class="admin-note" style="margin-top:8px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-muted);">
+                         <strong>MTN AFA NOTE:</strong> ${safeAdminNote}
+                    </div>`;
+                }
+                
+                html += `
+                    <div class="order-card" id="order-card-${order.id}">
+                        <div class="order-header">
+                            <span class="order-id">#${orderId}</span>
+                            <span class="order-status ${displayStatus.badgeClass}">${displayStatus.badge}</span>
+                        </div>
+                        <div class="order-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Applicant</span>
+                                <span class="detail-value">${safeName}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">${safePhone}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Amount</span>
+                                <span class="detail-value">GH₵ ${displayAmount.toFixed(2)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Payment Ref</span>
+                                <span class="detail-value" style="font-size: 11px;">${safeRef}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Date</span>
+                                <span class="detail-value">${date}</span>
+                            </div>
+                        </div>
+                        ${adminNoteHtml}
+                        <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
+                            🗑 Remove from History
+                        </button>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            updateStats();
+            autoSendSMSForPaidOrders(); // ← AUTO-SMS: Send SMS for paid orders
+        }
+
+        
+
+        // ============================================
+        // AUTO-SMS: Send SMS for paid orders that haven't sent SMS yet
+        // ============================================
+        async function autoSendSMSForPaidOrders() {
+            // Get current orders from the page or localStorage
+            let currentOrders = [];
+            const cachedOrders = localStorage.getItem('cachedOrders');
+            if (cachedOrders) {
+                try { currentOrders = JSON.parse(cachedOrders); } catch (e) {}
+            }
+
+            const paidOrders = currentOrders.filter(o => 
+                (o.status === 'paid' || o.status === 'approved') && 
+                o.sms_sent !== true && 
+                o.sms_sent !== 'true'
+            );
+
+            if (paidOrders.length === 0) return;
+
+            console.log(`[AUTO-SMS-ORDERS] Found ${paidOrders.length} paid orders without SMS`);
+
+            for (const order of paidOrders) {
+                try {
+                    const data = await apiCallOrders('/api/send-sms', 'POST', { orderId: order.id });
+                    if (data.success) {
+                        console.log(`[AUTO-SMS-ORDERS] SMS sent for order ${order.id}`);
+                        showToast('Admin notified of your payment!', 'success');
+                    } else {
+                        console.log(`[AUTO-SMS-ORDERS] SMS failed for order ${order.id}:`, data.message);
+                    }
+                } catch (e) {
+                    console.error(`[AUTO-SMS-ORDERS] Error for order ${order.id}:`, e.message);
+                }
+            }
+        }
+function updateStats() {
+            document.getElementById('totalOrders').textContent = totalCount;
+            document.getElementById('pendingOrders').textContent = pendingCount;
+            document.getElementById('approvedOrders').textContent = approvedCount;
+        }
+
+        // ============================================
+        // XSS HELPER
+        // ============================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // START ON PAGE LOAD
+        // ============================================
+        document.addEventListener('DOMContentLoaded', initOrders);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('ordersHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
