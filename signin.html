@@ -1,0 +1,3205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com; img-src 'self' data:;">
+    <title>Sign In - MTN AFA Portal</title>
+    <link rel="stylesheet" href="glass.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           iOS 26 LIQUID GLASS DESIGN SYSTEM
+           ============================================ */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-bg-strong: rgba(255, 255, 255, 0.12);
+            --glass-bg-hover: rgba(255, 255, 255, 0.16);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.15);
+            --glass-shadow-strong: rgba(0, 0, 0, 0.25);
+            
+            --primary-yellow: #FFD700;
+            --primary-yellow-glow: rgba(255, 215, 0, 0.3);
+            --accent-blue: #5AC8FA;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --accent-orange: #FF9500;
+            --accent-purple: #AF52DE;
+            
+            --text-white: #ffffff;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --text-dark: #1a1a1a;
+            
+            --bg-deep: #0a0f1a;
+            --bg-gradient-start: #0a0f1a;
+            --bg-gradient-mid: #0d1b2a;
+            --bg-gradient-end: #0a1520;
+            
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(90, 200, 250, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--primary-yellow-glow); }
+            50% { box-shadow: 0 0 20px 4px var(--primary-yellow-glow); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* ============================================
+           EXISTING CODE - LIQUID GLASS UPGRADED
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(160deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 40%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Liquid Glass Fixed Header */
+        .auth-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(10, 15, 26, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 68px;
+            transition: all var(--transition-smooth);
+        }
+        
+        .auth-header.scrolled {
+            background: rgba(10, 15, 26, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
+        .auth-header-left { display: flex; align-items: center; gap: 12px; }
+        
+        /* Liquid Glass Logo Icon */
+        .auth-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+        }
+        .auth-icon:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        .auth-icon span {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .auth-header-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        .auth-header-text p { font-size: 12px; color: var(--text-muted); }
+        
+        /* Liquid Glass Yellow Button */
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
+            font-size: 13px; font-weight: 700;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            border: none; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            transition: all var(--transition-fast);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+        }
+        .btn-yellow:active {
+            transform: translateY(0) scale(0.97);
+        }
+        
+        /* Content scrolls behind fixed header */
+        .auth-content {
+            padding: 88px 20px 40px;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Liquid Glass Badge */
+        .badge {
+            display: inline-block; 
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark); 
+            font-size: 11px; 
+            font-weight: 800;
+            padding: 8px 18px; 
+            border-radius: var(--radius-full); 
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .welcome-title { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 12px; 
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
+        }
+        .welcome-text { 
+            font-size: 15px; 
+            color: var(--text-secondary); 
+            line-height: 1.6; 
+            margin-bottom: 24px; 
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.2s backwards;
+        }
+        
+        /* Liquid Glass Auth Card */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl);
+            padding: 44px 32px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .auth-card h3 { 
+            color: var(--text-dark); 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .subtitle { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 32px; 
+            font-weight: 400;
+        }
+        
+        .form-group { 
+            margin-bottom: 22px; 
+            position: relative;
+        }
+        .form-group label { 
+            display: block; 
+            color: var(--text-dark); 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.3px;
+        }
+        
+        /* Input wrapper with proper spacing for toggle button */
+        .input-wrapper { 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Liquid Glass Form Inputs - with right padding for toggle */
+        .form-input {
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            font-family: inherit;
+            color: var(--text-dark); 
+            background: rgba(0,0,0,0.03); 
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+        /* Extra right padding for password input to prevent toggle overlap */
+        .form-input[type="password"],
+        .form-input[type="text"] {
+            padding-right: 80px;
+        }
+        .form-input:focus { 
+            border-color: var(--primary-yellow); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.15); 
+            transform: scale(1.01);
+        }
+        .form-input::placeholder { 
+            color: #aaa; 
+            opacity: 1;
+        }
+        
+        /* Liquid Glass Password Toggle - positioned inside input */
+        .password-toggle {
+            position: absolute; 
+            right: 8px; 
+            top: 50%; 
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.06); 
+            border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: var(--radius-sm);
+            padding: 8px 14px; 
+            font-size: 12px; 
+            color: #666; 
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .password-toggle:hover {
+            background: rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            transform: translateY(-50%) translateY(-1px);
+        }
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        /* Forgot Password Link */
+        .forgot-link {
+            color: var(--accent-red);
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            display: block;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: right;
+            transition: all var(--transition-fast);
+        }
+        .forgot-link:hover { 
+            text-decoration: underline; 
+            transform: translateX(-2px);
+        }
+        
+        /* Liquid Glass Submit Button */
+        .btn-submit {
+            width: 100%; 
+            padding: 18px; 
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: white; 
+            font-size: 16px; 
+            font-weight: 700;
+            border: none; 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            margin-top: 8px;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .btn-submit:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-submit:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-link { 
+            text-align: center; 
+            margin-top: 24px; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .auth-link a { 
+            color: var(--text-dark); 
+            font-weight: 700; 
+            text-decoration: underline; 
+            transition: all var(--transition-fast);
+        }
+        .auth-link a:hover {
+            color: #000;
+        }
+        
+        /* Liquid Glass Success Message */
+        .success-msg {
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--accent-green);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .success-msg.show { display: block; }
+        
+        /* Liquid Glass Error Message */
+        .error-msg {
+            background: rgba(255, 59, 48, 0.12);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .error-msg.show { display: block; }
+        
+        /* Liquid Glass Suspended Message */
+        .suspended-msg {
+            background: rgba(175, 82, 222, 0.12);
+            border: 1px solid rgba(175, 82, 222, 0.25);
+            color: var(--accent-purple);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .suspended-msg.show { display: block; }
+        .suspended-msg a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 13px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+        }
+        .suspended-msg a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+        .suspended-msg a svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* Liquid Glass Info Box */
+        .info-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            margin-bottom: 24px; 
+            font-size: 14px;
+            color: var(--text-secondary); 
+            line-height: 1.5;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+        }
+        .info-box:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+        }
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        
+        /* Liquid Glass Feature Cards */
+        .feature-cards { display: flex; flex-direction: column; gap: 14px; }
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) backwards;
+        }
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .feature-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .feature-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            letter-spacing: 1px; 
+            color: var(--text-muted); 
+            margin-bottom: 4px; 
+            text-transform: uppercase; 
+        }
+        .feature-value { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--text-primary); 
+        }
+        
+        /* Email Sent Icon */
+        .email-sent-icon {
+            width: 64px; height: 64px;
+            background: rgba(52, 199, 89, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 16px rgba(52, 199, 89, 0.2);
+        }
+        .email-sent-icon svg { width: 32px; height: 32px; color: var(--accent-green); }
+        .check-email-title { 
+            text-align: center; 
+            color: var(--text-dark); 
+            font-size: 22px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .check-email-text { 
+            text-align: center; 
+            color: #666; 
+            font-size: 14px; 
+            line-height: 1.5; 
+            margin-bottom: 24px; 
+        }
+        
+        /* Not Found Message */
+        .not-found-msg {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            color: var(--accent-orange);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .not-found-msg.show { display: block; }
+        
+        /* Back button */
+        .btn-back {
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #666;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            border-radius: var(--radius-sm);
+        }
+        .btn-back:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-dark);
+        }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .auth-content { max-width: 520px; padding: 96px 24px 40px; }
+            .auth-header { padding: 20px 32px; height: 72px; }
+            .auth-content { padding-top: 96px; }
+            .welcome-title { font-size: 40px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .auth-header { padding: 24px 48px; height: 76px; }
+            .auth-content { padding: 104px 24px 40px; }
+            .welcome-title { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="auth-header" id="authHeader">
+            <div class="auth-header-left">
+                <div class="auth-icon">
+                    <span>MTN</span>
+                </div>
+                <div class="auth-header-text">
+                    <h2>MTN AFA Portal</h2>
+                    <p>Secure user access</p>
+                </div>
+            </div>
+            <a href="create.html" class="btn-yellow">Create Account</a>
+        </header>
+
+        <div class="auth-content" style="flex: 1;">
+            <div style="margin-bottom: 24px;">
+                <span class="badge">MTN AFA User Login</span>
+                <h2 class="welcome-title">Welcome back</h2>
+                <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
+            </div>
+
+            <div class="auth-card" id="signinCard">
+                <h3>Sign in</h3>
+                <p class="subtitle">Enter your account details below.</p>
+
+                <div class="success-msg" id="signinSuccess"></div>
+                <div class="error-msg" id="signinError"></div>
+                <div class="suspended-msg" id="suspendedMsg">
+                    <strong>🚫 Account Suspended</strong><br>
+                    Your account has been suspended by the admin. Please contact support for assistance.<br>
+                    <a href="https://wa.me/233503107100" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5.02L2 22l5.11-1.34A9.93 9.93 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.53 0-2.97-.43-4.2-1.17l-.3-.18-3.03.79.81-2.95-.2-.31A8.02 8.02 0 014 12c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8z"/>
+                        </svg>
+                        Chat Support on WhatsApp
+                    </a>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signinEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signinPassword" class="form-input" placeholder="Enter your password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('signinPassword', this)">Show</button>
+                    </div>
+                </div>
+
+                <p class="forgot-link" onclick="showForgotCard()">Forgot Password?</p>
+
+                <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+
+                <div class="auth-link">
+                    Do not have an account? <a href="create.html">Create one</a>
+                </div>
+            </div>
+
+            <div class="auth-card" id="forgotCard" style="display: none;">
+                <h3>Reset Password</h3>
+                <p class="subtitle" id="forgotSubtitle">Enter your email to receive a 6-digit OTP.</p>
+
+                <div class="success-msg" id="forgotSuccess"></div>
+                <div class="error-msg" id="forgotError"></div>
+
+                <!-- Step 1: Enter Email -->
+                <div id="forgotStep1">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn-submit" id="sendOtpBtn" onclick="sendOTP()">Send OTP</button>
+                </div>
+
+                <!-- Step 2: Enter OTP -->
+                <div id="forgotStep2" style="display: none;">
+                    <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">
+                        Enter the 6-digit code sent to <strong id="otpEmailDisplay"></strong>
+                    </p>
+
+                    <div class="otp-container" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 24px;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp1" maxlength="1" oninput="handleOTPInput(this, 'otp2')" onkeydown="handleOTPKeydown(this, event, null)" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp2" maxlength="1" oninput="handleOTPInput(this, 'otp3')" onkeydown="handleOTPKeydown(this, event, 'otp1')" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp3" maxlength="1" oninput="handleOTPInput(this, 'otp4')" onkeydown="handleOTPKeydown(this, event, 'otp2')" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp4" maxlength="1" oninput="handleOTPInput(this, 'otp5')" onkeydown="handleOTPKeydown(this, event, 'otp3')" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp5" maxlength="1" oninput="handleOTPInput(this, 'otp6')" onkeydown="handleOTPKeydown(this, event, 'otp4')" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-input" id="otp6" maxlength="1" oninput="handleOTPInput(this, null)" onkeydown="handleOTPKeydown(this, event, 'otp5')" style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; background: rgba(0,0,0,0.03); outline: none; transition: all 0.15s;">
+                    </div>
+
+                    <button type="button" class="btn-submit" id="verifyOtpBtn" onclick="verifyOTP()">Verify OTP</button>
+                    <button type="button" class="btn-back" onclick="resendOTP()">Resend OTP</button>
+                </div>
+
+                <!-- Step 3: New Password -->
+                <div id="forgotStep3" style="display: none;">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('newPassword', this)">Show</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-submit" id="resetPassBtn" onclick="resetPassword()">Reset Password</button>
+                </div>
+
+                <button type="button" class="btn-back" onclick="backToSignIn()">← Back to Sign In</button>
+            </div>
+
+            <div class="info-box">
+                Use the same email address you registered with to access your dashboard.
+            </div>
+
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-label">Orders</div>
+                    <div class="feature-value">Track status</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Registrations</div>
+                    <div class="feature-value">Submit AFA applications</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Security</div>
+                    <div class="feature-value">Protected access</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script src="config.js">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script src="glass.js">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        function showSuccess(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function showError(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function hideAllMessages() {
+            document.getElementById('signinSuccess').classList.remove('show');
+            document.getElementById('signinError').classList.remove('show');
+            document.getElement0.5px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .welcome-title { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 12px; 
+            letter-spacing: -1px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.1s backwards;
+        }
+        .welcome-text { 
+            font-size: 15px; 
+            color: var(--text-secondary); 
+            line-height: 1.6; 
+            margin-bottom: 24px; 
+            animation: fadeInUp 0.5s var(--transition-smooth) 0.2s backwards;
+        }
+        
+        /* Liquid Glass Auth Card */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(60px) saturate(200%);
+            -webkit-backdrop-filter: blur(60px) saturate(200%);
+            border-radius: var(--radius-xl);
+            padding: 44px 32px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 24px 80px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: scaleIn 0.5s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.6;
+        }
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .auth-card h3 { 
+            color: var(--text-dark); 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .subtitle { 
+            color: #666; 
+            font-size: 14px; 
+            margin-bottom: 32px; 
+            font-weight: 400;
+        }
+        
+        .form-group { 
+            margin-bottom: 22px; 
+            position: relative;
+        }
+        .form-group label { 
+            display: block; 
+            color: var(--text-dark); 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.3px;
+        }
+        
+        /* Input wrapper with proper spacing for toggle button */
+        .input-wrapper { 
+            position: relative; 
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Liquid Glass Form Inputs - with right padding for toggle */
+        .form-input {
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            font-family: inherit;
+            color: var(--text-dark); 
+            background: rgba(0,0,0,0.03); 
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+        /* Extra right padding for password input to prevent toggle overlap */
+        .form-input[type="password"],
+        .form-input[type="text"] {
+            padding-right: 80px;
+        }
+        .form-input:focus { 
+            border-color: var(--primary-yellow); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.15); 
+            transform: scale(1.01);
+        }
+        .form-input::placeholder { 
+            color: #aaa; 
+            opacity: 1;
+        }
+        
+        /* Liquid Glass Password Toggle - positioned inside input */
+        .password-toggle {
+            position: absolute; 
+            right: 8px; 
+            top: 50%; 
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.06); 
+            border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: var(--radius-sm);
+            padding: 8px 14px; 
+            font-size: 12px; 
+            color: #666; 
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .password-toggle:hover {
+            background: rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            transform: translateY(-50%) translateY(-1px);
+        }
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        /* Forgot Password Link */
+        .forgot-link {
+            color: var(--accent-red);
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            display: block;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: right;
+            transition: all var(--transition-fast);
+        }
+        .forgot-link:hover { 
+            text-decoration: underline; 
+            transform: translateX(-2px);
+        }
+        
+        /* Liquid Glass Submit Button */
+        .btn-submit {
+            width: 100%; 
+            padding: 18px; 
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: white; 
+            font-size: 16px; 
+            font-weight: 700;
+            border: none; 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            margin-top: 8px;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .btn-submit:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-submit:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-link { 
+            text-align: center; 
+            margin-top: 24px; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .auth-link a { 
+            color: var(--text-dark); 
+            font-weight: 700; 
+            text-decoration: underline; 
+            transition: all var(--transition-fast);
+        }
+        .auth-link a:hover {
+            color: #000;
+        }
+        
+        /* Liquid Glass Success Message */
+        .success-msg {
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--accent-green);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .success-msg.show { display: block; }
+        
+        /* Liquid Glass Error Message */
+        .error-msg {
+            background: rgba(255, 59, 48, 0.12);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .error-msg.show { display: block; }
+        
+        /* Liquid Glass Suspended Message */
+        .suspended-msg {
+            background: rgba(175, 82, 222, 0.12);
+            border: 1px solid rgba(175, 82, 222, 0.25);
+            color: var(--accent-purple);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .suspended-msg.show { display: block; }
+        .suspended-msg a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 13px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+        }
+        .suspended-msg a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+        .suspended-msg a svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* Liquid Glass Info Box */
+        .info-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            margin-bottom: 24px; 
+            font-size: 14px;
+            color: var(--text-secondary); 
+            line-height: 1.5;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+        }
+        .info-box:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+        }
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        
+        /* Liquid Glass Feature Cards */
+        .feature-cards { display: flex; flex-direction: column; gap: 14px; }
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg); 
+            padding: 20px 24px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s var(--transition-smooth) backwards;
+        }
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+            opacity: 0.6;
+        }
+        .feature-card:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px var(--glass-shadow-strong), inset 0 1px 0 var(--glass-highlight);
+        }
+        .feature-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            letter-spacing: 1px; 
+            color: var(--text-muted); 
+            margin-bottom: 4px; 
+            text-transform: uppercase; 
+        }
+        .feature-value { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--text-primary); 
+        }
+        
+        /* Email Sent Icon */
+        .email-sent-icon {
+            width: 64px; height: 64px;
+            background: rgba(52, 199, 89, 0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 16px rgba(52, 199, 89, 0.2);
+        }
+        .email-sent-icon svg { width: 32px; height: 32px; color: var(--accent-green); }
+        .check-email-title { 
+            text-align: center; 
+            color: var(--text-dark); 
+            font-size: 22px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px;
+        }
+        .check-email-text { 
+            text-align: center; 
+            color: #666; 
+            font-size: 14px; 
+            line-height: 1.5; 
+            margin-bottom: 24px; 
+        }
+        
+        /* Not Found Message */
+        .not-found-msg {
+            background: rgba(255, 152, 0, 0.12);
+            border: 1px solid rgba(255, 152, 0, 0.25);
+            color: var(--accent-orange);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.3s var(--transition-smooth);
+        }
+        .not-found-msg.show { display: block; }
+        
+        /* Back button */
+        .btn-back {
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #666;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            border-radius: var(--radius-sm);
+        }
+        .btn-back:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-dark);
+        }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .auth-content { max-width: 520px; padding: 96px 24px 40px; }
+            .auth-header { padding: 20px 32px; height: 72px; }
+            .auth-content { padding-top: 96px; }
+            .welcome-title { font-size: 40px; }
+        }
+        
+        @media (min-width: 1024px) {
+            .auth-header { padding: 24px 48px; height: 76px; }
+            .auth-content { padding: 104px 24px 40px; }
+            .welcome-title { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="auth-header" id="authHeader">
+            <div class="auth-header-left">
+                <div class="auth-icon">
+                    <span>MTN</span>
+                </div>
+                <div class="auth-header-text">
+                    <h2>MTN AFA Portal</h2>
+                    <p>Secure user access</p>
+                </div>
+            </div>
+            <a href="create.html" class="btn-yellow">Create Account</a>
+        </header>
+
+        <div class="auth-content" style="flex: 1;">
+            <div style="margin-bottom: 24px;">
+                <span class="badge">MTN AFA User Login</span>
+                <h2 class="welcome-title">Welcome back</h2>
+                <p class="welcome-text">Sign in to manage your AFA registrations, track orders, and keep your account updated.</p>
+            </div>
+
+            <div class="auth-card" id="signinCard">
+                <h3>Sign in</h3>
+                <p class="subtitle">Enter your account details below.</p>
+
+                <div class="success-msg" id="signinSuccess"></div>
+                <div class="error-msg" id="signinError"></div>
+                <div class="suspended-msg" id="suspendedMsg">
+                    <strong>🚫 Account Suspended</strong><br>
+                    Your account has been suspended by the admin. Please contact support for assistance.<br>
+                    <a href="https://wa.me/233503107100" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5.02L2 22l5.11-1.34A9.93 9.93 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.53 0-2.97-.43-4.2-1.17l-.3-.18-3.03.79.81-2.95-.2-.31A8.02 8.02 0 014 12c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8z"/>
+                        </svg>
+                        Chat Support on WhatsApp
+                    </a>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signinEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signinPassword" class="form-input" placeholder="Enter your password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('signinPassword', this)">Show</button>
+                    </div>
+                </div>
+
+                <p class="forgot-link" onclick="showForgotCard()">Forgot Password?</p>
+
+                <button type="button" class="btn-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+
+                <div class="auth-link">
+                    Do not have an account? <a href="create.html">Create one</a>
+                </div>
+            </div>
+
+            <div class="auth-card" id="forgotCard" style="display: none;">
+                <h3>Reset Password</h3>
+                <p class="subtitle" id="forgotSubtitle">Enter your email to receive a password reset link.</p>
+                
+                <div class="success-msg" id="forgotSuccess"></div>
+                <div class="error-msg" id="forgotError"></div>
+                <div class="not-found-msg" id="notFoundMsg">
+                    <strong>Email Not Found</strong><br>
+                    This email is not registered with MTN AFA Portal. Please create an account first.
+                </div>
+
+                <div id="forgotStep1">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn-submit" id="sendCodeBtn" onclick="sendResetLink()">Send Reset Link</button>
+                </div>
+
+                <div id="forgotStep2" style="display: none;">
+                    <div class="email-sent-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="check-email-title">Check your email</div>
+                    <div class="check-email-text">
+                        We've sent a password reset link to <strong id="resetEmailDisplay"></strong>.<<br><br>
+                        Click the link in your email to reset your password.
+                    </div>
+                    <button type="button" class="btn-submit" onclick="backToSignIn()">Back to Sign In</button>
+                </div>
+
+                <button type="button" class="btn-back" onclick="backToSignIn()">← Back to Sign In</button>
+            </div>
+
+            <div class="info-box">
+                Use the same email address you registered with to access your dashboard.
+            </div>
+
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-label">Orders</div>
+                    <div class="feature-value">Track status</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Registrations</div>
+                    <div class="feature-value">Submit AFA applications</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-label">Security</div>
+                    <div class="feature-value">Protected access</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script src="config.js">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script src="glass.js">
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+    <script>
+        // XSS protection - escape HTML entities
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        function showSuccess(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function showError(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = escapeHtml(msg);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function hideAllMessages() {
+            document.getElementById('signinSuccess').classList.remove('show');
+            document.getElementById('signinError').classList.remove('show');
+            document.getElementById('suspendedMsg').classList.remove('show');
+        }
+
+        async function handleSignIn() {
+            const email = document.getElementById('signinEmail').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            const btn = document.getElementById('signinBtn');
+
+            if (!email || !password) {
+                showError('signinError', 'Please enter both email and password.');
+                return;
+            }
+
+            hideAllMessages();
+            btn.disabled = true;
+            btn.textContent = 'Signing In...';
+
+            try {
+                const data = await apiCall('/api/auth/signin', 'POST', { email, password });
+                
+                if (data.suspended) {
+                    hideAllMessages();
+                    document.getElementById('suspendedMsg').classList.add('show');
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                    return;
+                }
+                
+                if (!data.success) {
+                    // Show the actual error from the server instead of generic message
+                    const serverError = data.error || data.message || 'Authentication failed.';
+                    throw new Error(serverError);
+                }
+                
+                setSession(data.session);
+                setUser(data.user);
+                
+                if (data.user) {
+                    localStorage.setItem('userName', escapeHtml(data.user.fullName || data.user.name || email.split('@')[0]));
+                    localStorage.setItem('userEmail', escapeHtml(data.user.email || email));
+                    localStorage.setItem('userId', escapeHtml(data.user.id));
+                    localStorage.setItem('userPhone', escapeHtml(data.user.phone || ''));
+                }
+                
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+                hideAllMessages();
+                
+                const errorMsg = error.message || '';
+                const errorLower = errorMsg.toLowerCase();
+                
+                if (errorLower.includes('suspended') || errorLower.includes('contact support')) {
+                    document.getElementById('suspendedMsg').classList.add('show');
+                } else if (errorLower.includes('invalid login credentials')) {
+                    showError('signinError', 'Invalid email or password. Please check your credentials and try again.');
+                } else if (errorLower.includes('email not confirmed')) {
+                    showError('signinError', 'Please confirm your email address before signing in. Check your inbox for the confirmation link.');
+                } else if (errorLower.includes('too many requests')) {
+                    showError('signinError', 'Too many login attempts. Please wait a moment and try again.');
+                } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('failed to fetch')) {
+                    showError('signinError', 'Unable to connect to server. Please check your internet connection and try again.');
+                } else {
+                    // Show the actual error message from Supabase/server
+                    showError('signinError', errorMsg);
+                }
+            }
+        }
+
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+        }
+
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+        }
+
+        async function sendResetLink() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendCodeBtn');
+            
+            if (!email) {
+                showError('forgotError', 'Please enter your email.');
+                return;
+            }
+            
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+            
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            try {
+                const data = await apiCall('/api/auth/reset-password', 'POST', { email });
+                
+                if (!data.success && data.error === 'Email not found') {
+                    document.getElementById('notFoundMsg').classList.add('show');
+                    btn.disabled = false;
+                    btn.textContent = 'Send Reset Link';
+                    return;
+                }
+                
+                if (!data.success) {
+                    // Show actual server error
+                    const serverError = data.error || data.message || 'Failed to send reset link.';
+                    throw new Error(serverError);
+                }
+                
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+                document.getElementById('resetEmailDisplay').textContent = escapeHtml(email);
+                showSuccess('forgotSuccess', 'Reset link sent! Check your email.');
+                
+            } catch (error) {
+                const errorMsg = error.message || '';
+                const errorLower = errorMsg.toLowerCase();
+                
+                if (errorLower.includes('not found') || errorLower.includes('not registered') || errorLower.includes('user not found')) {
+                    document.getElementById('notFoundMsg').classList.add('show');
+                } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('failed to fetch')) {
+                    showError('forgotError', 'Unable to connect to server. Please check your internet connection and try again.');
+                } else {
+                    // Show actual error from Supabase/server
+                    showError('forgotError', 'Error: ' + errorMsg);
+                }
+                
+                btn.disabled = false;
+                btn.textContent = 'Send Reset Link';
+            }
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('authHeader');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    
+
+        // ============================================
+        // OTP PASSWORD RESET FUNCTIONS
+        // ============================================
+
+        let currentOtpEmail = '';
+
+        // Handle OTP input - auto-focus next box
+        function handleOTPInput(current, nextId) {
+            // Only allow numbers
+            current.value = current.value.replace(/[^0-9]/g, '');
+
+            if (current.value.length === 1 && nextId) {
+                document.getElementById(nextId).focus();
+            }
+
+            // Check if all 6 digits entered
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            if (otp1 && otp2 && otp3 && otp4 && otp5 && otp6) {
+                // Auto-verify when all digits entered
+                setTimeout(() => verifyOTP(), 300);
+            }
+        }
+
+        // Handle backspace in OTP
+        function handleOTPKeydown(current, event, prevId) {
+            if (event.key === 'Backspace' && current.value === '' && prevId) {
+                document.getElementById(prevId).focus();
+            }
+        }
+
+        // Step 1: Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const btn = document.getElementById('sendOtpBtn');
+
+            if (!email) {
+                showError('forgotError', 'Please enter your email address.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const data = await apiCall('/api/auth/send-otp', 'POST', { email });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to send OTP');
+                }
+
+                currentOtpEmail = email;
+                document.getElementById('otpEmailDisplay').textContent = escapeHtml(email);
+
+                // Switch to OTP step
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+
+                // Focus first OTP box
+                setTimeout(() => document.getElementById('otp1').focus(), 100);
+
+                showSuccess('forgotSuccess', 'OTP sent! Check your email.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to send OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otp5 = document.getElementById('otp5').value;
+            const otp6 = document.getElementById('otp6').value;
+
+            const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+            const btn = document.getElementById('verifyOtpBtn');
+
+            if (otp.length !== 6) {
+                showError('forgotError', 'Please enter all 6 digits.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                // Store OTP for password reset step
+                window.currentOTP = otp;
+
+                // Switch to password step
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotStep3').style.display = 'block';
+
+                showSuccess('forgotSuccess', 'OTP verified! Enter your new password.');
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Invalid OTP. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        // Resend OTP
+        async function resendOTP() {
+            const btn = document.getElementById('verifyOtpBtn');
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+
+            // Send again
+            await sendOTP();
+        }
+
+        // Step 3: Reset Password
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if (!newPassword || newPassword.length < 6) {
+                showError('forgotError', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+
+            try {
+                const otp = window.currentOTP || '';
+                const data = await apiCall('/api/auth/verify-otp-reset', 'POST', {
+                    email: currentOtpEmail,
+                    otp: otp,
+                    newPassword: newPassword
+                });
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+
+                showSuccess('forgotSuccess', 'Password reset successful! You can now sign in.');
+
+                // Go back to sign in after 2 seconds
+                setTimeout(() => {
+                    backToSignIn();
+                }, 2000);
+
+            } catch (error) {
+                showError('forgotError', error.message || 'Failed to reset password. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            }
+        }
+
+        // Update showForgotCard to reset OTP flow
+        function showForgotCard() {
+            document.getElementById('forgotCard').style.display = 'block';
+            document.getElementById('signinCard').style.display = 'none';
+
+            // Reset OTP flow
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            document.getElementById('forgotSuccess').classList.remove('show');
+            document.getElementById('forgotError').classList.remove('show');
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').textContent = 'Verify OTP';
+            document.getElementById('resetPassBtn').disabled = false;
+            document.getElementById('resetPassBtn').textContent = 'Reset Password';
+        }
+
+        // Update backToSignIn to clear OTP
+        function backToSignIn() {
+            document.getElementById('forgotCard').style.display = 'none';
+            document.getElementById('signinCard').style.display = 'block';
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('signinEmail').value = '';
+            document.getElementById('signinPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            // Clear OTP boxes
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+
+            hideAllMessages();
+            document.getElementById('notFoundMsg').classList.remove('show');
+
+            // Reset buttons
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+        }
+
+    </script>
+</body>
+</html>
