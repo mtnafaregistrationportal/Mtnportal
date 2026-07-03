@@ -4,7 +4,6 @@
 const _u = 'aHR0cHM6Ly9tdG4tYWZhLWFwaS5vbnJlbmRlci5jb20=';
 const API_BASE_URL = atob(_u);
 
-
 // ============================================
 // SECURITY: XSS Sanitization Helper
 // ============================================
@@ -50,49 +49,6 @@ setInterval(checkServerConnection, 30000);
 setTimeout(checkServerConnection, 2000);
 
 // ============================================
-// SUPABASE CONFIG - MUST BE BEFORE apiCall
-// ============================================
-const SUPABASE_URL = 'https://iqzjpdynmnucxswbrkho.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxempwZHlubW51Y3hzd2Jya2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDY1OTksImV4cCI6MjA5NTc4MjU5OX0.Wro7xlYFR2zNIVitHSWI6itG5jPFYLMa2kpctGkY3QQ';
-
-let supabaseClient = null;
-
-function initSupabase() {
-  // Try different ways Supabase might be exposed
-  const supabaseLib = window.supabase || window.supabaseJs;
-  
-  if (supabaseLib && supabaseLib.createClient) {
-    supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return true;
-  }
-  
-  // Check if it's already initialized globally
-  if (window.supabaseClient) {
-    supabaseClient = window.supabaseClient;
-    return true;
-  }
-  
-  return false;
-}
-
-// Try immediately - supabase CDN loads BEFORE config.js now
-initSupabase();
-
-// Helper to get supabase client (waits if needed)
-async function getSupabaseClient() {
-  if (supabaseClient) return supabaseClient;
-  
-  // Try to init again
-  if (initSupabase()) return supabaseClient;
-  
-  // Wait a bit and retry
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  if (initSupabase()) return supabaseClient;
-  
-  throw new Error('Supabase client not available. Please refresh the page.');
-}
-
-// ============================================
 // Get valid token
 // ============================================
 async function getValidToken() {
@@ -113,18 +69,17 @@ async function getValidToken() {
 }
 
 // ============================================
-// Refresh token
+// Refresh token via backend
 // ============================================
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   
   try {
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ refresh_token: refreshToken })
     });
