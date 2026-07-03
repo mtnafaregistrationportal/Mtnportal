@@ -1,7 +1,9 @@
 // ============================================
 // API CONFIGURATION
 // ============================================
-const API_BASE_URL = 'https://mtn-afa-api.onrender.com';
+const _u = 'aHR0cHM6Ly9tdG4tYWZhLWFwaS5vbnJlbmRlci5jb20=';
+const API_BASE_URL = atob(_u);
+
 
 // ============================================
 // SECURITY: XSS Sanitization Helper
