@@ -468,7 +468,110 @@
             .form-card { padding: 24px 20px; }
             .summary-card { padding: 24px 20px; }
         }
-    </style>
+    
+        /* Payment Modal */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 26, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .payment-modal.active {
+            display: flex;
+        }
+        .payment-modal-content {
+            background: #fff;
+            width: 95%;
+            max-width: 520px;
+            height: 85vh;
+            max-height: 700px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+            animation: scaleIn 0.3s var(--transition-spring);
+            display: flex;
+            flex-direction: column;
+        }
+        .payment-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .payment-modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .payment-modal-close {
+            background: rgba(0,0,0,0.15);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 700;
+            transition: all var(--transition-fast);
+        }
+        .payment-modal-close:hover {
+            background: rgba(0,0,0,0.25);
+            transform: scale(1.1);
+        }
+        .payment-modal-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+        .payment-modal-status {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .payment-modal-status-text {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+        .payment-modal-verify-btn {
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .payment-modal-verify-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+</style>
 </head>
 <body>
     <main class="container">
@@ -538,6 +641,25 @@
             </div>
             <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
         </form>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="payment-modal">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <span class="payment-modal-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Complete Your Payment
+                </span>
+                <button class="payment-modal-close" onclick="closePaymentModal()" title="Close">&times;</button>
+            </div>
+            <iframe id="paymentIframe" class="payment-modal-iframe" src=""></iframe>
+            <div class="payment-modal-status">
+                <span class="payment-modal-status-text">GH&#8373; 13.40 &middot; MTN AFA Bundle</span>
+                <button class="payment-modal-verify-btn" onclick="verifyPaymentStatus()">I've Paid</button>
+            </div>
+        </div>
+    </div>
+
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -737,7 +859,7 @@
                                 localStorage.setItem('lastPaymentReference', orderData.reference);
                 // E-Tranzact: redirect to hosted checkout page
                 if (orderData.paymentLink) {
-                    window.location.href = orderData.paymentLink;
+                    openPaymentModal(orderData.paymentLink);
                 } else {
                     throw new Error('Payment link not received from E-Tranzact');
                 }
@@ -755,6 +877,58 @@
                 submitBtn.textContent = originalText;
             }
         });
-    </script>
+    
+        // Payment Modal Functions
+        function openPaymentModal(paymentLink) {
+            const modal = document.getElementById('paymentModal');
+            const iframe = document.getElementById('paymentIframe');
+            iframe.src = paymentLink;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            const iframe = document.getElementById('paymentIframe');
+            modal.classList.remove('active');
+            iframe.src = '';
+            document.body.style.overflow = '';
+        }
+        async function verifyPaymentStatus() {
+            const reference = localStorage.getItem('lastPaymentReference');
+            if (!reference) {
+                showError('No payment reference found. Please try again.', true);
+                closePaymentModal();
+                return;
+            }
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Verifying...';
+            try {
+                const response = await fetchWithRetry('https://mtn-afa-api.onrender.com/api/payment/verify?reference=' + encodeURIComponent(reference), {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.verified) {
+                    closePaymentModal();
+                    window.location.href = 'payment-success.html?reference=' + encodeURIComponent(reference);
+                } else {
+                    showError('Payment not confirmed yet. Please complete the payment in the modal and try again.', true);
+                }
+            } catch (error) {
+                showError('Unable to verify payment. Please check your orders page later.', true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Registration';
+            }
+        }
+        // Close modal when clicking outside
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePaymentModal();
+            }
+        });
+
+</script>
 </body>
 </html>
