@@ -661,7 +661,7 @@ async function checkPaymentStatus(reference) {
         const data = await response.json();
         const result = { 
             paid: data.verified === true, 
-            amount: data.amount || 13.40 
+            amount: data.amount || 15.45 
         };
         paymentVerifyCache.set(reference, result);
         return result;
@@ -888,7 +888,7 @@ function getRegistrationStatusBadge(order) {
 
                     const isPaid = r.payment_verified === true || r.payment_verified === 'true' || r.paid_at || r.status === 'paid';
                     // FIXED: safe amount formatting
-                    const displayAmount = r.status === 'failed' ? 0.00 : parseFloat(r.amount || 13.40);
+                    const displayAmount = r.status === 'failed' ? 0.00 : parseFloat(r.amount || 15.45);
 
                     const safeName = escapeHtml(r.applicant_name || 'Unknown');
                     const safePhone = escapeHtml(r.applicant_phone || 'No phone');
