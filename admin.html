@@ -470,7 +470,6 @@
         let allUsers = [];
         let allRegistrations = [];
         let allPayments = [];
-        let allPaymentAttempts = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('adminToken');
@@ -582,7 +581,6 @@
 
         async function loadAllData() {
             await loadUsers();
-            await loadPaymentAttempts();
             await loadRegistrations();
             await loadPayments();
             await loadTotalRevenue();
@@ -613,16 +611,6 @@
             } catch (error) {
                 document.getElementById('registrationsList').innerHTML = 
                     '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error loading registrations: ' + escapeHtml(error.message) + '</div>';
-            }
-        }
-
-        async function loadPaymentAttempts() {
-            try {
-                const data = await adminApiCall('/api/admin/payment-attempts', 'POST');
-                allPaymentAttempts = data.success ? (data.attempts || []) : [];
-            } catch (error) {
-                console.error('Payment attempt history load error:', error);
-                allPaymentAttempts = [];
             }
         }
 
@@ -909,8 +897,6 @@ function getRegistrationStatusBadge(order) {
                     const safeDob = escapeHtml(r.dob || 'N/A');
                     const safeOccupation = escapeHtml(r.occupation || 'N/A');
                     const safeRef = escapeHtml(r.payment_reference || 'N/A');
-                    const attemptHistory = allPaymentAttempts.filter(a => String(a.order_id) === String(r.id));
-                    const attemptHistoryHtml = attemptHistory.length ? `<div class="admin-note" style="margin-top:8px;"><strong>PAYMENT ATTEMPTS:</strong> ${attemptHistory.map(a => `${escapeHtml(a.status || 'unknown')} · ${escapeHtml(a.payment_reference || 'N/A')} · ${a.created_at ? new Date(a.created_at).toLocaleString() : 'No date'}`).join('<br>')}</div>` : '';
                     const safeNote = escapeHtml(r.admin_note || '');
 
                     const idStr = String(r.id || '');
@@ -926,7 +912,6 @@ function getRegistrationStatusBadge(order) {
                                  title="${r.status === 'approved' ? 'Completed' : (r.status === 'rejected' ? 'Rejected' : (r.admin_attended ? 'Attended' : 'Click to mark as attended'))}"></div>
 
                             ${statusInfo.html}
-                            ${attemptHistoryHtml}
 
                             <div class="user-card-header">
                                 <div class="user-info">
@@ -1174,7 +1159,7 @@ function getRegistrationStatusBadge(order) {
                     throw new Error(data.error);
                 }
                 showLoading(false);
-                showToast('Registration deleted permanently', 'success');
+                showToast('Registration hidden from admin dashboard', 'success');
                 // Refresh to ensure sync
                 await loadAllData();
             } catch (error) {
