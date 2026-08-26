@@ -576,6 +576,19 @@
             .orders-header { padding: 24px 48px; height: 76px; }
             .orders-content { padding: 104px 24px 40px; }
         }
+        /* Retry payment: scoped to pending/failed order cards only. */
+        .retry-payment-btn { width:100%; margin-top:12px; padding:13px 16px; background:var(--primary-yellow); border:1px solid rgba(255,255,255,0.2); border-radius:var(--radius-sm); color:var(--text-dark); font-weight:800; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease; }
+        .retry-payment-btn:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(255,215,0,0.22); }
+        .retry-payment-btn:disabled { opacity:.65; cursor:wait; transform:none; box-shadow:none; }
+        .retry-payment-modal { position:fixed; inset:0; z-index:2000; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.72); backdrop-filter:blur(20px) saturate(130%); -webkit-backdrop-filter:blur(20px) saturate(130%); }
+        .retry-payment-modal.active { display:flex; }
+        .retry-payment-content { width:min(680px,100%); max-height:92vh; overflow:hidden; background:var(--bg-gradient-mid); border:1px solid var(--glass-border); border-radius:var(--radius-lg); box-shadow:0 24px 70px rgba(0,0,0,.45); }
+        .retry-payment-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 20px; color:var(--text-primary); font-weight:800; }
+        .retry-payment-close { border:0; background:transparent; color:var(--text-primary); font-size:28px; line-height:1; cursor:pointer; }
+        .retry-payment-iframe { display:block; width:100%; height:min(62vh,560px); border:0; background:#fff; }
+        .retry-payment-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; color:var(--text-muted); }
+        .retry-payment-verify { padding:11px 18px; border:0; border-radius:999px; background:var(--primary-yellow); color:var(--text-dark); font-weight:800; cursor:pointer; }
+        @media (max-width:520px) { .retry-payment-modal { padding:10px; } .retry-payment-content { border-radius:18px; } .retry-payment-iframe { height:66vh; } .retry-payment-footer { flex-direction:column; align-items:stretch; } .retry-payment-verify { width:100%; } }
     </style>
 </head>
 <body>
@@ -632,6 +645,20 @@
         </svg>
         <span class="contact-support-text">Contact Support</span>
     </a>
+
+    <div class="retry-payment-modal" id="retryPaymentModal" role="dialog" aria-modal="true" aria-labelledby="retryPaymentTitle" aria-hidden="true">
+        <div class="retry-payment-content">
+            <div class="retry-payment-header">
+                <span id="retryPaymentTitle">Complete Payment</span>
+                <button type="button" class="retry-payment-close" onclick="closeRetryPaymentModal()" aria-label="Close payment window">&times;</button>
+            </div>
+            <iframe id="retryPaymentIframe" class="retry-payment-iframe" title="Payment window" src=""></iframe>
+            <div class="retry-payment-footer">
+                <span>GH₵ 15.45 · Complete the payment to update this order.</span>
+                <button type="button" class="retry-payment-verify" id="retryPaymentVerifyBtn" onclick="verifyRetryPayment()">I've Paid</button>
+            </div>
+        </div>
+    </div>
 
     <div class="toast" id="toast"></div>
 
@@ -753,6 +780,108 @@
         // ============================================
         // USER DELETE OWN ORDER
         // ============================================
+        let retryPaymentContext = null;
+        let retryPaymentPreviousFocus = null;
+        let retryPaymentKeyByOrder = {};
+
+        function openRetryPaymentModal(paymentLink, orderId, reference, expiresAt) {
+            retryPaymentPreviousFocus = document.activeElement;
+            retryPaymentContext = { orderId, reference, expiresAt };
+            const modal = document.getElementById('retryPaymentModal');
+            document.getElementById('retryPaymentIframe').src = paymentLink;
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('retryPaymentVerifyBtn').focus();
+        }
+
+        function closeRetryPaymentModal() {
+            const modal = document.getElementById('retryPaymentModal');
+            document.getElementById('retryPaymentIframe').src = '';
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            retryPaymentContext = null;
+            if (retryPaymentPreviousFocus && typeof retryPaymentPreviousFocus.focus === 'function') retryPaymentPreviousFocus.focus();
+            retryPaymentPreviousFocus = null;
+        }
+
+        function getRetryIdempotencyKey(orderId) {
+            if (!retryPaymentKeyByOrder[orderId]) {
+                const randomPart = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+                retryPaymentKeyByOrder[orderId] = 'retry-' + orderId + '-' + randomPart;
+            }
+            return retryPaymentKeyByOrder[orderId];
+        }
+
+        function handleRetryPaymentKeydown(event) {
+            if (!retryPaymentContext) return;
+            if (event.key === 'Escape') { event.preventDefault(); closeRetryPaymentModal(); return; }
+            if (event.key !== 'Tab') return;
+            const modal = document.getElementById('retryPaymentModal');
+            const focusable = [...modal.querySelectorAll('button:not([disabled]), iframe')];
+            if (!focusable.length) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+        document.addEventListener('keydown', handleRetryPaymentKeydown);
+
+        async function proceedToPayment(orderId) {
+            const button = document.getElementById('retry-payment-' + orderId);
+            if (button) { button.disabled = true; button.textContent = 'Opening Payment...'; }
+            try {
+                const user = getUserUnified();
+                const data = await apiCallOrders('/api/payment/retry', 'POST', { orderId, userId: user.id, idempotencyKey: getRetryIdempotencyKey(orderId) });
+                if (!data.success || !data.paymentLink) throw new Error(data.error || 'Payment link not received.');
+                localStorage.setItem('lastPaymentReference', data.reference);
+                localStorage.setItem('lastPaymentOrderId', String(data.orderId || orderId));
+                if (data.expiresAt) localStorage.setItem('lastPaymentExpiresAt', data.expiresAt);
+                openRetryPaymentModal(data.paymentLink, data.orderId || orderId, data.reference, data.expiresAt);
+            } catch (error) {
+                console.error('Retry payment error:', error);
+                showToast(error.message || 'Unable to open payment. Please try again.', 'error');
+            } finally {
+                if (button) { button.disabled = false; button.textContent = 'Proceed to Payment'; }
+            }
+        }
+
+        async function verifyRetryPayment() {
+            if (!retryPaymentContext) return;
+            if (retryPaymentContext.expiresAt && new Date(retryPaymentContext.expiresAt) <= new Date()) {
+                showToast('This payment window has expired. Please request a new payment attempt.', 'error');
+                closeRetryPaymentModal();
+                return;
+            }
+            const button = document.getElementById('retryPaymentVerifyBtn');
+            button.disabled = true;
+            button.textContent = 'Verifying...';
+            try {
+                const user = getUserUnified();
+                const response = await apiCallOrders('/api/payment/confirm-client', 'POST', {
+                    reference: retryPaymentContext.reference,
+                    orderId: retryPaymentContext.orderId,
+                    userId: user.id
+                });
+                if (!response.success || response.verified === false) throw new Error(response.error || 'Payment is not confirmed yet.');
+                closeRetryPaymentModal();
+                showToast('Payment verified. Your order has been updated.', 'success');
+                await initOrders();
+            } catch (error) {
+                console.error('Retry payment verification error:', error);
+                showToast(error.message || 'Payment is not confirmed yet. Please complete it and try again.', 'error');
+            } finally {
+                if (document.getElementById('retryPaymentVerifyBtn')) {
+                    document.getElementById('retryPaymentVerifyBtn').disabled = false;
+                    document.getElementById('retryPaymentVerifyBtn').textContent = "I've Paid";
+                }
+            }
+        }
+
+        document.getElementById('retryPaymentModal').addEventListener('click', function(event) {
+            if (event.target === this) closeRetryPaymentModal();
+        });
+
         async function deleteUserOrder(orderId) {
             if (!confirm('Delete this registration from your dashboard? This does not reverse payment or change revenue, and cannot be undone.')) return;
             const user = getUserUnified();
@@ -1064,6 +1193,7 @@
                             </div>
                         </div>
                         ${adminNoteHtml}
+                        ${(status === 'pending' || status === 'failed') ? `<button type="button" class="retry-payment-btn" id="retry-payment-${order.id}" onclick="proceedToPayment('${order.id}')">Proceed to Payment</button>` : ''}
                         <button type="button" onclick="window.print()" style="width:100%;margin-top:12px;padding:11px;background:transparent;border:1px solid var(--glass-border);border-radius:var(--radius-sm);color:var(--text-primary);font-weight:700;cursor:pointer;">Print Receipt</button>
                         <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
                             🗑 Delete
