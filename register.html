@@ -794,8 +794,11 @@
                 }
             }
         }
+        let registrationSubmitting = false;
         document.getElementById('afaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (registrationSubmitting) return;
+            registrationSubmitting = true;
             hideError();
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.textContent;
@@ -872,9 +875,11 @@
                     errorMessage.includes('Unable to connect') ||
                     error.name === 'TypeError' ||
                     error.name === 'AbortError';
-                showError(error.message || 'Something went wrong. Please try again.', isNetworkError);
+                showError(isNetworkError ? 'Connection problem. Your registration was not submitted. Please try again.' : (error.message || 'We could not complete your registration. Please try again.'), true);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+            } finally {
+                registrationSubmitting = false;
             }
         });
     
