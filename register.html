@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com https://api.xcelapp.com; frame-src https://paygate.xcelapp.com; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://mtn-afa-api.onrender.com https://api.xcelapp.com; frame-src https://paygate.xcelapp.com https://*.xcelapp.com; img-src 'self' data:;">
     <title>MTN AFA Portal - Register AFA</title>
     <link rel="stylesheet" href="glass.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -916,7 +916,8 @@
                 const data = await response.json();
                 if (data.verified) {
                     closePaymentModal();
-                    window.location.href = 'payment-success.html?reference=' + encodeURIComponent(reference);
+                    showPaymentToast('Payment verified successfully.');
+                    setTimeout(() => { window.location.href = 'payment-success.html?reference=' + encodeURIComponent(reference); }, 900);
                 } else {
                     showError('Payment not confirmed yet. Please complete the payment in the modal and try again.', true);
                 }
@@ -935,5 +936,16 @@
         });
 
 </script>
+    <div id="paymentToast" role="status" aria-live="polite" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);display:none;z-index:3000;padding:12px 18px;border-radius:999px;background:#34C759;color:#fff;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);">Payment verified successfully.</div>
+    <script>
+        function showPaymentToast(message) {
+            const toast = document.getElementById('paymentToast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.style.display = 'block';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            setTimeout(() => { toast.style.display = 'none'; toast.style.transform = 'translateX(-50%) translateY(20px)'; }, 2400);
+        }
+    </script>
 </body>
 </html>
