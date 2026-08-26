@@ -593,8 +593,16 @@
     </header>
 
     <div class="orders-content">
-        <h1 class="section-title">Orders</h1>
-        
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
+            <h1 class="section-title" style="margin-bottom:0;">Orders</h1>
+            <button type="button" onclick="refreshOrders()" style="padding:10px 14px;background:var(--primary-yellow);border:none;border-radius:var(--radius-sm);color:var(--text-dark);font-weight:700;cursor:pointer;">Refresh Status</button>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+            <input id="orderSearch" type="search" placeholder="Search name, phone or reference" oninput="applyOrderFilters()" style="flex:1;padding:13px 14px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--glass-bg);color:var(--text-primary);outline:none;">
+            <select id="orderFilter" onchange="applyOrderFilters()" style="padding:13px 10px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--bg-deep);color:var(--text-primary);outline:none;">
+                <option value="all">All</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="failed">Failed</option>
+            </select>
+        </div>
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-value" id="totalOrders">0</div>
@@ -746,7 +754,7 @@
         // USER DELETE OWN ORDER
         // ============================================
         async function deleteUserOrder(orderId) {
-            if (!confirm('Are you sure you want to permanently delete this order? This cannot be undone.')) return;
+            if (!confirm('Delete this registration from your dashboard? This does not reverse payment or change revenue, and cannot be undone.')) return;
             const user = getUserUnified();
             const btn = document.getElementById('delete-btn-' + orderId);
             if (btn) {
@@ -840,6 +848,8 @@
         let totalCount = 0;
         let pendingCount = 0;
         let approvedCount = 0;
+        let allOrders = [];
+        let isRefreshingOrders = false;
 
         // ============================================
         // FIXED: MAIN INIT with async auth
@@ -883,7 +893,8 @@
                 
                 if (data.orders) localStorage.setItem('cachedOrders', JSON.stringify(data.orders));
                 
-                renderOrders(data.orders || []);
+                allOrders = data.orders || [];
+                renderOrders(allOrders);
                 clearTimeout(loadingTimeout);
                 
             } catch (error) {
@@ -928,10 +939,32 @@
             }
         }
 
+        function applyOrderFilters() {
+            const query = (document.getElementById('orderSearch')?.value || '').trim().toLowerCase();
+            const filter = document.getElementById('orderFilter')?.value || 'all';
+            const filtered = allOrders.filter(order => {
+                const matchesText = !query || [order.applicant_name, order.applicant_phone, order.payment_reference, order.id].some(value => String(value || '').toLowerCase().includes(query));
+                const matchesStatus = filter === 'all' || (order.status || 'pending') === filter;
+                return matchesText && matchesStatus;
+            });
+            renderOrders(filtered, true);
+        }
+
+        async function refreshOrders() {
+            if (isRefreshingOrders) return;
+            isRefreshingOrders = true;
+            const button = document.querySelector('button[onclick="refreshOrders()"]');
+            if (button) { button.disabled = true; button.textContent = 'Refreshing...'; }
+            try { await initOrders(); showToast('Order status refreshed', 'success'); } finally {
+                isRefreshingOrders = false;
+                if (button) { button.disabled = false; button.textContent = 'Refresh Status'; }
+            }
+        }
+
         // ============================================
         // PAGE VISIBILITY REFRESH
         // ============================================
-        let isRefreshingOrders = false;
+        
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState === 'visible') {
                 if (isRefreshingOrders) return;
@@ -947,7 +980,7 @@
         // ============================================
         // RENDER ORDERS
         // ============================================
-        function renderOrders(orders) {
+        function renderOrders(orders, preserveFilters = false) {
             const container = document.getElementById('ordersList');
             totalCount = orders.length;
             pendingCount = 0;
@@ -1005,6 +1038,9 @@
                             <span class="order-id">#${orderId}</span>
                             <span class="order-status ${displayStatus.badgeClass}">${displayStatus.badge}</span>
                         </div>
+                        <div style="display:flex;justify-content:space-between;gap:4px;margin:14px 0 16px;font-size:10px;font-weight:700;color:var(--text-muted);">
+                            <span style="color:${status === 'pending' ? 'var(--primary-yellow)' : 'var(--text-muted)'};">Payment</span><span>Verified</span><span style="color:${status === 'approved' ? 'var(--accent-green)' : 'var(--text-muted)'};">Approved</span>
+                        </div>
                         <div class="order-details">
                             <div class="detail-row">
                                 <span class="detail-label">Applicant</span>
@@ -1028,6 +1064,7 @@
                             </div>
                         </div>
                         ${adminNoteHtml}
+                        <button type="button" onclick="window.print()" style="width:100%;margin-top:12px;padding:11px;background:transparent;border:1px solid var(--glass-border);border-radius:var(--radius-sm);color:var(--text-primary);font-weight:700;cursor:pointer;">Print Receipt</button>
                         <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
                             🗑 Delete
                         </button>
