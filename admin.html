@@ -245,6 +245,10 @@
         .tab:hover { background: var(--glass-bg-hover); color: var(--text-primary); transform: translateY(-1px); }
         .tab.active { background: linear-gradient(135deg, var(--primary-yellow), #FFA500); color: var(--text-dark); border-color: transparent; box-shadow: 0 4px 20px rgba(255, 215, 0, 0.35); font-weight: 700; }
         .tab.active:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255, 215, 0, 0.45); }
+        @media (max-width: 600px) {
+            .tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow: visible; padding-bottom: 0; }
+            .tab { width: 100%; min-width: 0; min-height: 50px; padding: 10px 8px; white-space: normal; text-align: center; line-height: 1.2; display: flex; align-items: center; justify-content: center; }
+        }
         .search-bar { display: flex; gap: 12px; margin-bottom: 20px; }
         .search-input { flex: 1; padding: 14px 18px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 14px; outline: none; backdrop-filter: blur(20px); transition: all var(--transition-fast); font-family: inherit; }
         .search-input:focus { border-color: var(--primary-yellow); box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1); background: var(--glass-bg-hover); }
@@ -641,17 +645,32 @@
 
         async function recoveryApiCall(endpoint, body) {
             if (!accountRecoveryToken) throw new Error('Unlock Account Recovery before continuing.');
-            const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${adminToken}`,
-                    'X-Account-Recovery-Token': accountRecoveryToken
-                },
-                credentials: 'include',
-                body: JSON.stringify(body)
-            });
-            return response.json();
+            try {
+                const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`,
+                        'X-Account-Recovery-Token': accountRecoveryToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+                let data = null;
+                try { data = await response.json(); } catch (parseError) { data = null; }
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) throw new Error(data?.error || 'Your admin session or recovery unlock has expired. Unlock Account Recovery again.');
+                    if (response.status === 503) throw new Error(data?.error || 'Account recovery is not configured on the backend.');
+                    throw new Error(data?.error || `Recovery service error (${response.status}).`);
+                }
+                return data || { success: false, error: 'The recovery service returned an empty response.' };
+            } catch (error) {
+                const message = error?.message || '';
+                if (message.includes('Load failed') || message.includes('Failed to fetch') || error?.name === 'TypeError') {
+                    throw new Error('Unable to reach the recovery service. Confirm that the updated backend is deployed on Render, then try again.');
+                }
+                throw error;
+            }
         }
 
         async function lookupRecoveryAccount() {
