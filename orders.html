@@ -978,6 +978,35 @@
         });
 
         // ============================================
+        function getStatusExplanation(status) {
+            if (status === 'paid') return 'Payment has been verified. Your registration is waiting for the administrator to complete approval.';
+            if (status === 'approved') return 'Payment was verified and your registration has been approved.';
+            if (status === 'failed' || status === 'rejected') return 'This payment did not complete. Use Proceed to Payment on this order to try again instead of creating a duplicate order.';
+            return 'Your order is recorded and is waiting for payment confirmation. Complete payment or use Proceed to Payment to continue.';
+        }
+
+        async function copyPaymentReference(reference, button) {
+            if (!reference || reference === 'N/A') return;
+            try {
+                if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(reference);
+                else {
+                    const helper = document.createElement('textarea');
+                    helper.value = reference;
+                    helper.style.position = 'fixed';
+                    helper.style.opacity = '0';
+                    document.body.appendChild(helper);
+                    helper.select();
+                    document.execCommand('copy');
+                    helper.remove();
+                }
+                const original = button?.textContent || 'Copy';
+                if (button) { button.textContent = 'Copied'; button.disabled = true; setTimeout(() => { button.textContent = original; button.disabled = false; }, 1500); }
+                showToast('Payment reference copied', 'success');
+            } catch (error) {
+                showToast('Could not copy the payment reference', 'error');
+            }
+        }
+
         // RENDER ORDERS
         // ============================================
         function renderOrders(orders, preserveFilters = false) {
@@ -1018,8 +1047,11 @@
                 
                 const safeName = escapeHtml(order.applicant_name || 'N/A');
                 const safePhone = escapeHtml(order.applicant_phone || 'N/A');
-                const safeRef = escapeHtml(order.payment_reference || 'N/A');
+                const rawRef = String(order.payment_reference || 'N/A');
+                const safeRef = escapeHtml(rawRef);
+                const jsRef = rawRef.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeNoteText = escapeHtml(displayStatus.noteText);
+                const safeStatusExplanation = escapeHtml(getStatusExplanation(status));
                 
                 const displayAmount = 15.45;
                 
@@ -1056,7 +1088,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Payment Ref</span>
-                                <span class="detail-value" style="font-size: 11px;">${safeRef}</span>
+                                <span class="detail-value" style="font-size: 11px;word-break:break-all;">${safeRef}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Date</span>
@@ -1064,6 +1096,11 @@
                             </div>
                         </div>
                         ${adminNoteHtml}
+                        <details style="margin-top:12px;border-top:1px solid var(--glass-border);padding-top:10px;">
+                            <summary style="cursor:pointer;color:var(--primary-yellow);font-size:13px;font-weight:700;">What does this status mean?</summary>
+                            <p style="margin-top:8px;color:var(--text-secondary);font-size:12px;line-height:1.5;">${safeStatusExplanation}</p>
+                        </details>
+                        ${rawRef !== 'N/A' ? `<button type="button" onclick="copyPaymentReference('${jsRef}', this)" style="width:100%;margin-top:12px;padding:11px;background:rgba(255,215,0,.10);border:1px solid rgba(255,215,0,.35);border-radius:var(--radius-sm);color:var(--primary-yellow);font-weight:700;cursor:pointer;">Copy Payment Reference</button>` : ''}
                         <button type="button" onclick="window.print()" style="width:100%;margin-top:12px;padding:11px;background:transparent;border:1px solid var(--glass-border);border-radius:var(--radius-sm);color:var(--text-primary);font-weight:700;cursor:pointer;">Print Receipt</button>
                         <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
                             🗑 Delete
