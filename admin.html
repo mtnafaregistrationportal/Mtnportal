@@ -414,6 +414,39 @@
                 <div class="tab active" onclick="switchTab('users', this)">👥 Users</div>
                 <div class="tab" onclick="switchTab('registrations', this)">📝 Registrations</div>
                 <div class="tab" onclick="switchTab('payments', this)">💰 Payments</div>
+                <div class="tab" onclick="switchTab('account-recovery', this)">🔐 Account Recovery</div>
+            </div>
+
+            <div class="data-section" id="section-account-recovery">
+                <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:22px;box-shadow:0 8px 32px var(--glass-shadow);">
+                    <h3 style="margin-bottom:8px;">Account Recovery</h3>
+                    <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;margin-bottom:18px;">Unlock this protected area before looking up or changing any account login email.</p>
+                    <div id="recoveryGate">
+                        <label for="recoveryGatePassword" style="display:block;font-size:13px;font-weight:700;margin-bottom:7px;">Recovery password</label>
+                        <input id="recoveryGatePassword" type="password" autocomplete="off" placeholder="Enter recovery password" style="width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:rgba(0,0,0,.18);color:var(--text-primary);margin-bottom:10px;">
+                        <button type="button" onclick="unlockAccountRecovery()" id="recoveryUnlockBtn" style="padding:12px 18px;border:0;border-radius:999px;background:var(--primary-yellow);color:var(--text-dark);font-weight:800;cursor:pointer;">Unlock Account Recovery</button>
+                        <div id="recoveryGateError" role="alert" style="display:none;color:var(--accent-red);font-size:13px;margin-top:10px;"></div>
+                    </div>
+                    <div id="recoveryTools" style="display:none;">
+                        <div style="padding:10px 12px;border-radius:var(--radius-sm);background:rgba(52,199,89,.12);color:var(--accent-green);font-size:13px;margin-bottom:16px;">Recovery unlocked for 10 minutes.</div>
+                        <label for="recoveryName" style="display:block;font-size:13px;font-weight:700;margin-bottom:7px;">User name</label>
+                        <input id="recoveryName" type="text" autocomplete="off" placeholder="Enter the registered full name" style="width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:rgba(0,0,0,.18);color:var(--text-primary);margin-bottom:12px;">
+                        <label for="recoveryPhone" style="display:block;font-size:13px;font-weight:700;margin-bottom:7px;">Registered phone number</label>
+                        <input id="recoveryPhone" type="tel" inputmode="numeric" autocomplete="off" placeholder="0240000000" style="width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:rgba(0,0,0,.18);color:var(--text-primary);margin-bottom:12px;">
+                        <button type="button" onclick="lookupRecoveryAccount()" id="recoveryLookupBtn" style="padding:12px 18px;border:0;border-radius:999px;background:var(--primary-yellow);color:var(--text-dark);font-weight:800;cursor:pointer;">Find Account</button>
+                        <div id="recoveryLookupError" role="alert" style="display:none;color:var(--accent-red);font-size:13px;margin-top:10px;"></div>
+                        <div id="recoveryResult" style="display:none;margin-top:18px;padding-top:16px;border-top:1px solid var(--glass-border);">
+                            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Current account email: <strong id="recoveryCurrentEmail" style="color:var(--text-primary);"></strong></div>
+                            <input type="hidden" id="recoveryUserId">
+                            <label for="recoveryNewEmail" style="display:block;font-size:13px;font-weight:700;margin-bottom:7px;">New valid email address</label>
+                            <input id="recoveryNewEmail" type="email" autocomplete="off" placeholder="user@example.com" style="width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:rgba(0,0,0,.18);color:var(--text-primary);margin-bottom:12px;">
+                            <label for="recoveryConfirmEmail" style="display:block;font-size:13px;font-weight:700;margin-bottom:7px;">Confirm new email address</label>
+                            <input id="recoveryConfirmEmail" type="email" autocomplete="off" placeholder="Re-enter the new email" style="width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:rgba(0,0,0,.18);color:var(--text-primary);margin-bottom:12px;">
+                            <button type="button" onclick="updateRecoveryEmail()" id="recoveryUpdateBtn" style="padding:12px 18px;border:0;border-radius:999px;background:var(--primary-yellow);color:var(--text-dark);font-weight:800;cursor:pointer;">Update Email</button>
+                            <div id="recoveryUpdateError" role="alert" style="display:none;color:var(--accent-red);font-size:13px;margin-top:10px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="search-bar" id="searchBar">
@@ -470,6 +503,8 @@
         let allUsers = [];
         let allRegistrations = [];
         let allPayments = [];
+        let accountRecoveryToken = null;
+        let recoveryAccount = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('adminToken');
@@ -543,6 +578,8 @@
             allUsers = [];
             allRegistrations = [];
             allPayments = [];
+            accountRecoveryToken = null;
+            recoveryAccount = null;
             showLoginScreen();
             showToast('Logged out successfully', 'success');
         }
@@ -559,6 +596,118 @@
             if (body && method !== 'GET') options.body = JSON.stringify(body);
             const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, options);
             return response.json();
+        }
+
+        function recoveryMessage(id, message) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message || '';
+            el.style.display = message ? 'block' : 'none';
+        }
+
+        function resetRecoveryPanel() {
+            accountRecoveryToken = null;
+            recoveryAccount = null;
+            document.getElementById('recoveryGate').style.display = 'block';
+            document.getElementById('recoveryTools').style.display = 'none';
+            document.getElementById('recoveryGatePassword').value = '';
+            document.getElementById('recoveryResult').style.display = 'none';
+            ['recoveryGateError', 'recoveryLookupError', 'recoveryUpdateError'].forEach(id => recoveryMessage(id, ''));
+        }
+
+        async function unlockAccountRecovery() {
+            const passwordInput = document.getElementById('recoveryGatePassword');
+            const button = document.getElementById('recoveryUnlockBtn');
+            const password = passwordInput.value;
+            recoveryMessage('recoveryGateError', '');
+            if (!password) return recoveryMessage('recoveryGateError', 'Enter the recovery password first.');
+            button.disabled = true;
+            button.textContent = 'Unlocking...';
+            try {
+                const data = await adminApiCall('/api/admin/account-recovery/unlock', 'POST', { recoveryPassword: password });
+                if (!data.success) throw new Error(data.error || 'Unable to unlock account recovery.');
+                accountRecoveryToken = data.recoveryToken;
+                passwordInput.value = '';
+                document.getElementById('recoveryGate').style.display = 'none';
+                document.getElementById('recoveryTools').style.display = 'block';
+                document.getElementById('recoveryName').focus();
+            } catch (error) {
+                recoveryMessage('recoveryGateError', error.message || 'Invalid recovery password.');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Unlock Account Recovery';
+            }
+        }
+
+        async function recoveryApiCall(endpoint, body) {
+            if (!accountRecoveryToken) throw new Error('Unlock Account Recovery before continuing.');
+            const response = await fetch('https://mtn-afa-api.onrender.com' + endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`,
+                    'X-Account-Recovery-Token': accountRecoveryToken
+                },
+                credentials: 'include',
+                body: JSON.stringify(body)
+            });
+            return response.json();
+        }
+
+        async function lookupRecoveryAccount() {
+            const name = document.getElementById('recoveryName').value.trim();
+            const phone = document.getElementById('recoveryPhone').value.trim();
+            const button = document.getElementById('recoveryLookupBtn');
+            recoveryMessage('recoveryLookupError', '');
+            document.getElementById('recoveryResult').style.display = 'none';
+            if (!name || !phone) return recoveryMessage('recoveryLookupError', 'Enter the user name and registered phone number.');
+            button.disabled = true;
+            button.textContent = 'Finding...';
+            try {
+                const data = await recoveryApiCall('/api/admin/account-recovery/lookup', { name, phone });
+                if (!data.success) throw new Error(data.error || 'No matching account found.');
+                recoveryAccount = { ...data.user, name, phone };
+                document.getElementById('recoveryUserId').value = data.user.id;
+                document.getElementById('recoveryCurrentEmail').textContent = data.user.email || 'No email recorded';
+                document.getElementById('recoveryResult').style.display = 'block';
+                document.getElementById('recoveryNewEmail').focus();
+            } catch (error) {
+                recoveryMessage('recoveryLookupError', error.message || 'Unable to find the account.');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Find Account';
+            }
+        }
+
+        async function updateRecoveryEmail() {
+            const newEmail = document.getElementById('recoveryNewEmail').value.trim().toLowerCase();
+            const confirmEmail = document.getElementById('recoveryConfirmEmail').value.trim().toLowerCase();
+            const button = document.getElementById('recoveryUpdateBtn');
+            recoveryMessage('recoveryUpdateError', '');
+            if (!recoveryAccount) return recoveryMessage('recoveryUpdateError', 'Find an account before updating its email.');
+            if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return recoveryMessage('recoveryUpdateError', 'Enter a valid new email address.');
+            if (newEmail !== confirmEmail) return recoveryMessage('recoveryUpdateError', 'The email addresses do not match.');
+            button.disabled = true;
+            button.textContent = 'Updating...';
+            try {
+                const data = await recoveryApiCall('/api/admin/account-recovery/update-email', {
+                    userId: recoveryAccount.id,
+                    name: recoveryAccount.name,
+                    phone: recoveryAccount.phone,
+                    newEmail
+                });
+                if (!data.success) throw new Error(data.error || 'Unable to update the email.');
+                recoveryAccount.email = newEmail;
+                document.getElementById('recoveryCurrentEmail').textContent = newEmail;
+                document.getElementById('recoveryNewEmail').value = '';
+                document.getElementById('recoveryConfirmEmail').value = '';
+                showToast('Email updated. The user can now request an OTP.', 'success');
+            } catch (error) {
+                recoveryMessage('recoveryUpdateError', error.message || 'Unable to update the email.');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Update Email';
+            }
         }
 
         // Persistent revenue cache — never resets on tab switch or refresh
@@ -1224,9 +1373,13 @@ function getRegistrationStatusBadge(order) {
                 if (tabName === 'users' && tabs[0]) tabs[0].classList.add('active');
                 if (tabName === 'registrations' && tabs[1]) tabs[1].classList.add('active');
                 if (tabName === 'payments' && tabs[2]) tabs[2].classList.add('active');
+                if (tabName === 'account-recovery' && tabs[3]) tabs[3].classList.add('active');
             }
 
             document.getElementById('section-' + tabName).classList.add('active');
+            const searchBar = document.getElementById('searchBar');
+            if (searchBar) searchBar.style.display = tabName === 'account-recovery' ? 'none' : 'flex';
+            if (tabName === 'account-recovery') resetRecoveryPanel();
 
             if (tabName === 'users') renderUsers();
             if (tabName === 'registrations') renderRegistrations();
