@@ -576,6 +576,75 @@
             .orders-header { padding: 24px 48px; height: 76px; }
             .orders-content { padding: 104px 24px 40px; }
         }
+
+        .retry-payment-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(10, 15, 26, 0.72);
+            backdrop-filter: blur(20px) saturate(130%);
+            -webkit-backdrop-filter: blur(20px) saturate(130%);
+        }
+        .retry-payment-modal.active { display: flex; }
+        .retry-payment-content {
+            width: min(520px, 100%);
+            height: min(82vh, 700px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 24px 80px rgba(0,0,0,.55);
+        }
+        .retry-payment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 18px;
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
+        }
+        .retry-payment-title { font-size: 15px; font-weight: 800; }
+        .retry-payment-close {
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(0,0,0,.15);
+            color: var(--text-dark);
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .retry-payment-iframe { flex: 1; width: 100%; border: 0; }
+        .retry-payment-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-top: 1px solid rgba(0,0,0,.08);
+        }
+        .retry-payment-status { color: #555; font-size: 12px; font-weight: 600; }
+        .retry-payment-verify {
+            border: 0;
+            padding: 9px 14px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary-yellow), #FFA500);
+            color: var(--text-dark);
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .retry-payment-verify:disabled { opacity: .55; cursor: not-allowed; }
+        @media (max-width: 480px) {
+            .retry-payment-content { height: 86vh; }
+            .retry-payment-footer { align-items: stretch; flex-direction: column; }
+            .retry-payment-verify { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -634,6 +703,20 @@
     </a>
 
     <div class="toast" id="toast"></div>
+
+    <div class="retry-payment-modal" id="retryPaymentModal" role="dialog" aria-modal="true" aria-labelledby="retryPaymentTitle" onclick="if(event.target === this) closeRetryPaymentModal()">
+        <div class="retry-payment-content">
+            <div class="retry-payment-header">
+                <span class="retry-payment-title" id="retryPaymentTitle">Complete Your Payment</span>
+                <button type="button" class="retry-payment-close" aria-label="Close payment window" onclick="closeRetryPaymentModal()">&times;</button>
+            </div>
+            <iframe id="retryPaymentIframe" class="retry-payment-iframe" title="Payment provider"></iframe>
+            <div class="retry-payment-footer">
+                <span class="retry-payment-status" id="retryPaymentStatus">GH₵ 15.45 · MTN AFA Registration</span>
+                <button type="button" class="retry-payment-verify" id="retryPaymentVerify" onclick="verifyRetryPayment()">I've Paid</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -750,6 +833,73 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
+        let retryPaymentState = { orderId: null, reference: null, verifying: false };
+
+        async function proceedToPayment(orderId, button) {
+            if (button?.disabled) return;
+            if (button) { button.disabled = true; button.textContent = 'Opening Payment...'; }
+            try {
+                const data = await apiCallOrders('/api/payment/retry', 'POST', { orderId });
+                if (!data.success || !data.paymentLink || !data.reference) throw new Error(data.error || 'Payment link not received.');
+                retryPaymentState = { orderId: String(orderId), reference: data.reference, verifying: false };
+                document.getElementById('retryPaymentIframe').src = data.paymentLink;
+                document.getElementById('retryPaymentStatus').textContent = 'GH₵ 15.45 · Complete payment, then tap I\'ve Paid.';
+                document.getElementById('retryPaymentVerify').disabled = false;
+                document.getElementById('retryPaymentModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                showToast(error.message || 'Unable to open payment. Please try again.', 'error');
+            } finally {
+                if (button) { button.disabled = false; button.textContent = 'Proceed to Payment'; }
+            }
+        }
+
+        function closeRetryPaymentModal() {
+            const modal = document.getElementById('retryPaymentModal');
+            const iframe = document.getElementById('retryPaymentIframe');
+            const verifyButton = document.getElementById('retryPaymentVerify');
+            if (modal) modal.classList.remove('active');
+            if (iframe) iframe.src = '';
+            if (verifyButton) { verifyButton.disabled = false; verifyButton.textContent = 'I\'ve Paid'; }
+            retryPaymentState = { orderId: null, reference: null, verifying: false };
+            document.body.style.overflow = '';
+        }
+
+        async function verifyRetryPayment() {
+            if (retryPaymentState.verifying || !retryPaymentState.reference) return;
+            retryPaymentState.verifying = true;
+            const button = document.getElementById('retryPaymentVerify');
+            const status = document.getElementById('retryPaymentStatus');
+            if (button) { button.disabled = true; button.textContent = 'Checking...'; }
+            if (status) status.textContent = 'Checking payment status...';
+            try {
+                const token = await getAuthToken();
+                const response = await fetch(API_BASE + '/api/payment/verify?reference=' + encodeURIComponent(retryPaymentState.reference), {
+                    method: 'GET', headers: token ? { Authorization: 'Bearer ' + token } : {}, credentials: 'include', cache: 'no-store'
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to verify payment.');
+                if (data.verified) {
+                    closeRetryPaymentModal();
+                    showToast('Payment verified successfully', 'success');
+                    await initOrders();
+                } else {
+                    if (status) status.textContent = 'Payment not confirmed yet. Complete payment and try again.';
+                    showToast('Payment is not confirmed yet', 'error');
+                }
+            } catch (error) {
+                if (status) status.textContent = 'Unable to verify payment. Please try again.';
+                showToast(error.message || 'Unable to verify payment.', 'error');
+            } finally {
+                retryPaymentState.verifying = false;
+                if (button) { button.disabled = false; button.textContent = 'I\'ve Paid'; }
+            }
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && retryPaymentState.orderId) closeRetryPaymentModal();
+        });
+
         // ============================================
         // USER DELETE OWN ORDER
         // ============================================
@@ -820,7 +970,7 @@
                     badge: 'Payment Failed',
                     badgeClass: 'status-failed',
                     noteClass: 'failed',
-                    noteText: '⚠️ Payment failed or was not completed. Please register again.'
+                    noteText: '⚠️ Payment failed or was not completed. Use Proceed to Payment to try again.'
                 };
             }
             
@@ -1052,6 +1202,10 @@
                 const jsRef = rawRef.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeNoteText = escapeHtml(displayStatus.noteText);
                 const safeStatusExplanation = escapeHtml(getStatusExplanation(status));
+                const canRetryPayment = status === 'pending' || status === 'failed';
+                const retryPaymentButton = canRetryPayment
+                    ? `<button type="button" onclick="proceedToPayment('${String(order.id).replace(/'/g, "\\'")}', this)" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;border-radius:var(--radius-sm);color:#1a1a1a;font-weight:800;cursor:pointer;">Proceed to Payment</button>`
+                    : '';
                 
                 const displayAmount = 15.45;
                 
@@ -1101,7 +1255,7 @@
                             <p style="margin-top:8px;color:var(--text-secondary);font-size:12px;line-height:1.5;">${safeStatusExplanation}</p>
                         </details>
                         ${rawRef !== 'N/A' ? `<button type="button" onclick="copyPaymentReference('${jsRef}', this)" style="width:100%;margin-top:12px;padding:11px;background:rgba(255,215,0,.10);border:1px solid rgba(255,215,0,.35);border-radius:var(--radius-sm);color:var(--primary-yellow);font-weight:700;cursor:pointer;">Copy Payment Reference</button>` : ''}
-                        <button type="button" onclick="window.print()" style="width:100%;margin-top:12px;padding:11px;background:transparent;border:1px solid var(--glass-border);border-radius:var(--radius-sm);color:var(--text-primary);font-weight:700;cursor:pointer;">Print Receipt</button>
+                        ${retryPaymentButton}
                         <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
                             🗑 Delete
                         </button>
