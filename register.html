@@ -639,6 +639,11 @@
                 <div class="summary-row"><span class="summary-label">Charge</span><span class="summary-value">GH₵ 15.45</span></div>
                 <div class="summary-row"><span class="summary-label">Payment Method</span><span class="summary-value">E-Tranzact</span></div>
             </div>
+            <details class="registration-help" style="margin:16px 0;padding:14px 16px;border:1px solid rgba(0,0,0,.10);border-radius:16px;background:rgba(255,255,255,.45);color:#1a1a1a;">
+                <summary style="cursor:pointer;font-weight:700;">Need help before submitting?</summary>
+                <p style="margin-top:10px;font-size:13px;line-height:1.55;">Use your legal name and a phone number with exactly 10 digits. Check the Ghana Card format carefully. Your payment reference will be shown after the request is accepted.</p>
+            </details>
+            <p id="registrationDraftStatus" style="display:none;margin:8px 0;text-align:center;color:#555;font-size:12px;">Your draft was restored on this device.</p>
             <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
         </form>
 
@@ -794,8 +799,38 @@
                 }
             }
         }
+        const registrationDraftKey = 'afaRegistrationDraft';
+        const registrationDraftFields = ['fullName', 'phone', 'email', 'location', 'occupation'];
         let registrationSubmitting = false;
         let paymentVerifying = false;
+
+        function saveRegistrationDraft() {
+            const draft = {};
+            registrationDraftFields.forEach(id => {
+                const field = document.getElementById(id);
+                if (field?.value.trim()) draft[id] = field.value.trim();
+            });
+            if (Object.keys(draft).length) localStorage.setItem(registrationDraftKey, JSON.stringify(draft));
+        }
+
+        function restoreRegistrationDraft() {
+            try {
+                const draft = JSON.parse(localStorage.getItem(registrationDraftKey) || 'null');
+                if (!draft) return;
+                let restored = false;
+                registrationDraftFields.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (field && draft[id] && !field.value) { field.value = draft[id]; restored = true; }
+                });
+                if (restored) {
+                    const status = document.getElementById('registrationDraftStatus');
+                    if (status) { status.style.display = 'block'; setTimeout(() => { status.style.display = 'none'; }, 4000); }
+                }
+            } catch (error) { localStorage.removeItem(registrationDraftKey); }
+        }
+
+        registrationDraftFields.forEach(id => document.getElementById(id)?.addEventListener('input', saveRegistrationDraft));
+        window.addEventListener('DOMContentLoaded', restoreRegistrationDraft);
         document.getElementById('afaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             if (registrationSubmitting) return;
@@ -861,6 +896,7 @@
                     throw new Error(orderData.error || 'Registration failed. Please try again.');
                 }
                                 localStorage.setItem('lastPaymentReference', orderData.reference);
+                localStorage.removeItem('afaRegistrationDraft');
                 // E-Tranzact: redirect to hosted checkout page
                 if (orderData.paymentLink) {
                     openPaymentModal(orderData.paymentLink);
