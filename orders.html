@@ -1344,7 +1344,8 @@
                 const jsRef = rawRef.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeNoteText = escapeHtml(displayStatus.noteText);
                 const safeStatusExplanation = escapeHtml(getStatusExplanation(status));
-                const canRetryPayment = status === 'pending' || status === 'failed';
+                const isPaidOrder = order.payment_verified === true || order.payment_verified === 'true' || !!order.paid_at || status === 'paid' || status === 'approved';
+                const canRetryPayment = !isPaidOrder && (status === 'pending' || status === 'failed' || status === 'rejected');
                 const retryPaymentButton = canRetryPayment
                     ? `<button type="button" onclick="proceedToPayment('${String(order.id).replace(/'/g, "\\'")}', this)" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;border-radius:var(--radius-sm);color:#1a1a1a;font-weight:800;cursor:pointer;">Proceed to Payment</button>`
                     : '';
