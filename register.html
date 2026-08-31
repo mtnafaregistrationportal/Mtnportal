@@ -599,8 +599,12 @@
                 <h2 class="form-title">Applicant Details</h2>
                 <p class="form-subtitle">Fill the form carefully. GH₵15.45 will be charged via E-Tranzact.</p>
                 <div class="form-group">
-                    <label class="form-label">Full Name <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="fullName" placeholder="e.g. John Doe" required>
+                    <label class="form-label" for="firstName">First Name <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="firstName" placeholder="e.g. John" autocomplete="given-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="lastName">Last Name <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="lastName" placeholder="e.g. Doe" autocomplete="family-name" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Phone Number <span class="required">*</span></label>
@@ -800,7 +804,7 @@
             }
         }
         const registrationDraftKey = 'afaRegistrationDraft';
-        const registrationDraftFields = ['fullName', 'phone', 'email', 'location', 'occupation'];
+        const registrationDraftFields = ['firstName', 'lastName', 'phone', 'email', 'idNumber', 'location', 'dobInput', 'occupation'];
         let registrationSubmitting = false;
         let paymentVerifying = false;
 
@@ -857,7 +861,9 @@
                     return; 
                 }
                 const formData = {
-                    fullName: document.getElementById('fullName').value.trim(),
+                    firstName: document.getElementById('firstName').value.trim(),
+                    lastName: document.getElementById('lastName').value.trim(),
+                    fullName: [document.getElementById('firstName').value.trim(), document.getElementById('lastName').value.trim()].filter(Boolean).join(' '),
                     phone: document.getElementById('phone').value.trim(),
                     email: document.getElementById('email').value.trim(),
                     idType: 'ghana-card',
@@ -877,7 +883,7 @@
                 if (!/^GHA-\d{9}-\d$/.test(formData.idNumber)) {
                     throw new Error('Ghana Card ID must be in format: GHA-000000000-0');
                 }
-                if (!formData.fullName || !formData.phone || !formData.email || !formData.idNumber || 
+                if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.idNumber || 
                     !formData.location || !formData.dob || !formData.occupation) {
                     throw new Error('Please fill in all required fields');
                 }
