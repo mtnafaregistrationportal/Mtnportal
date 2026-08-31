@@ -349,6 +349,17 @@
         @media (max-width: 480px) { .login-card { padding: 32px 20px; border-radius: var(--radius-lg); } .admin-header { padding: 12px 16px; } .admin-header h1 { font-size: 15px; } .admin-greeting { display: none; } .stat-value { font-size: 26px; } }
         .empty-state { text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: 14px; animation: fadeIn 0.5s var(--transition-smooth); }
         .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .admin-edit-modal { display:none; position:fixed; inset:0; z-index:3000; align-items:center; justify-content:center; padding:16px; background:rgba(10,15,26,.75); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+        .admin-edit-modal.active { display:flex; }
+        .admin-edit-card { width:min(540px,100%); max-height:90vh; overflow:auto; background:#fff; color:#1a1a1a; border-radius:28px; padding:24px; box-shadow:0 24px 80px rgba(0,0,0,.55); }
+        .admin-edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .admin-edit-grid label { display:block; font-size:12px; font-weight:700; margin-bottom:5px; }
+        .admin-edit-grid input { width:100%; padding:11px; border:1px solid #d5d9e0; border-radius:10px; font:inherit; color:#1a1a1a; }
+        .admin-edit-actions { display:flex; gap:10px; margin-top:18px; }
+        .admin-edit-actions button { flex:1; padding:12px; border:0; border-radius:12px; font:inherit; font-weight:800; cursor:pointer; }
+        .admin-edit-cancel { background:#e8ebf0; color:#1a1a1a; }
+        .admin-edit-save { background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a1a; }
+        @media(max-width:480px){ .admin-edit-grid{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
@@ -482,6 +493,24 @@
 
     <div class="toast" id="toast"></div>
 
+    <div class="admin-edit-modal" id="adminEditModal" role="dialog" aria-modal="true" aria-labelledby="adminEditTitle">
+        <form class="admin-edit-card" id="adminEditForm">
+            <h2 id="adminEditTitle" style="font-size:20px;margin-bottom:16px;">Edit Registration</h2>
+            <input type="hidden" id="adminEditOrderId">
+            <div class="admin-edit-grid">
+                <div><label for="adminEditFirstName">First Name *</label><input id="adminEditFirstName" required></div>
+                <div><label for="adminEditLastName">Last Name *</label><input id="adminEditLastName" required></div>
+                <div><label for="adminEditPhone">Phone Number *</label><input id="adminEditPhone" maxlength="10" required></div>
+                <div><label for="adminEditEmail">Email Address *</label><input id="adminEditEmail" type="email" required></div>
+                <div><label for="adminEditIdNumber">Ghana Card ID *</label><input id="adminEditIdNumber" required></div>
+                <div><label for="adminEditLocation">Location *</label><input id="adminEditLocation" required></div>
+                <div><label for="adminEditDob">Date of Birth *</label><input id="adminEditDob" required></div>
+                <div><label for="adminEditOccupation">Occupation *</label><input id="adminEditOccupation" required></div>
+            </div>
+            <div class="admin-edit-actions"><button type="button" class="admin-edit-cancel" onclick="closeAdminEditModal()">Cancel</button><button type="submit" class="admin-edit-save" id="adminEditSave">Save Changes</button></div>
+        </form>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script>
@@ -509,6 +538,40 @@
         let allPayments = [];
         let accountRecoveryToken = null;
         let recoveryAccount = null;
+        let adminEditingOrder = null;
+
+        function openAdminEditModal(orderId) {
+            const order = allRegistrations.find(item => String(item.id) === String(orderId));
+            if (!order) return showToast('Registration not found', 'error');
+            const parts = String(order.applicant_name || '').trim().split(/\s+/).filter(Boolean);
+            document.getElementById('adminEditOrderId').value = order.id;
+            document.getElementById('adminEditFirstName').value = parts.shift() || '';
+            document.getElementById('adminEditLastName').value = parts.join(' ');
+            document.getElementById('adminEditPhone').value = order.applicant_phone || '';
+            document.getElementById('adminEditEmail').value = order.applicant_email || '';
+            document.getElementById('adminEditIdNumber').value = order.id_number || '';
+            document.getElementById('adminEditLocation').value = order.location || '';
+            document.getElementById('adminEditDob').value = order.dob || '';
+            document.getElementById('adminEditOccupation').value = order.occupation || '';
+            adminEditingOrder = order;
+            document.getElementById('adminEditModal').classList.add('active');
+        }
+        function closeAdminEditModal() { document.getElementById('adminEditModal')?.classList.remove('active'); adminEditingOrder = null; }
+        document.getElementById('adminEditForm')?.addEventListener('submit', async event => {
+            event.preventDefault();
+            const save = document.getElementById('adminEditSave');
+            const payload = { orderId: document.getElementById('adminEditOrderId').value,
+                firstName: document.getElementById('adminEditFirstName').value.trim(), lastName: document.getElementById('adminEditLastName').value.trim(),
+                phone: document.getElementById('adminEditPhone').value.trim(), email: document.getElementById('adminEditEmail').value.trim(),
+                idNumber: document.getElementById('adminEditIdNumber').value.trim().toUpperCase(), location: document.getElementById('adminEditLocation').value.trim(),
+                dob: document.getElementById('adminEditDob').value.trim(), occupation: document.getElementById('adminEditOccupation').value.trim() };
+            if (!payload.firstName || !payload.lastName || !payload.phone || !payload.email || !payload.idNumber || !payload.location || !payload.dob || !payload.occupation) return showToast('Please fill in all required fields', 'error');
+            if (!/^\d{10}$/.test(payload.phone) || !/^GHA-\d{9}-\d$/.test(payload.idNumber)) return showToast('Check the phone and Ghana Card formats', 'error');
+            save.disabled = true; save.textContent = 'Saving...';
+            try { const data = await adminApiCall('/api/admin/update-order', 'POST', payload); if (!data.success) throw new Error(data.error || 'Unable to update registration'); closeAdminEditModal(); showToast('Registration updated', 'success'); await loadRegistrations(); }
+            catch (error) { showToast(error.message, 'error'); }
+            finally { save.disabled = false; save.textContent = 'Save Changes'; }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('adminToken');
@@ -1135,6 +1198,7 @@ function getRegistrationStatusBadge(order) {
                             ` : safeNote ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">MTN AFA NOTE: ${safeNote}</div>` : ''}
 
                             <div class="action-buttons" style="margin-top:8px;">
+                                <button type="button" onclick="openAdminEditModal('${idStr}')" style="padding:12px 18px;background:linear-gradient(135deg,#FFD700,#FFA500);border:0;border-radius:12px;color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit</button>
                                 <button class="btn-delete" onclick="deleteRegistration('${idStr}')">🗑 Delete</button>
                             </div>
                         </div>
