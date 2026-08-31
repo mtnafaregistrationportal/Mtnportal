@@ -663,6 +663,18 @@
         .delete-cancel-btn { background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); color: var(--text-primary); }
         .delete-confirm-btn { background: linear-gradient(135deg, #ff3b30, #d92d26); border: 0; color: #fff; }
         @media (max-width: 480px) { .delete-confirm-actions { flex-direction: column-reverse; } }
+        .order-edit-modal { display:none; position:fixed; inset:0; z-index:2050; align-items:center; justify-content:center; padding:16px; background:rgba(10,15,26,.72); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+        .order-edit-modal.active { display:flex; }
+        .order-edit-card { width:min(520px,100%); max-height:90vh; overflow:auto; background:#fff; color:#1a1a1a; border-radius:var(--radius-lg); padding:22px; box-shadow:0 24px 80px rgba(0,0,0,.55); }
+        .order-edit-title { font-size:19px; font-weight:800; margin-bottom:16px; }
+        .order-edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .order-edit-grid label { display:block; font-size:12px; font-weight:700; margin-bottom:5px; }
+        .order-edit-grid input { width:100%; padding:11px; border:1px solid #d5d9e0; border-radius:10px; font:inherit; color:#1a1a1a; }
+        .order-edit-actions { display:flex; gap:10px; margin-top:18px; }
+        .order-edit-actions button { flex:1; padding:12px; border:0; border-radius:var(--radius-sm); font:inherit; font-weight:800; cursor:pointer; }
+        .order-edit-cancel { background:#e8ebf0; color:#1a1a1a; }
+        .order-edit-save { background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a1a; }
+        @media(max-width:480px){ .order-edit-grid{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
@@ -745,6 +757,24 @@
                 <button type="button" class="delete-confirm-btn" onclick="closeDeleteConfirm(true)">Delete</button>
             </div>
         </div>
+    </div>
+
+    <div class="order-edit-modal" id="orderEditModal" role="dialog" aria-modal="true" aria-labelledby="orderEditTitle">
+        <form class="order-edit-card" id="orderEditForm">
+            <div class="order-edit-title" id="orderEditTitle">Edit Registration</div>
+            <input type="hidden" id="editOrderId">
+            <div class="order-edit-grid">
+                <div><label for="editFirstName">First Name *</label><input id="editFirstName" required></div>
+                <div><label for="editLastName">Last Name *</label><input id="editLastName" required></div>
+                <div><label for="editPhone">Phone Number *</label><input id="editPhone" inputmode="numeric" maxlength="10" required></div>
+                <div><label for="editEmail">Email Address *</label><input id="editEmail" type="email" required></div>
+                <div><label for="editIdNumber">Ghana Card ID *</label><input id="editIdNumber" required></div>
+                <div><label for="editLocation">Location *</label><input id="editLocation" required></div>
+                <div><label for="editDob">Date of Birth *</label><input id="editDob" placeholder="DD/MM/YYYY" required></div>
+                <div><label for="editOccupation">Occupation *</label><input id="editOccupation" required></div>
+            </div>
+            <div class="order-edit-actions"><button type="button" class="order-edit-cancel" onclick="closeOrderEditModal()">Cancel</button><button type="submit" class="order-edit-save" id="orderEditSave">Save Changes</button></div>
+        </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -864,6 +894,65 @@
 
         let retryPaymentState = { orderId: null, reference: null, verifying: false };
         let deleteConfirmResolver = null;
+        let editingOrder = null;
+
+        function splitApplicantName(name) {
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            return { firstName: parts.shift() || '', lastName: parts.join(' ') || '' };
+        }
+
+        function openOrderEditModal(orderId) {
+            const order = allOrders.find(item => String(item.id) === String(orderId));
+            if (!order) return showToast('Order not found', 'error');
+            editingOrder = order;
+            const name = splitApplicantName(order.applicant_name);
+            document.getElementById('editOrderId').value = order.id;
+            document.getElementById('editFirstName').value = name.firstName;
+            document.getElementById('editLastName').value = name.lastName;
+            document.getElementById('editPhone').value = order.applicant_phone || '';
+            document.getElementById('editEmail').value = order.applicant_email || '';
+            document.getElementById('editIdNumber').value = order.id_number || '';
+            document.getElementById('editLocation').value = order.location || '';
+            document.getElementById('editDob').value = order.dob || '';
+            document.getElementById('editOccupation').value = order.occupation || '';
+            document.getElementById('orderEditModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('editFirstName').focus();
+        }
+
+        function closeOrderEditModal() {
+            document.getElementById('orderEditModal')?.classList.remove('active');
+            document.body.style.overflow = retryPaymentState.orderId ? 'hidden' : '';
+            editingOrder = null;
+        }
+
+        document.getElementById('orderEditForm')?.addEventListener('submit', async event => {
+            event.preventDefault();
+            const save = document.getElementById('orderEditSave');
+            const payload = { userId: getUserUnified().id, orderId: document.getElementById('editOrderId').value,
+                firstName: document.getElementById('editFirstName').value.trim(), lastName: document.getElementById('editLastName').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(), email: document.getElementById('editEmail').value.trim(),
+                idNumber: document.getElementById('editIdNumber').value.trim().toUpperCase(), location: document.getElementById('editLocation').value.trim(),
+                dob: document.getElementById('editDob').value.trim(), occupation: document.getElementById('editOccupation').value.trim() };
+            if (!payload.firstName || !payload.lastName || !payload.phone || !payload.email || !payload.idNumber || !payload.location || !payload.dob || !payload.occupation) return showToast('Please fill in all required fields', 'error');
+            if (!/^\d{10}$/.test(payload.phone) || !/^GHA-\d{9}-\d$/.test(payload.idNumber)) return showToast('Check the phone and Ghana Card formats', 'error');
+            save.disabled = true; save.textContent = 'Saving...';
+            try {
+                const data = await apiCallOrders('/api/user/update-order', 'POST', payload);
+                if (!data.success) throw new Error(data.error || 'Unable to update order');
+                closeOrderEditModal();
+                showToast(data.paymentRequired ? 'Details saved. Complete payment.' : 'Order details updated', 'success');
+                if (data.paymentRequired && data.paymentLink && data.reference) {
+                    retryPaymentState = { orderId: String(payload.orderId), reference: data.reference, verifying: false };
+                    document.getElementById('retryPaymentIframe').src = data.paymentLink;
+                    document.getElementById('retryPaymentStatus').textContent = 'GH₵ 15.45 · Complete payment, then tap I\'ve Paid.';
+                    document.getElementById('retryPaymentModal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+                await initOrders();
+            } catch (error) { showToast(error.message || 'Unable to update order', 'error'); }
+            finally { save.disabled = false; save.textContent = 'Save Changes'; }
+        });
 
         function askDeleteConfirmation() {
             const modal = document.getElementById('deleteConfirmModal');
@@ -1309,6 +1398,7 @@
                         </details>
                         ${rawRef !== 'N/A' ? `<button type="button" onclick="copyPaymentReference('${jsRef}', this)" style="width:100%;margin-top:12px;padding:11px;background:rgba(255,215,0,.10);border:1px solid rgba(255,215,0,.35);border-radius:var(--radius-sm);color:var(--primary-yellow);font-weight:700;cursor:pointer;">Copy Payment Reference</button>` : ''}
                         ${retryPaymentButton}
+                        <button type="button" onclick="openOrderEditModal('${String(order.id).replace(/'/g, "\\'")}')" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;border-radius:var(--radius-sm);color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit Registration</button>
                         <button class="btn-delete-order" id="delete-btn-${order.id}" onclick="deleteUserOrder('${order.id}')">
                             🗑 Delete
                         </button>
