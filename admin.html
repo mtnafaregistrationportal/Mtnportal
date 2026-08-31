@@ -495,19 +495,14 @@
 
     <div class="admin-edit-modal" id="adminEditModal" role="dialog" aria-modal="true" aria-labelledby="adminEditTitle">
         <form class="admin-edit-card" id="adminEditForm">
-            <h2 id="adminEditTitle" style="font-size:20px;margin-bottom:16px;">Edit Registration</h2>
+            <h2 id="adminEditTitle" style="font-size:20px;margin-bottom:8px;">Edit Approval Status</h2>
+            <p style="font-size:13px;color:#555;margin:0 0 16px;">Change only the administrator’s decision. Payment, revenue, and SMS records will remain unchanged.</p>
             <input type="hidden" id="adminEditOrderId">
-            <div class="admin-edit-grid">
-                <div><label for="adminEditFirstName">First Name *</label><input id="adminEditFirstName" required></div>
-                <div><label for="adminEditLastName">Last Name *</label><input id="adminEditLastName" required></div>
-                <div><label for="adminEditPhone">Phone Number *</label><input id="adminEditPhone" maxlength="10" required></div>
-                <div><label for="adminEditEmail">Email Address *</label><input id="adminEditEmail" type="email" required></div>
-                <div><label for="adminEditIdNumber">Ghana Card ID *</label><input id="adminEditIdNumber" required></div>
-                <div><label for="adminEditLocation">Location *</label><input id="adminEditLocation" required></div>
-                <div><label for="adminEditDob">Date of Birth *</label><input id="adminEditDob" required></div>
-                <div><label for="adminEditOccupation">Occupation *</label><input id="adminEditOccupation" required></div>
-            </div>
-            <div class="admin-edit-actions"><button type="button" class="admin-edit-cancel" onclick="closeAdminEditModal()">Cancel</button><button type="submit" class="admin-edit-save" id="adminEditSave">Save Changes</button></div>
+            <label for="adminEditStatus" style="display:block;font-size:12px;font-weight:700;margin-bottom:5px;">Registration decision</label>
+            <select id="adminEditStatus" required style="width:100%;padding:12px;border:1px solid #d5d9e0;border-radius:10px;font:inherit;color:#1a1a1a;background:#fff;"><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <label for="adminEditNote" style="display:block;font-size:12px;font-weight:700;margin:14px 0 5px;">Admin note (optional)</label>
+            <textarea id="adminEditNote" rows="3" style="width:100%;padding:12px;border:1px solid #d5d9e0;border-radius:10px;font:inherit;color:#1a1a1a;resize:vertical;"></textarea>
+            <div class="admin-edit-actions"><button type="button" class="admin-edit-cancel" onclick="closeAdminEditModal()">Cancel</button><button type="submit" class="admin-edit-save" id="adminEditSave">Save Status</button></div>
         </form>
     </div>
 
@@ -543,16 +538,9 @@
         function openAdminEditModal(orderId) {
             const order = allRegistrations.find(item => String(item.id) === String(orderId));
             if (!order) return showToast('Registration not found', 'error');
-            const parts = String(order.applicant_name || '').trim().split(/\s+/).filter(Boolean);
             document.getElementById('adminEditOrderId').value = order.id;
-            document.getElementById('adminEditFirstName').value = parts.shift() || '';
-            document.getElementById('adminEditLastName').value = parts.join(' ');
-            document.getElementById('adminEditPhone').value = order.applicant_phone || '';
-            document.getElementById('adminEditEmail').value = order.applicant_email || '';
-            document.getElementById('adminEditIdNumber').value = order.id_number || '';
-            document.getElementById('adminEditLocation').value = order.location || '';
-            document.getElementById('adminEditDob').value = order.dob || '';
-            document.getElementById('adminEditOccupation').value = order.occupation || '';
+            document.getElementById('adminEditStatus').value = order.status === 'rejected' ? 'rejected' : 'approved';
+            document.getElementById('adminEditNote').value = order.admin_note || '';
             adminEditingOrder = order;
             document.getElementById('adminEditModal').classList.add('active');
         }
@@ -561,14 +549,10 @@
             event.preventDefault();
             const save = document.getElementById('adminEditSave');
             const payload = { orderId: document.getElementById('adminEditOrderId').value,
-                firstName: document.getElementById('adminEditFirstName').value.trim(), lastName: document.getElementById('adminEditLastName').value.trim(),
-                phone: document.getElementById('adminEditPhone').value.trim(), email: document.getElementById('adminEditEmail').value.trim(),
-                idNumber: document.getElementById('adminEditIdNumber').value.trim().toUpperCase(), location: document.getElementById('adminEditLocation').value.trim(),
-                dob: document.getElementById('adminEditDob').value.trim(), occupation: document.getElementById('adminEditOccupation').value.trim() };
-            if (!payload.firstName || !payload.lastName || !payload.phone || !payload.email || !payload.idNumber || !payload.location || !payload.dob || !payload.occupation) return showToast('Please fill in all required fields', 'error');
-            if (!/^\d{10}$/.test(payload.phone) || !/^GHA-\d{9}-\d$/.test(payload.idNumber)) return showToast('Check the phone and Ghana Card formats', 'error');
+                status: document.getElementById('adminEditStatus').value,
+                adminNote: document.getElementById('adminEditNote').value.trim() };
             save.disabled = true; save.textContent = 'Saving...';
-            try { const data = await adminApiCall('/api/admin/update-order', 'POST', payload); if (!data.success) throw new Error(data.error || 'Unable to update registration'); closeAdminEditModal(); showToast('Registration updated', 'success'); await loadRegistrations(); }
+            try { const data = await adminApiCall('/api/admin/update-order-status', 'POST', payload); if (!data.success) throw new Error(data.error || 'Unable to update registration'); closeAdminEditModal(); showToast('Registration updated', 'success'); await loadRegistrations(); }
             catch (error) { showToast(error.message, 'error'); }
             finally { save.disabled = false; save.textContent = 'Save Changes'; }
         });
@@ -1198,7 +1182,7 @@ function getRegistrationStatusBadge(order) {
                             ` : safeNote ? `<div style="margin-top:10px;padding:10px;background:rgba(255,193,7,0.1);border-radius:8px;font-size:12px;color:#FFC107;">MTN AFA NOTE: ${safeNote}</div>` : ''}
 
                             <div class="action-buttons" style="margin-top:8px;">
-                                <button type="button" onclick="openAdminEditModal('${idStr}')" style="padding:12px 18px;background:linear-gradient(135deg,#FFD700,#FFA500);border:0;border-radius:12px;color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit</button>
+                                <button type="button" onclick="openAdminEditModal('${idStr}')" style="padding:12px 18px;background:linear-gradient(135deg,#FFD700,#FFA500);border:0;border-radius:12px;color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit Status</button>
                                 <button class="btn-delete" onclick="deleteRegistration('${idStr}')">🗑 Delete</button>
                             </div>
                         </div>
