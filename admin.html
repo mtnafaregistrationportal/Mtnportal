@@ -1180,7 +1180,22 @@ function getRegistrationStatusBadge(order) {
                         </div>
                     `;
                 } catch (itemError) {
-                    html += '<div style="color:var(--accent-red);padding:10px;">Error rendering item ' + i + '</div>';
+                    // Never hide an order because one optional field has an unexpected type.
+                    // Keep it visible so the admin can identify and manage the record.
+                    const fallbackOrder = regs[i] || {};
+                    const fallbackId = String(fallbackOrder.id || '');
+                    const fallbackName = escapeHtml(String(fallbackOrder.applicant_name || 'Unknown'));
+                    const fallbackStatus = escapeHtml(String(fallbackOrder.status || 'pending'));
+                    console.error('[ADMIN] Registration card render failed', { orderId: fallbackId, error: itemError });
+                    html += `
+                        <div class="user-card" style="position:relative;border-color:rgba(255,149,0,.45);">
+                            <div class="status-badge badge-pending">Record needs review</div>
+                            <div class="user-name">${fallbackName}</div>
+                            <div class="payment-meta">Order ID: ${escapeHtml(fallbackId || 'N/A')} · Status: ${fallbackStatus}</div>
+                            <div class="action-buttons" style="margin-top:10px;">
+                                <button type="button" onclick="openAdminEditModal('${fallbackId.replace(/'/g, "\\'")}')" style="padding:10px 14px;background:linear-gradient(135deg,#FFD700,#FFA500);border:0;border-radius:10px;color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit Status</button>
+                            </div>
+                        </div>`;
                 }
             }
 
