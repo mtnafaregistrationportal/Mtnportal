@@ -374,6 +374,11 @@
             color: var(--accent-red); 
             border: 1px solid rgba(255, 59, 48, 0.25);
         }
+        .status-refunded {
+            background: rgba(90, 200, 250, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(90, 200, 250, 0.25);
+        }
         
         .order-details { 
             border-top: 1px solid rgba(255,255,255,0.1); 
@@ -699,7 +704,7 @@
         <div style="display:flex;gap:10px;margin-bottom:18px;">
             <input id="orderSearch" type="search" placeholder="Search name, phone or reference" oninput="applyOrderFilters()" style="flex:1;padding:13px 14px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--glass-bg);color:var(--text-primary);outline:none;">
             <select id="orderFilter" onchange="applyOrderFilters()" style="padding:13px 10px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--bg-deep);color:var(--text-primary);outline:none;">
-                <option value="all">All</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="failed">Failed</option>
+                <option value="all">All</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="failed">Failed</option><option value="refunded">Refunded</option>
             </select>
         </div>
         <div class="stats-row">
@@ -1106,6 +1111,15 @@
                     noteText: '❌ Registration rejected. Please contact support for assistance.'
                 };
             }
+
+            if (status === 'refunded') {
+                return {
+                    badge: 'Refunded',
+                    badgeClass: 'status-refunded',
+                    noteClass: 'pending',
+                    noteText: '↩ Your payment was refunded because the registration system was down. Use Proceed to Payment when the system is back.'
+                };
+            }
             
             if (status === 'failed') {
                 return {
@@ -1273,6 +1287,7 @@
         function getStatusExplanation(status) {
             if (status === 'paid') return 'Payment has been verified. Your registration is waiting for the administrator to complete approval.';
             if (status === 'approved') return 'Payment was verified and your registration has been approved.';
+            if (status === 'refunded') return 'Your payment was refunded because the registration system was down. Use Proceed to Payment when the system is back.';
             if (status === 'failed' || status === 'rejected') return 'This payment did not complete. Use Proceed to Payment on this order to try again instead of creating a duplicate order.';
             return 'Your order is recorded and is waiting for payment confirmation. Complete payment or use Proceed to Payment to continue.';
         }
@@ -1344,8 +1359,8 @@
                 const jsRef = rawRef.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeNoteText = escapeHtml(displayStatus.noteText);
                 const safeStatusExplanation = escapeHtml(getStatusExplanation(status));
-                const isPaidOrder = order.payment_verified === true || order.payment_verified === 'true' || !!order.paid_at || status === 'paid' || status === 'approved';
-                const canRetryPayment = !isPaidOrder && (status === 'pending' || status === 'failed' || status === 'rejected');
+                const isPaidOrder = status !== 'refunded' && (order.payment_verified === true || order.payment_verified === 'true' || !!order.paid_at || status === 'paid' || status === 'approved');
+                const canRetryPayment = status === 'refunded' || (!isPaidOrder && (status === 'pending' || status === 'failed' || status === 'rejected'));
                 const retryPaymentButton = canRetryPayment
                     ? `<button type="button" onclick="proceedToPayment('${String(order.id).replace(/'/g, "\\'")}', this)" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;border-radius:var(--radius-sm);color:#1a1a1a;font-weight:800;cursor:pointer;">Proceed to Payment</button>`
                     : '';
