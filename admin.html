@@ -284,6 +284,7 @@
         .badge-pending { background: rgba(255, 152, 0, 0.15); color: var(--accent-orange); border: 1px solid rgba(255, 152, 0, 0.25); }
         .badge-approved { background: rgba(52, 199, 89, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 199, 89, 0.25); }
         .badge-rejected { background: rgba(255, 59, 48, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 59, 48, 0.25); }
+        .badge-refunded { background: rgba(90, 200, 250, 0.15); color: var(--accent-blue); border: 1px solid rgba(90, 200, 250, 0.25); }
         .badge-suspended { background: rgba(175, 82, 222, 0.15); color: var(--accent-purple); border: 1px solid rgba(175, 82, 222, 0.25); }
         .badge-paid { background: rgba(52, 199, 89, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 199, 89, 0.25); }
         .badge-failed { background: rgba(255, 59, 48, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 59, 48, 0.25); }
@@ -499,7 +500,7 @@
             <p style="font-size:13px;color:#555;margin:0 0 16px;">Change only the administrator’s decision. Payment, revenue, and SMS records will remain unchanged.</p>
             <input type="hidden" id="adminEditOrderId">
             <label for="adminEditStatus" style="display:block;font-size:12px;font-weight:700;margin-bottom:5px;">Registration decision</label>
-            <select id="adminEditStatus" required style="width:100%;padding:12px;border:1px solid #d5d9e0;border-radius:10px;font:inherit;color:#1a1a1a;background:#fff;"><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <select id="adminEditStatus" required style="width:100%;padding:12px;border:1px solid #d5d9e0;border-radius:10px;font:inherit;color:#1a1a1a;background:#fff;"><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="refunded">Refunded</option></select>
             <label for="adminEditNote" style="display:block;font-size:12px;font-weight:700;margin:14px 0 5px;">Admin note (optional)</label>
             <textarea id="adminEditNote" rows="3" style="width:100%;padding:12px;border:1px solid #d5d9e0;border-radius:10px;font:inherit;color:#1a1a1a;resize:vertical;"></textarea>
             <div class="admin-edit-actions"><button type="button" class="admin-edit-cancel" onclick="closeAdminEditModal()">Cancel</button><button type="submit" class="admin-edit-save" id="adminEditSave">Save Status</button></div>
@@ -539,7 +540,7 @@
             const order = allRegistrations.find(item => String(item.id) === String(orderId));
             if (!order) return showToast('Registration not found', 'error');
             document.getElementById('adminEditOrderId').value = order.id;
-            document.getElementById('adminEditStatus').value = order.status === 'rejected' ? 'rejected' : 'approved';
+            document.getElementById('adminEditStatus').value = ['rejected', 'refunded'].includes(order.status) ? order.status : 'approved';
             document.getElementById('adminEditNote').value = order.admin_note || '';
             adminEditingOrder = order;
             document.getElementById('adminEditModal').classList.add('active');
@@ -844,7 +845,7 @@
         function updateStats() {
             const pending = allRegistrations.filter(r => {
                 const status = r.status || 'pending';
-                return status !== 'approved' && status !== 'rejected';
+                return status !== 'approved' && status !== 'rejected' && status !== 'refunded';
             }).length;
             document.getElementById('statPending').textContent = pending;
         }
@@ -888,7 +889,7 @@ async function checkPaymentStatus(reference) {
 // NEW: Async version that checks payment status directly for pending/failed orders
 async function getRegistrationStatusBadgeAsync(order) {
     // If already approved/rejected, use database status (fast path)
-    if (order.status === 'approved' || order.status === 'rejected') {
+            if (order.status === 'approved' || order.status === 'rejected' || order.status === 'refunded') {
         return getRegistrationStatusBadge(order);
     }
 
@@ -937,6 +938,14 @@ function getRegistrationStatusBadge(order) {
                     html: paymentBadge + '<div class="reg-status-badge rejected">❌ REJECTED</div>',
                     isApproved: false,
                     isRejected: true,
+                    showActions: false
+                };
+            }
+            if (order.status === 'refunded') {
+                return {
+                    html: '<div class="payment-status-banner pending">↩ REFUND RECORDED</div><div class="reg-status-badge" style="background:rgba(90,200,250,.12);color:var(--accent-blue);border:1px solid rgba(90,200,250,.25);">↩ REFUNDED</div>',
+                    isApproved: false,
+                    isRejected: false,
                     showActions: false
                 };
             }
@@ -1183,6 +1192,9 @@ function getRegistrationStatusBadge(order) {
 
                             <div class="action-buttons" style="margin-top:8px;">
                                 <button type="button" onclick="openAdminEditModal('${idStr}')" style="padding:12px 18px;background:linear-gradient(135deg,#FFD700,#FFA500);border:0;border-radius:12px;color:#1a1a1a;font-weight:800;cursor:pointer;">✎ Edit Status</button>
+                                ${r.status === 'refunded'
+                                    ? '<button type="button" disabled style="padding:12px 18px;background:rgba(90,200,250,.18);border:1px solid rgba(90,200,250,.35);border-radius:12px;color:var(--accent-blue);font-weight:800;cursor:not-allowed;">↩ Refunded</button>'
+                                    : `<button type="button" onclick="refundRegistration('${idStr}')" style="padding:12px 18px;background:rgba(90,200,250,.16);border:1px solid rgba(90,200,250,.35);border-radius:12px;color:var(--accent-blue);font-weight:800;cursor:pointer;">↩ Refund</button>`}
                                 <button class="btn-delete" onclick="deleteRegistration('${idStr}')">🗑 Delete</button>
                             </div>
                         </div>
@@ -1337,6 +1349,20 @@ function getRegistrationStatusBadge(order) {
             } catch (error) {
                 showLoading(false);
                 showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function refundRegistration(regId) {
+            showLoading(true);
+            try {
+                const data = await adminApiCall('/api/admin/update-order-status', 'POST', { orderId: regId, status: 'refunded' });
+                if (!data.success) throw new Error(data.error || 'Unable to record refund');
+                showToast('Refund recorded. The user can pay again when the system is back.', 'success');
+                await loadAllData();
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
             }
         }
 
