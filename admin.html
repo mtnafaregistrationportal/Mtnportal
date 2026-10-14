@@ -886,31 +886,11 @@ async function checkPaymentStatus(reference) {
     }
 }
 
-// NEW: Async version that checks payment status directly for pending/failed orders
+// Registration cards use the database/webhook status as the source of truth.
+// Do not block card rendering on a separate provider request.
 async function getRegistrationStatusBadgeAsync(order) {
-    // If already approved/rejected, use database status (fast path)
-            if (order.status === 'approved' || order.status === 'rejected' || order.status === 'refunded') {
-        return getRegistrationStatusBadge(order);
-    }
-
-    // For pending/failed orders, check payment status directly
-    const reference = order.payment_reference;
-    if (reference && reference !== 'N/A') {
-        const paymentStatus = await checkPaymentStatus(reference);
-        if (paymentStatus.paid) {
-            // Payment succeeded! Show as PAID
-            const badgeClass = order.status === 'approved' ? 'approved' : 'pending';
-            const badgeText = order.status === 'approved' ? '✅ COMPLETED' : '⏳ PAID - AWAITING APPROVAL';
-            return {
-                html: '<div class="payment-status-banner paid">✅ PAID (Verified)</div><div class="reg-status-badge ' + badgeClass + '">' + badgeText + '</div>',
-                isApproved: order.status === 'approved',
-                isRejected: false,
-                showActions: order.status !== 'approved'
-            };
-        }
-    }
-
-    // Fall back to original function
+    // Payment webhooks/cron update the database; rendering must not wait for a
+    // provider request because one slow reference can hide the remaining cards.
     return getRegistrationStatusBadge(order);
 }
 
